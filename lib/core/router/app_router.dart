@@ -6,6 +6,7 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/communities/presentation/communities_screen.dart';
 import '../../features/events/presentation/events_screen.dart';
 import '../../features/messaging/presentation/messages_screen.dart';
+import '../../features/organization/presentation/organization_dashboard_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../shell/main_shell.dart';
 
@@ -54,6 +55,11 @@ final appRouter = GoRouter(
           builder: (context, state) => const ProfileScreen(),
         ),
       ],
+    ),
+    GoRoute(
+      path: '/organization',
+      name: 'organization',
+      builder: (context, state) => const OrganizationDashboardScreen(),
     ),
   ],
 );

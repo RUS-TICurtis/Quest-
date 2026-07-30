@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -104,6 +105,41 @@ class ProfileScreen extends StatelessWidget {
                 _badge(Icons.lock_outline, '???', AppColors.border),
               ],
             ),
+            
+            const SizedBox(height: 32),
+
+            // Admin & Hosting
+            const Text('Admin & Hosting', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
+            const SizedBox(height: 12),
+            GestureDetector(
+              onTap: () => context.push('/organization'),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: AppColors.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: AppColors.border)),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(color: AppColors.emerald.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(10)),
+                      child: const Icon(Icons.admin_panel_settings, color: AppColors.emerald, size: 20),
+                    ),
+                    const SizedBox(width: 16),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Organization Portal', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 16)),
+                          SizedBox(height: 4),
+                          Text('Manage communities and events', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, color: AppColors.textMuted),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
           ],
         ),
       ),

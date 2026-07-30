@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/quest_button.dart';
 
@@ -88,7 +89,7 @@ class LandingScreen extends StatelessWidget {
                     label: 'Begin Your Quest',
                     isFullWidth: true,
                     icon: Icons.rocket_launch_outlined,
-                    onPressed: () => Navigator.of(context).pushNamed('/onboarding'),
+                    onPressed: () => context.go('/onboarding'),
                   ),
                   const SizedBox(height: 12),
 

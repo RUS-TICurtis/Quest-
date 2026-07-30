@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../shared/widgets/quest_button.dart';
 
@@ -231,7 +232,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           label: 'Enter Dashboard',
           isFullWidth: true,
           icon: Icons.arrow_forward,
-          onPressed: () => Navigator.of(context).pushReplacementNamed('/home'),
+          onPressed: () => context.go('/home'),
         ),
       ],
     );
