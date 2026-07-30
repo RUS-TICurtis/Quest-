@@ -1,10 +1,11 @@
-import 'package:flutter/material.dart';
+
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/landing_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
 import '../../features/communities/presentation/communities_screen.dart';
 import '../../features/events/presentation/events_screen.dart';
+import '../../features/messaging/presentation/messages_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../shell/main_shell.dart';
 
@@ -45,9 +46,7 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/messages',
           name: 'messages',
-          builder: (context, state) => const Scaffold(
-            body: Center(child: Text('Messages — Coming Soon', style: TextStyle(color: Colors.white))),
-          ),
+          builder: (context, state) => const MessagesScreen(),
         ),
         GoRoute(
           path: '/profile',
