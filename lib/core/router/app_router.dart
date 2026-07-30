@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/landing_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/home/presentation/home_screen.dart';
+import '../../features/communities/presentation/communities_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../shell/main_shell.dart';
 
@@ -33,9 +34,7 @@ final appRouter = GoRouter(
         GoRoute(
           path: '/communities',
           name: 'communities',
-          builder: (context, state) => const Scaffold(
-            body: Center(child: Text('Communities — Coming Soon', style: TextStyle(color: Colors.white))),
-          ),
+          builder: (context, state) => const CommunitiesScreen(),
         ),
         GoRoute(
           path: '/events',
