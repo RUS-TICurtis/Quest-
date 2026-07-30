@@ -149,14 +149,14 @@ class HomeScreen extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 12),
-              ...quests.map((q) => _questTile(q)).toList(),
+              ...quests.map((q) => _questTile(q)),
 
               const SizedBox(height: 28),
 
               // Upcoming Events
               const Text('Upcoming Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
               const SizedBox(height: 12),
-              ...events.map((e) => _eventTile(e)).toList(),
+              ...events.map((e) => _eventTile(e)),
 
               const SizedBox(height: 80),
             ],
