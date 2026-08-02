@@ -8,23 +8,31 @@ class MainShell extends StatelessWidget {
 
   int _selectedIndex(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
-    switch (location) {
-      case '/home':        return 0;
-      case '/communities': return 1;
-      case '/events':      return 2;
-      case '/messages':    return 3;
-      case '/profile':     return 4;
-      default:             return 0;
-    }
+    if (location.startsWith('/home')) return 0;
+    if (location.startsWith('/communities')) return 1;
+    if (location.startsWith('/events')) return 2;
+    if (location.startsWith('/messages')) return 3;
+    if (location.startsWith('/profile')) return 4;
+    return 0;
   }
 
   void _onTap(BuildContext context, int index) {
     switch (index) {
-      case 0: context.go('/home');         break;
-      case 1: context.go('/communities');  break;
-      case 2: context.go('/events');       break;
-      case 3: context.go('/messages');     break;
-      case 4: context.go('/profile');      break;
+      case 0:
+        context.go('/home');
+        break;
+      case 1:
+        context.go('/communities');
+        break;
+      case 2:
+        context.go('/events');
+        break;
+      case 3:
+        context.go('/messages');
+        break;
+      case 4:
+        context.go('/profile');
+        break;
     }
   }
 
@@ -53,11 +61,15 @@ class MainShell extends StatelessWidget {
                 child: Column(
                   children: [
                     Container(
-                      width: 36, height: 36,
+                      width: 36,
+                      height: 36,
                       decoration: BoxDecoration(
                         color: AppColors.questBlue,
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [BoxShadow(color: AppColors.questBlue.withValues(alpha: 0.4), blurRadius: 12)],
+                      ),
+                      child: const Center(
+                        child: Icon(Icons.bolt, color: Colors.white, size: 22),
                       ),
                     ),
                     const SizedBox(height: 6),

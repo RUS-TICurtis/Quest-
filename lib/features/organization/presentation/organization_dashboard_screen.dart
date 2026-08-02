@@ -1,19 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../communities/data/communities_provider.dart';
+import '../../events/data/events_provider.dart';
+import 'widgets/create_event_sheet.dart';
+import 'widgets/post_announcement_sheet.dart';
 
-
-class OrganizationDashboardScreen extends StatelessWidget {
+class OrganizationDashboardScreen extends ConsumerWidget {
   const OrganizationDashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final communitiesState = ref.watch(communitiesProvider);
+    final eventsState = ref.watch(eventsProvider);
+
+    final totalMembers = communitiesState.communities.fold<int>(0, (sum, c) => sum + c.memberCount);
+    final totalEvents = eventsState.events.length;
+    final totalRsvps = eventsState.events.fold<int>(0, (sum, e) => sum + e.attendeesCount);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text('Host Portal'),
-        actions: [
-          IconButton(icon: const Icon(Icons.settings_outlined), onPressed: () {}),
-        ],
+        title: const Text('Host & Organization Portal'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/profile');
+            }
+          },
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -35,16 +54,16 @@ class OrganizationDashboardScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('Total Impact', style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600)),
+                const Text('Total Community Reach', style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w600)),
                 const SizedBox(height: 8),
-                const Text('1,420 XP', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.w900, letterSpacing: -1)),
+                const Text('3,850 XP Generated', style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _statItem('Members', '342'),
-                    _statItem('Events', '12'),
-                    _statItem('RSVPs', '89'),
+                    _statItem('Total Members', '$totalMembers'),
+                    _statItem('Active Events', '$totalEvents'),
+                    _statItem('Total RSVPs', '$totalRsvps'),
                   ],
                 ),
               ],
@@ -52,39 +71,38 @@ class OrganizationDashboardScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 32),
-          const Text('Manage Communities', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
+          const Text('Managed Communities', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
           const SizedBox(height: 16),
 
-          _manageCommunityCard(
-            title: 'Flutter Builders',
-            members: 128,
-            updates: 3,
-            color: AppColors.questBlue,
-          ),
-          
-          const SizedBox(height: 12),
-          
-          _manageCommunityCard(
-            title: 'Design Systems NYC',
-            members: 214,
-            updates: 0,
-            color: AppColors.auroraPurple,
-          ),
+          ...communitiesState.communities.take(3).map(
+                (c) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: GestureDetector(
+                    onTap: () => context.push('/communities/${c.id}'),
+                    child: _manageCommunityCard(
+                      title: c.name,
+                      members: c.memberCount,
+                      updates: c.id == '1' ? 2 : 0,
+                      color: c.accentColor,
+                    ),
+                  ),
+                ),
+              ),
 
-          const SizedBox(height: 32),
-          
+          const SizedBox(height: 24),
+
           // Quick Actions
           const Text('Admin Actions', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white)),
           const SizedBox(height: 16),
-          
+
           Row(
             children: [
               Expanded(
                 child: _actionCard(
                   icon: Icons.event,
-                  title: 'New Event',
+                  title: 'Host Event',
                   color: AppColors.emerald,
-                  onTap: () {},
+                  onTap: () => CreateEventSheet.show(context),
                 ),
               ),
               const SizedBox(width: 12),
@@ -93,12 +111,12 @@ class OrganizationDashboardScreen extends StatelessWidget {
                   icon: Icons.campaign,
                   title: 'Announcement',
                   color: AppColors.crimson,
-                  onTap: () {},
+                  onTap: () => PostAnnouncementSheet.show(context),
                 ),
               ),
             ],
           ),
-          
+
           const SizedBox(height: 40),
         ],
       ),
@@ -109,8 +127,8 @@ class OrganizationDashboardScreen extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
-        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+        Text(label, style: const TextStyle(color: Colors.white70, fontSize: 11)),
       ],
     );
   }
@@ -126,7 +144,8 @@ class OrganizationDashboardScreen extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 48, height: 48,
+            width: 48,
+            height: 48,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(12),

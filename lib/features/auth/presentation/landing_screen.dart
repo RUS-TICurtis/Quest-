@@ -111,7 +111,7 @@ class LandingScreen extends StatelessWidget {
                     isFullWidth: true,
                     variant: QuestButtonVariant.secondary,
                     icon: Icons.g_mobiledata_rounded,
-                    onPressed: () {}, // Hook up Supabase Google Auth later
+                    onPressed: () => context.go('/home'),
                   ),
 
                   const SizedBox(height: 24),
