@@ -274,6 +274,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                         const Spacer(),
                         IconButton(
                           icon: const Icon(Icons.close, color: Colors.white, size: 24),
+                          tooltip: 'Close',
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                       ],

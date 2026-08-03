@@ -52,6 +52,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    tooltip: 'Back',
                     onPressed: () {
                       if (context.canPop()) {
                         context.pop();
@@ -321,6 +322,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
               ),
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white54, size: 20),
+                tooltip: 'Close',
                 onPressed: () {
                   setState(() {
                     _selectedMember = null;
