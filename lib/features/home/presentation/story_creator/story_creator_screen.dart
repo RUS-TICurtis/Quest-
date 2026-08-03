@@ -98,6 +98,7 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: Colors.white),
+          tooltip: 'Close',
           onPressed: () {
             if (context.canPop()) {
               context.pop();

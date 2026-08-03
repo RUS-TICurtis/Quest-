@@ -25,6 +25,7 @@ class LeaderboardScreen extends ConsumerWidget {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    tooltip: 'Back',
                     onPressed: () {
                       if (context.canPop()) {
                         context.pop();

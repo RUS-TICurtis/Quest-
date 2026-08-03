@@ -70,6 +70,7 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
                     children: [
                       IconButton(
                         icon: const Icon(Icons.keyboard_arrow_down, color: Colors.white, size: 28),
+                        tooltip: 'Minimize',
                         onPressed: () {
                           if (context.canPop()) {
                             context.pop();
@@ -485,6 +486,7 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
                   ),
                 ),
                 icon: const Icon(Icons.call_end, color: AppColors.crimson),
+                tooltip: 'Leave stage',
                 onPressed: () {
                   if (context.canPop()) {
                     context.pop();

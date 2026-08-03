@@ -58,6 +58,7 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
             backgroundColor: AppColors.surface,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back, color: Colors.white),
+              tooltip: 'Back',
               onPressed: () {
                 if (context.canPop()) {
                   context.pop();

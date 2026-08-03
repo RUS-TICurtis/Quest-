@@ -47,6 +47,7 @@ class EventDetailScreen extends ConsumerWidget {
             backgroundColor: AppColors.surface,
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
+              tooltip: 'Back',
               onPressed: () {
                 if (context.canPop()) {
                   context.pop();

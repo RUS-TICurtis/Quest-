@@ -59,6 +59,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                 suffixIcon: communitiesState.searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, color: AppColors.textMuted, size: 18),
+                        tooltip: 'Clear search',
                         onPressed: () {
                           _searchController.clear();
                           ref.read(communitiesProvider.notifier).setSearchQuery('');

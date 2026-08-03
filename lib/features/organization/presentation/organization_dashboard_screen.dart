@@ -25,6 +25,7 @@ class OrganizationDashboardScreen extends ConsumerWidget {
         title: const Text('Host & Organization Portal'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back',
           onPressed: () {
             if (context.canPop()) {
               context.pop();
