@@ -31,6 +31,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit_square),
+            tooltip: 'New chat',
             onPressed: () => context.push('/messages/ai_coach'),
           ),
         ],
