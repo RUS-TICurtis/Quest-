@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'radar_provider.dart';
 
@@ -6,47 +7,24 @@ abstract class RadarRepository {
   Future<List<RadarMember>> getNearbyMembers();
 }
 
-class MockRadarRepository implements RadarRepository {
+class SupabaseRadarRepository implements RadarRepository {
+  final SupabaseClient _supabase;
+
+  SupabaseRadarRepository(this._supabase);
+
   @override
   Future<List<HubLocation>> getHubs() async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    return const [
-      HubLocation(
-        id: 'hub_1',
-        name: 'The Foundry Commons',
-        address: '450 Mission St, San Francisco',
-        category: 'Builders Hub',
-        activeMembersCount: 14,
-        distanceMiles: 0.2,
-        xpBonus: 200,
-        imageUrl: 'https://images.unsplash.com/photo-1497366216548-37526070297c?w=800',
-      ),
-      HubLocation(
-        id: 'hub_2',
-        name: 'Nexus Cyber Lounge',
-        address: '88 2nd St, San Francisco',
-        category: 'AI & Hackers',
-        activeMembersCount: 9,
-        distanceMiles: 0.6,
-        xpBonus: 150,
-        imageUrl: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=800',
-      ),
-      HubLocation(
-        id: 'hub_3',
-        name: 'Pioneer Studio Collective',
-        address: '210 Townsend St, San Francisco',
-        category: 'Design & Audio',
-        activeMembersCount: 6,
-        distanceMiles: 1.1,
-        xpBonus: 175,
-        imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=800',
-      ),
-    ];
+    final response = await _supabase.from('radar_nodes').select();
+    
+    return (response as List<dynamic>)
+        .map((node) => HubLocation.fromJson(node))
+        .toList();
   }
 
   @override
   Future<List<RadarMember>> getNearbyMembers() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+    // Return mock data for now since we don't have a radar_members table
+    // PostGIS isn't fully set up yet in our schema for real-time proximity
     return const [
       RadarMember(
         id: 'mem_1',
@@ -72,34 +50,10 @@ class MockRadarRepository implements RadarRepository {
         angleRatio: 0.45,
         radiusRatio: 0.65,
       ),
-      RadarMember(
-        id: 'mem_3',
-        name: 'Samir Patel',
-        initials: 'SP',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-        archetype: 'Connector',
-        distanceFeet: 85,
-        currentHubId: 'hub_1',
-        status: 'Organizing weekend hackathon',
-        angleRatio: 0.75,
-        radiusRatio: 0.50,
-      ),
-      RadarMember(
-        id: 'mem_4',
-        name: 'Chloe Bennett',
-        initials: 'CB',
-        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
-        archetype: 'Pioneer',
-        distanceFeet: 120,
-        currentHubId: 'hub_1',
-        status: 'Working on generative UI experiments',
-        angleRatio: 0.90,
-        radiusRatio: 0.80,
-      ),
     ];
   }
 }
 
 final radarRepositoryProvider = Provider<RadarRepository>((ref) {
-  return MockRadarRepository();
+  return SupabaseRadarRepository(Supabase.instance.client);
 });

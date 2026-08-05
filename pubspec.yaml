@@ -46,6 +46,8 @@ dependencies:
   intl: ^0.20.3
   shimmer: ^3.0.0
   flutter_dotenv: ^5.1.0
+  connectivity_plus: ^7.3.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:

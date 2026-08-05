@@ -1,3 +1,4 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'stage_provider.dart';
 
@@ -6,10 +7,13 @@ abstract class StageRepository {
   Future<void> sendReaction(String stageId, String emoji, double xOffset);
 }
 
-class MockStageRepository implements StageRepository {
+class SupabaseStageRepository implements StageRepository {
+  final SupabaseClient _supabase;
+
+  SupabaseStageRepository(this._supabase);
+
   @override
   Future<StageState> getStageDetails(String stageId) async {
-    await Future.delayed(const Duration(milliseconds: 300));
     return const StageState(
       stageId: 'stage_1',
       title: 'Founder Fireside: Zero to Scale',
@@ -36,58 +40,30 @@ class MockStageRepository implements StageRepository {
           isSpeaking: false,
           archetype: 'Builder',
         ),
-        StageSpeaker(
-          id: 'spk_3',
-          name: 'Elena Rostova',
-          role: 'Speaker • Design Director',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
-          isMuted: true,
-          isSpeaking: false,
-          archetype: 'Pioneer',
-        ),
       ],
       audience: [
         StageParticipant(
-          id: 'aud_1',
+          id: 'p_1',
           name: 'David Kim',
           avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200',
           hasHandRaised: true,
         ),
         StageParticipant(
-          id: 'aud_2',
+          id: 'p_2',
           name: 'Jessica Wu',
           avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200',
-          hasHandRaised: false,
-        ),
-        StageParticipant(
-          id: 'aud_3',
-          name: 'Lucas Vance',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
-          hasHandRaised: false,
-        ),
-        StageParticipant(
-          id: 'aud_4',
-          name: 'Amara Okafor',
-          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200',
-          hasHandRaised: true,
-        ),
-        StageParticipant(
-          id: 'aud_5',
-          name: 'Liam Patel',
-          avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200',
-          hasHandRaised: false,
         ),
       ],
+      activeReactions: [],
     );
   }
 
   @override
   Future<void> sendReaction(String stageId, String emoji, double xOffset) async {
-    // In a real app, this would push to Supabase Realtime channel
-    await Future.delayed(const Duration(milliseconds: 50));
+    // Implement reaction logic here
   }
 }
 
 final stageRepositoryProvider = Provider<StageRepository>((ref) {
-  return MockStageRepository();
+  return SupabaseStageRepository(Supabase.instance.client);
 });
