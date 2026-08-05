@@ -6,6 +6,14 @@ Build communities. Discover events. Level up your life.
 
 ---
 
+## 📖 Exhaustive Architecture & Documentation
+For a complete, exhaustive technical breakdown of every module, Riverpod provider, route, screen, design token, and micro-interaction, see:
+👉 **[CODEBASE_DOCUMENTATION.md](./CODEBASE_DOCUMENTATION.md)**
+
+> **Note to Contributors & Agents:** Whenever making changes to this codebase, you **must** keep `CODEBASE_DOCUMENTATION.md` updated synchronously.
+
+---
+
 ## Stack
 
 | Layer | Technology |

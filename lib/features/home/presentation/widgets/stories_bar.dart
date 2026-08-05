@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -23,7 +24,10 @@ class StoriesBar extends ConsumerWidget {
           if (index == 0) {
             // "Your Story" / "Share Update" button
             return GestureDetector(
-              onTap: () => context.push('/create-story'),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/create-story');
+              },
               child: Column(
                 children: [
                   Stack(

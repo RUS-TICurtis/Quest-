@@ -1,4 +1,6 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -297,12 +299,12 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
                 animation: _pulseController,
                 builder: (context, child) {
                   return Container(
-                    width: 78 + (_pulseController.value * 8),
-                    height: 78 + (_pulseController.value * 8),
+                    width: 78 + (_pulseController.value * 10),
+                    height: 78 + (_pulseController.value * 10),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: AppColors.emerald.withValues(alpha: 0.8 - (_pulseController.value * 0.4)),
+                        color: AppColors.emerald.withValues(alpha: 0.8 - (_pulseController.value * 0.45)),
                         width: 2.5,
                       ),
                     ),
@@ -317,7 +319,7 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: speaker.isSpeaking ? AppColors.emerald : AppColors.border,
-                  width: speaker.isSpeaking ? 2 : 1,
+                  width: speaker.isSpeaking ? 2.5 : 1,
                 ),
                 image: DecorationImage(
                   image: NetworkImage(speaker.avatar),
@@ -325,6 +327,51 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
                 ),
               ),
             ),
+
+            // Live Audio Equalizer Wave Badge (when speaking)
+            if (speaker.isSpeaking)
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: AppColors.emerald,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.emerald.withValues(alpha: 0.5),
+                        blurRadius: 6,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      AnimatedBuilder(
+                        animation: _pulseController,
+                        builder: (context, child) {
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: List.generate(3, (barIndex) {
+                              final barHeight = 4.0 + (sin((_pulseController.value * 2 * pi) + (barIndex * 1.5)).abs() * 8.0);
+                              return Container(
+                                margin: const EdgeInsets.symmetric(horizontal: 0.8),
+                                width: 2,
+                                height: barHeight,
+                                decoration: BoxDecoration(
+                                  color: Colors.black,
+                                  borderRadius: BorderRadius.circular(1),
+                                ),
+                              );
+                            }),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
 
             // Mute / Archetype Badge
             Positioned(
@@ -420,7 +467,10 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: ['🔥', '🚀', '💡', '👏', '❤️'].map((emoji) {
               return GestureDetector(
-                onTap: () => notifier.sendReaction(emoji),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  notifier.sendReaction(emoji);
+                },
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -450,7 +500,10 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
                   ),
                   icon: Icon(state.isMicMuted ? Icons.mic_off : Icons.mic, size: 20),
                   label: Text(state.isMicMuted ? 'Muted' : 'Speaking'),
-                  onPressed: notifier.toggleMic,
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    notifier.toggleMic();
+                  },
                 ),
               ),
               const SizedBox(width: 8),
@@ -470,7 +523,10 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
                     state.isHandRaised ? 'Hand Raised' : 'Raise Hand',
                     style: TextStyle(color: state.isHandRaised ? Colors.black : Colors.white),
                   ),
-                  onPressed: notifier.toggleHandRaise,
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    notifier.toggleHandRaise();
+                  },
                 ),
               ),
               const SizedBox(width: 8),
@@ -486,6 +542,7 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
                 ),
                 icon: const Icon(Icons.call_end, color: AppColors.crimson),
                 onPressed: () {
+                  HapticFeedback.lightImpact();
                   if (context.canPop()) {
                     context.pop();
                   } else {
@@ -508,8 +565,9 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
       builder: (context, value, child) {
         final screenHeight = MediaQuery.of(context).size.height;
         final screenWidth = MediaQuery.of(context).size.width;
-        final bottomOffset = 120.0 + (value * (screenHeight * 0.5));
-        final leftOffset = (screenWidth * reaction.xOffset) + (15 * (value % 2 == 0 ? 1 : -1));
+        final bottomOffset = 120.0 + (value * (screenHeight * 0.52));
+        final horizontalSway = sin(value * pi * 3) * 24.0;
+        final leftOffset = (screenWidth * reaction.xOffset) + horizontalSway;
         final opacity = (1.0 - value).clamp(0.0, 1.0);
 
         return Positioned(
@@ -517,11 +575,14 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
           left: leftOffset,
           child: Opacity(
             opacity: opacity,
-            child: Transform.scale(
-              scale: 0.8 + (value * 0.6),
-              child: Text(
-                reaction.emoji,
-                style: const TextStyle(fontSize: 32),
+            child: Transform.rotate(
+              angle: sin(value * pi * 2) * 0.25,
+              child: Transform.scale(
+                scale: 0.85 + (value * 0.5),
+                child: Text(
+                  reaction.emoji,
+                  style: const TextStyle(fontSize: 32),
+                ),
               ),
             ),
           ),

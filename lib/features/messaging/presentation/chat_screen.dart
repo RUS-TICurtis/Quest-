@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -33,6 +34,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final text = _textController.text.trim();
     if (text.isEmpty) return;
 
+    HapticFeedback.lightImpact();
     ref.read(chatProvider.notifier).sendMessage(
           threadId: widget.threadId,
           text: text,
@@ -42,6 +44,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _sendVoiceNote() {
+    HapticFeedback.mediumImpact();
     ref.read(chatProvider.notifier).sendVoiceNote(widget.threadId);
     _scrollToBottom();
   }
@@ -323,9 +326,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  msg.time,
-                  style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      msg.time,
+                      style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
+                    ),
+                    if (msg.isMe) ...[
+                      const SizedBox(width: 4),
+                      const Icon(
+                        Icons.done_all,
+                        size: 13,
+                        color: AppColors.skyBlue,
+                      ),
+                    ],
+                  ],
                 ),
               ],
             ),

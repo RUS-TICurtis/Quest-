@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -29,17 +30,26 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
           IconButton(
             icon: const Icon(Icons.radar, color: AppColors.emerald),
             tooltip: 'Participation Radar',
-            onPressed: () => context.push('/radar'),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.push('/radar');
+            },
           ),
           IconButton(
             icon: const Icon(Icons.mic, color: AppColors.crimson),
             tooltip: 'Live Stage Room',
-            onPressed: () => context.push('/stage/stage_1'),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.push('/stage/stage_1');
+            },
           ),
           IconButton(
             icon: const Icon(Icons.add),
             tooltip: 'Host Event',
-            onPressed: () => _showHostEventSheet(context),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              _showHostEventSheet(context);
+            },
           ),
         ],
       ),
@@ -58,7 +68,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                 final filter = _filters[i];
                 final selected = eventsState.selectedFilter == filter;
                 return GestureDetector(
-                  onTap: () => ref.read(eventsProvider.notifier).setFilter(filter),
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    ref.read(eventsProvider.notifier).setFilter(filter);
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

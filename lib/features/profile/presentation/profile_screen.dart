@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -26,12 +27,18 @@ class ProfileScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.leaderboard, color: AppColors.gold),
             tooltip: 'Season Leaderboard',
-            onPressed: () => context.push('/leaderboard'),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.push('/leaderboard');
+            },
           ),
           IconButton(
             icon: const Icon(Icons.settings_outlined),
             tooltip: 'Settings',
-            onPressed: () => context.push('/settings'),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.push('/settings');
+            },
           ),
         ],
       ),
@@ -163,7 +170,10 @@ class ProfileScreen extends ConsumerWidget {
             const Text('Admin & Hosting', style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white)),
             const SizedBox(height: 12),
             GestureDetector(
-              onTap: () => context.push('/organization'),
+              onTap: () {
+                HapticFeedback.lightImpact();
+                context.push('/organization');
+              },
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(

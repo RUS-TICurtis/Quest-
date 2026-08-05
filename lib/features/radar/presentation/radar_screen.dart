@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -53,6 +54,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () {
+                      HapticFeedback.lightImpact();
                       if (context.canPop()) {
                         context.pop();
                       } else {
@@ -133,6 +135,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
                     selected: isSelected,
                     onSelected: (selected) {
                       if (selected) {
+                        HapticFeedback.selectionClick();
                         radarNotifier.selectHub(hub.id);
                         setState(() {
                           _selectedMember = null;
@@ -207,6 +210,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
                           top: (constraints.maxHeight - size) / 2 + y,
                           child: GestureDetector(
                             onTap: () {
+                              HapticFeedback.selectionClick();
                               setState(() {
                                 _selectedMember = isSelected ? null : member;
                               });
@@ -322,6 +326,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
               IconButton(
                 icon: const Icon(Icons.close, color: Colors.white54, size: 20),
                 onPressed: () {
+                  HapticFeedback.lightImpact();
                   setState(() {
                     _selectedMember = null;
                   });
@@ -356,6 +361,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
                   icon: const Icon(Icons.chat_bubble_outline, size: 16),
                   label: const Text('Direct Chat', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                   onPressed: () {
+                    HapticFeedback.lightImpact();
                     context.push('/messages/t1');
                   },
                 ),
@@ -372,6 +378,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
                   icon: const Icon(Icons.person_outline, size: 16),
                   label: const Text('View Matrix', style: TextStyle(fontSize: 12)),
                   onPressed: () {
+                    HapticFeedback.lightImpact();
                     context.push('/profile/${member.id}');
                   },
                 ),
@@ -448,21 +455,27 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               onPressed: () {
-                final didCheckIn = notifier.checkInToHub(hub.id);
-                if (didCheckIn) {
-                  ref.read(userProvider.notifier).addXp(hub.xpBonus);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: AppColors.card,
-                      content: Row(
-                        children: [
-                          const Icon(Icons.check_circle, color: AppColors.emerald),
-                          const SizedBox(width: 10),
-                          Text('Checked in at ${hub.name}! +${hub.xpBonus} XP gained.'),
-                        ],
+                if (isCheckedIn) {
+                  HapticFeedback.mediumImpact();
+                  notifier.checkInToHub(hub.id);
+                } else {
+                  HapticFeedback.heavyImpact();
+                  final didCheckIn = notifier.checkInToHub(hub.id);
+                  if (didCheckIn) {
+                    ref.read(userProvider.notifier).addXp(hub.xpBonus);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        backgroundColor: AppColors.card,
+                        content: Row(
+                          children: [
+                            const Icon(Icons.check_circle, color: AppColors.emerald),
+                            const SizedBox(width: 10),
+                            Text('Checked in at ${hub.name}! +${hub.xpBonus} XP gained.'),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  }
                 }
               },
             ),
@@ -483,21 +496,32 @@ class _RadarSweepPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    // Background circle fill
+    // Background circle fill with subtle radial gradient
     final bgPaint = Paint()
-      ..color = AppColors.surface.withValues(alpha: 0.8)
+      ..shader = RadialGradient(
+        colors: [
+          AppColors.card,
+          AppColors.surface.withValues(alpha: 0.95),
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: radius))
       ..style = PaintingStyle.fill;
     canvas.drawCircle(center, radius, bgPaint);
 
+    // Outer glow ring
+    final outerRingPaint = Paint()
+      ..color = AppColors.emerald.withValues(alpha: 0.25)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.0;
+    canvas.drawCircle(center, radius, outerRingPaint);
+
     // Concentric grid circles
     final gridPaint = Paint()
-      ..color = AppColors.border.withValues(alpha: 0.7)
+      ..color = AppColors.border.withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
     canvas.drawCircle(center, radius * 0.33, gridPaint);
     canvas.drawCircle(center, radius * 0.66, gridPaint);
-    canvas.drawCircle(center, radius, gridPaint);
 
     // Crosshairs
     canvas.drawLine(Offset(center.dx - radius, center.dy), Offset(center.dx + radius, center.dy), gridPaint);
@@ -509,7 +533,7 @@ class _RadarSweepPainter extends CustomPainter {
       startAngle: 0.0,
       endAngle: pi / 2,
       colors: [
-        AppColors.emerald.withValues(alpha: 0.35),
+        AppColors.emerald.withValues(alpha: 0.4),
         AppColors.emerald.withValues(alpha: 0.0),
       ],
       transform: GradientRotation(sweepAngle - (pi / 2)),

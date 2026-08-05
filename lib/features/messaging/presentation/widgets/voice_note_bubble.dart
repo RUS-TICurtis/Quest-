@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class VoiceNoteBubble extends StatefulWidget {
@@ -52,6 +53,7 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble>
   }
 
   void _togglePlay() {
+    HapticFeedback.selectionClick();
     setState(() {
       _isPlaying = !_isPlaying;
       if (_isPlaying) {
@@ -59,6 +61,15 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble>
       } else {
         _animController.stop();
       }
+    });
+  }
+
+  void _seekTo(double ratio) {
+    HapticFeedback.lightImpact();
+    final targetValue = ratio.clamp(0.0, 1.0);
+    _animController.value = targetValue;
+    setState(() {
+      _currentSecond = (targetValue * widget.durationSeconds).toInt();
     });
   }
 
@@ -90,26 +101,38 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble>
           ),
           const SizedBox(width: 12),
 
-          // Waveform bars
+          // Waveform bars with seek gesture
           Expanded(
-            child: SizedBox(
-              height: 28,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: List.generate(_waveformHeights.length, (index) {
-                  final progress = _animController.value;
-                  final barProgress = index / _waveformHeights.length;
-                  final isPlayed = barProgress <= progress;
+            child: GestureDetector(
+              onTapDown: (details) {
+                final box = context.findRenderObject() as RenderBox?;
+                if (box != null) {
+                  final localX = details.localPosition.dx;
+                  final width = box.size.width - 90;
+                  if (width > 0) {
+                    _seekTo((localX / width).clamp(0.0, 1.0));
+                  }
+                }
+              },
+              child: SizedBox(
+                height: 28,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: List.generate(_waveformHeights.length, (index) {
+                    final progress = _animController.value;
+                    final barProgress = index / _waveformHeights.length;
+                    final isPlayed = barProgress <= progress;
 
-                  return Container(
-                    width: 3,
-                    height: 28 * _waveformHeights[index],
-                    decoration: BoxDecoration(
-                      color: isPlayed ? activeColor : inactiveColor,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  );
-                }),
+                    return Container(
+                      width: 3,
+                      height: 28 * _waveformHeights[index],
+                      decoration: BoxDecoration(
+                        color: isPlayed ? activeColor : inactiveColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    );
+                  }),
+                ),
               ),
             ),
           ),

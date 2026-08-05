@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -48,6 +49,7 @@ class EventDetailScreen extends ConsumerWidget {
             leading: IconButton(
               icon: const Icon(Icons.arrow_back),
               onPressed: () {
+                HapticFeedback.lightImpact();
                 if (context.canPop()) {
                   context.pop();
                 } else {
@@ -185,6 +187,12 @@ class EventDetailScreen extends ConsumerWidget {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           onPressed: () {
+                            if (!isRsvpd) {
+                              HapticFeedback.heavyImpact();
+                              ref.read(userProvider.notifier).addXp(30);
+                            } else {
+                              HapticFeedback.mediumImpact();
+                            }
                             ref.read(userProvider.notifier).toggleRsvpEvent(event.id);
                             ScaffoldMessenger.of(context).hideCurrentSnackBar();
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -323,6 +331,7 @@ class EventDetailScreen extends ConsumerWidget {
               title: const Text('Copy Event Link', style: TextStyle(color: Colors.white)),
               subtitle: const Text('https://quest.app/events/e1', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
               onTap: () {
+                HapticFeedback.lightImpact();
                 Navigator.pop(ctx);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -337,6 +346,7 @@ class EventDetailScreen extends ConsumerWidget {
               title: const Text('Broadcast on Local Radar', style: TextStyle(color: Colors.white)),
               subtitle: const Text('Alert nearby members in your hub', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
               onTap: () {
+                HapticFeedback.lightImpact();
                 Navigator.pop(ctx);
                 context.push('/radar');
               },

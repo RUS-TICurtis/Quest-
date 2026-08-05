@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -26,6 +27,7 @@ class LeaderboardScreen extends ConsumerWidget {
                   IconButton(
                     icon: const Icon(Icons.arrow_back, color: Colors.white),
                     onPressed: () {
+                      HapticFeedback.lightImpact();
                       if (context.canPop()) {
                         context.pop();
                       } else {
@@ -82,7 +84,10 @@ class LeaderboardScreen extends ConsumerWidget {
                   final isSelected = tab == state.selectedTab;
                   return Expanded(
                     child: GestureDetector(
-                      onTap: () => notifier.setTab(tab),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        notifier.setTab(tab);
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 10),
                         margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -124,7 +129,10 @@ class LeaderboardScreen extends ConsumerWidget {
                       label: Text(archetype),
                       selected: isSelected,
                       onSelected: (selected) {
-                        if (selected) notifier.setArchetype(archetype);
+                        if (selected) {
+                          HapticFeedback.selectionClick();
+                          notifier.setArchetype(archetype);
+                        }
                       },
                       selectedColor: AppColors.gold.withValues(alpha: 0.25),
                       backgroundColor: AppColors.card,

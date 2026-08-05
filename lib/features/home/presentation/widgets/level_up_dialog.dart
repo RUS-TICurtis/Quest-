@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../shared/widgets/quest_button.dart';
 
@@ -15,6 +16,7 @@ class LevelUpDialog extends StatefulWidget {
   static void show(BuildContext context, {required int newLevel, required VoidCallback onDismiss}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!context.mounted) return;
+      HapticFeedback.heavyImpact();
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -36,6 +38,7 @@ class _LevelUpDialogState extends State<LevelUpDialog>
   @override
   void initState() {
     super.initState();
+    HapticFeedback.mediumImpact();
     _animController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 900),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../data/stories_provider.dart';
@@ -12,6 +13,7 @@ class StoryViewerModal extends ConsumerStatefulWidget {
   });
 
   static void show(BuildContext context, {int initialIndex = 0}) {
+    HapticFeedback.lightImpact();
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -62,6 +64,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
   void _nextStory() {
     final stories = ref.read(storiesProvider);
     if (_currentIndex < stories.length - 1) {
+      HapticFeedback.selectionClick();
       setState(() {
         _currentIndex++;
       });
@@ -69,12 +72,14 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
       _progressController.reset();
       _progressController.forward();
     } else {
+      HapticFeedback.lightImpact();
       Navigator.of(context).pop();
     }
   }
 
   void _previousStory() {
     if (_currentIndex > 0) {
+      HapticFeedback.selectionClick();
       setState(() {
         _currentIndex--;
       });
@@ -102,6 +107,12 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
       backgroundColor: Colors.transparent,
       body: SafeArea(
         child: GestureDetector(
+          onVerticalDragEnd: (details) {
+            if (details.primaryVelocity != null && details.primaryVelocity! > 300) {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).pop();
+            }
+          },
           onTapDown: (_) => _progressController.stop(),
           onTapUp: (details) {
             _progressController.forward();
