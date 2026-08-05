@@ -1,11 +1,13 @@
 # Project-Scoped Agent Rules & Guidelines
 
 ## 1. Living Documentation Requirement (Mandatory)
-- **Master Documentation File**: [`CODEBASE_DOCUMENTATION.md`](../CODEBASE_DOCUMENTATION.md)
+- **Master Documentation Index**: [`CODEBASE_DOCUMENTATION.md`](../CODEBASE_DOCUMENTATION.md)
+- **Modular Docs Directory**: `docs/architecture/`
 - **Rule**: Whenever any architectural component, file, model, Riverpod provider, route, screen, theme token, or behavior is added, modified, refactored, or deleted in this codebase:
-  1. The agent/contributor **MUST** update `CODEBASE_DOCUMENTATION.md` in the exact same turn/commit.
-  2. Ensure the directory tree, provider catalog, route catalog, and feature notes reflect the new changes accurately.
-  3. Ensure no documentation drift occurs.
+  1. The agent/contributor **MUST** update the relevant modular file(s) in `docs/architecture/` in the exact same turn/commit.
+  2. The agent/contributor **MUST** append or update the `_Last Modified: YYYY-MM-DD_` timestamp at the top of any modified documentation file.
+  3. Ensure the directory tree, provider catalog, route catalog, and feature notes reflect the new changes accurately.
+  4. Ensure no documentation drift occurs.
 
 ## 2. Code Quality & Analysis
 - Always verify changes with `flutter analyze`.

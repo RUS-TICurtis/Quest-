@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -13,7 +13,7 @@ class OrganizationDashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final communitiesState = ref.watch(communitiesProvider);
-    final eventsState = ref.watch(eventsProvider);
+    final eventsState = (ref.watch(eventsProvider).value ?? EventsState.initial());
 
     final totalMembers = communitiesState.communities.fold<int>(0, (sum, c) => sum + c.memberCount);
     final totalEvents = eventsState.events.length;
@@ -205,3 +205,4 @@ class OrganizationDashboardScreen extends ConsumerWidget {
     );
   }
 }
+

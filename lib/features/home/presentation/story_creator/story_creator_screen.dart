@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -51,7 +51,7 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
       return;
     }
 
-    final user = ref.read(userProvider);
+    final user = (ref.read(userProvider).value ?? UserState.initial());
     final newStory = StoryItem(
       id: 'story_${DateTime.now().millisecondsSinceEpoch}',
       authorName: user.name,
@@ -169,7 +169,7 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
                           radius: 16,
                           backgroundColor: Colors.white24,
                           child: Text(
-                            ref.read(userProvider).initials,
+                            (ref.read(userProvider).value ?? UserState.initial()).initials,
                             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
                           ),
                         ),
@@ -179,7 +179,7 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              ref.read(userProvider).name,
+                              (ref.read(userProvider).value ?? UserState.initial()).name,
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                             const Text(
@@ -464,3 +464,4 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
     );
   }
 }
+

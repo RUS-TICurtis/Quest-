@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../profile/data/user_provider.dart';
+import 'events_repository.dart';
 
 class Event {
   final String id;
@@ -68,18 +70,58 @@ class Event {
       isRsvpd: isRsvpd ?? this.isRsvpd,
     );
   }
+
+  factory Event.fromJson(Map<String, dynamic> json) {
+    return Event(
+      id: json['id'] as String,
+      communityId: json['communityId'] as String,
+      title: json['title'] as String,
+      host: json['host'] as String? ?? 'Quest Guild',
+      date: json['date'] as String,
+      time: json['time'] as String,
+      location: json['location'] as String,
+      attendeesCount: json['attendeesCount'] as int? ?? 0,
+      imageUrl: json['imageUrl'] as String? ?? 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
+      category: json['category'] as String,
+      accentColor: Color(json['accentColor'] as int? ?? AppColors.questBlue.value),
+      description: json['description'] as String,
+      xpReward: json['xpReward'] as int? ?? 150,
+      isRsvpd: json['isRsvpd'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'communityId': communityId,
+      'title': title,
+      'host': host,
+      'date': date,
+      'time': time,
+      'location': location,
+      'attendeesCount': attendeesCount,
+      'imageUrl': imageUrl,
+      'category': category,
+      'accentColor': accentColor.value,
+      'description': description,
+      'xpReward': xpReward,
+      'isRsvpd': isRsvpd,
+    };
+  }
 }
 
 class EventsState {
   final List<Event> events;
-  final Set<String> rsvpdEventIds;
   final String selectedFilter;
 
   const EventsState({
     required this.events,
-    this.rsvpdEventIds = const {'1'},
     this.selectedFilter = 'All',
   });
+
+  factory EventsState.initial() {
+    return const EventsState(events: []);
+  }
 
   List<Event> get filteredEvents {
     if (selectedFilter == 'All') return events;
@@ -88,126 +130,95 @@ class EventsState {
 
   EventsState copyWith({
     List<Event>? events,
-    Set<String>? rsvpdEventIds,
     String? selectedFilter,
   }) {
     return EventsState(
       events: events ?? this.events,
-      rsvpdEventIds: rsvpdEventIds ?? this.rsvpdEventIds,
       selectedFilter: selectedFilter ?? this.selectedFilter,
     );
   }
 }
 
-class EventsNotifier extends Notifier<EventsState> {
+class EventsNotifier extends AsyncNotifier<EventsState> {
+  late EventsRepository _repository;
+
   @override
-  EventsState build() {
-    return const EventsState(
-      rsvpdEventIds: {'1'},
-      events: [
-        Event(
-          id: '1',
-          communityId: '1',
-          title: 'Founder Fireside: Zero to Scale',
-          host: 'Sarah Chen (Y Combinator)',
-          date: 'Tonight',
-          time: '7:00 PM - 9:00 PM EST',
-          location: 'SoHo Innovation Hub, NYC',
-          attendeesCount: 48,
-          imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
-          category: 'Social',
-          accentColor: AppColors.emerald,
-          description:
-              'An intimate evening breakdown of early stage mechanics, high leverage decisions, and overcoming zero-to-one velocity hurdles with real founders.',
-          xpReward: 200,
-          isRsvpd: true,
-        ),
-        Event(
-          id: '2',
-          communityId: '2',
-          title: 'Deep Work Sprint & Architecture Review',
-          host: 'Marcus T. (Staff Eng)',
-          date: 'Tomorrow',
-          time: '10:00 AM - 1:00 PM EST',
-          location: 'Virtual • Discord Stage 01',
-          attendeesCount: 32,
-          imageUrl: 'https://images.unsplash.com/photo-1517048676732-d65bc937f952?w=800',
-          category: 'Tech',
-          accentColor: AppColors.questBlue,
-          description:
-              'Focus blocks with live pair code reviews, architecture teardowns, and real-time state machine modeling.',
-          xpReward: 150,
-          isRsvpd: false,
-        ),
-        Event(
-          id: '3',
-          communityId: '3',
-          title: 'Fluid Interfaces & Design Token Masterclass',
-          host: 'Elena V. (Design Lead)',
-          date: 'Sat, Mar 28',
-          time: '2:00 PM - 4:30 PM EST',
-          location: 'Flatiron Design Studio',
-          attendeesCount: 64,
-          imageUrl: 'https://images.unsplash.com/photo-1531403009284-440f080d1e12?w=800',
-          category: 'Design',
-          accentColor: AppColors.auroraPurple,
-          description:
-              'Hands-on workshop exploring tactile micro-interactions, responsive tokens, dynamic shadows, and high-fidelity transitions in Flutter.',
-          xpReward: 250,
-          isRsvpd: false,
-        ),
-      ],
-    );
+  Future<EventsState> build() async {
+    _repository = ref.watch(eventsRepositoryProvider);
+    final events = await _repository.getEvents();
+    
+    // We derive the RSVP'd events from the userProvider instead of keeping duplicate state here.
+    final userState = ref.watch(userProvider).value;
+    final rsvpdIds = userState?.rsvpdEventIds ?? <String>[];
+    
+    // Update the isRsvpd field on events based on user state
+    final updatedEvents = events.map((e) => e.copyWith(isRsvpd: rsvpdIds.contains(e.id))).toList();
+    
+    return EventsState(events: updatedEvents);
   }
 
   void setFilter(String filter) {
-    state = state.copyWith(selectedFilter: filter);
+    final currentState = state.value;
+    if (currentState == null) return;
+    state = AsyncData(currentState.copyWith(selectedFilter: filter));
   }
 
-  void toggleRsvp(String eventId) {
-    final updatedRsvps = Set<String>.from(state.rsvpdEventIds);
-    final isCurrentlyRsvpd = updatedRsvps.contains(eventId);
-
-    if (isCurrentlyRsvpd) {
-      updatedRsvps.remove(eventId);
-    } else {
-      updatedRsvps.add(eventId);
-    }
-
-    final updatedEvents = state.events.map((e) {
-      if (e.id == eventId) {
-        return e.copyWith(
-          attendeesCount: isCurrentlyRsvpd ? e.attendeesCount - 1 : e.attendeesCount + 1,
-          isRsvpd: !isCurrentlyRsvpd,
-        );
-      }
-      return e;
-    }).toList();
-
-    state = state.copyWith(
-      events: updatedEvents,
-      rsvpdEventIds: updatedRsvps,
+  Future<void> toggleRsvp(String eventId) async {
+    // We now just delegate to the userProvider. 
+    // Since we watch userProvider in build(), this provider will automatically rebuild
+    // with the updated RSVP statuses when the user state changes.
+    // However, we also need to update the attendee count on the backend.
+    
+    final currentState = state.value;
+    if (currentState == null) return;
+    
+    final eventIndex = currentState.events.indexWhere((e) => e.id == eventId);
+    if (eventIndex == -1) return;
+    
+    final event = currentState.events[eventIndex];
+    final isCurrentlyRsvpd = event.isRsvpd;
+    
+    final updatedEvent = event.copyWith(
+      attendeesCount: isCurrentlyRsvpd ? event.attendeesCount - 1 : event.attendeesCount + 1,
+      // isRsvpd is derived from user state, but we can optimistically update it for immediate UI feedback
+      isRsvpd: !isCurrentlyRsvpd,
     );
+    
+    final updatedEvents = List<Event>.from(currentState.events);
+    updatedEvents[eventIndex] = updatedEvent;
+    
+    // Optimistic UI update
+    state = AsyncData(currentState.copyWith(events: updatedEvents));
+    
+    // Fire off backend update
+    await _repository.updateEvent(updatedEvent);
+    
+    // Toggle RSVP on the user (which adds/removes XP and saves to user repository)
+    await ref.read(userProvider.notifier).toggleRsvpEvent(eventId);
   }
 
-  void addEvent(Event newEvent) {
-    state = state.copyWith(
-      events: [newEvent, ...state.events],
-    );
+  Future<void> addEvent(Event newEvent) async {
+    final currentState = state.value;
+    if (currentState == null) return;
+    
+    // Normally you'd send to backend here, but for this mock:
+    state = AsyncData(currentState.copyWith(
+      events: [newEvent, ...currentState.events],
+    ));
   }
 
   Event? getEventById(String eventId) {
+    final currentState = state.value;
+    if (currentState == null) return null;
+    
     try {
-      final cleanId = eventId.replaceAll(RegExp(r'^e'), '');
-      return state.events.firstWhere(
-        (e) => e.id == eventId || e.id == cleanId || 'e${e.id}' == eventId,
-      );
+      return currentState.events.firstWhere((e) => e.id == eventId);
     } catch (_) {
-      return state.events.isNotEmpty ? state.events.first : null;
+      return currentState.events.isNotEmpty ? currentState.events.first : null;
     }
   }
 }
 
-final eventsProvider = NotifierProvider<EventsNotifier, EventsState>(() {
+final eventsProvider = AsyncNotifierProvider<EventsNotifier, EventsState>(() {
   return EventsNotifier();
 });

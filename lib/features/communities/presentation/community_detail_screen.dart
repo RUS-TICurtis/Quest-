@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -18,8 +18,8 @@ class CommunityDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final communitiesNotifier = ref.watch(communitiesProvider.notifier);
     final community = communitiesNotifier.getCommunityById(communityId);
-    final userState = ref.watch(userProvider);
-    final eventsState = ref.watch(eventsProvider);
+    final userState = (ref.watch(userProvider).value ?? UserState.initial());
+    final eventsState = (ref.watch(eventsProvider).value ?? EventsState.initial());
 
     if (community == null) {
       return Scaffold(
@@ -129,7 +129,7 @@ class CommunityDetailScreen extends ConsumerWidget {
                             );
                           },
                           child: Text(
-                            isJoined ? 'Joined ✓' : 'Join Community',
+                            isJoined ? 'Joined âœ“' : 'Join Community',
                             style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                           ),
                         ),
@@ -281,7 +281,7 @@ class CommunityDetailScreen extends ConsumerWidget {
                 children: [
                   Text(event.title, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 14)),
                   const SizedBox(height: 2),
-                  Text('${event.date} • ${event.time}', style: TextStyle(color: event.accentColor, fontSize: 12)),
+                  Text('${event.date} â€¢ ${event.time}', style: TextStyle(color: event.accentColor, fontSize: 12)),
                 ],
               ),
             ),
@@ -302,7 +302,7 @@ class CommunityDetailScreen extends ConsumerWidget {
                   onPressed: () {
                     ref.read(userProvider.notifier).toggleRsvpEvent(event.id);
                   },
-                  child: Text(isRsvpd ? 'RSVP\'d ✓' : 'RSVP'),
+                  child: Text(isRsvpd ? 'RSVP\'d âœ“' : 'RSVP'),
                 ),
               ],
             ),
@@ -360,3 +360,5 @@ class CommunityDetailScreen extends ConsumerWidget {
     );
   }
 }
+
+

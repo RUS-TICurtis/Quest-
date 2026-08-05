@@ -12,49 +12,49 @@ import 'package:quest/features/leaderboard/data/leaderboard_provider.dart';
 
 void main() {
   group('Quest Core Riverpod State Tests', () {
-    test('UserNotifier handles XP gains and leveling up correctly', () {
+    test('UserNotifier handles XP gains and leveling up correctly', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final initialUser = container.read(userProvider);
+      final initialUser = await container.read(userProvider.future);
       expect(initialUser.level, equals(4));
       expect(initialUser.currentXp, equals(840));
 
       // Add XP within current level
-      container.read(userProvider.notifier).addXp(100);
-      expect(container.read(userProvider).currentXp, equals(940));
-      expect(container.read(userProvider).level, equals(4));
+      await container.read(userProvider.notifier).addXp(100);
+      expect((await container.read(userProvider.future)).currentXp, equals(940));
+      expect((await container.read(userProvider.future)).level, equals(4));
 
       // Complete the pending daily quest (q2, 30 XP)
-      final pendingQuest = container.read(userProvider).dailyQuests.firstWhere((q) => !q.isDone);
+      final pendingQuest = (await container.read(userProvider.future)).dailyQuests.firstWhere((q) => !q.isDone);
       expect(pendingQuest.isCompleted, isFalse);
 
-      container.read(userProvider.notifier).toggleQuest(pendingQuest.id);
-      final updatedQuest = container.read(userProvider).dailyQuests.firstWhere((q) => q.id == pendingQuest.id);
+      await container.read(userProvider.notifier).toggleQuest(pendingQuest.id);
+      final updatedQuest = (await container.read(userProvider.future)).dailyQuests.firstWhere((q) => q.id == pendingQuest.id);
       expect(updatedQuest.isCompleted, isTrue);
       // XP gained from completing the 30 XP quest: 940 + 30 = 970
-      expect(container.read(userProvider).currentXp, equals(970));
+      expect((await container.read(userProvider.future)).currentXp, equals(970));
     });
 
-    test('EventsNotifier handles filtering, RSVPs and adding events', () {
+    test('EventsNotifier handles filtering, RSVPs and adding events', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final initialEvents = container.read(eventsProvider).events;
+      final initialEvents = (await container.read(eventsProvider.future)).events;
       expect(initialEvents.isNotEmpty, isTrue);
 
       final eventToRsvp = initialEvents.first;
       final initialRsvpd = eventToRsvp.isRsvpd;
       final initialAttendees = eventToRsvp.attendeesCount;
 
-      container.read(eventsProvider.notifier).toggleRsvp(eventToRsvp.id);
-      final updatedEvent = container.read(eventsProvider).events.firstWhere((e) => e.id == eventToRsvp.id);
+      await container.read(eventsProvider.notifier).toggleRsvp(eventToRsvp.id);
+      final updatedEvent = (await container.read(eventsProvider.future)).events.firstWhere((e) => e.id == eventToRsvp.id);
       expect(updatedEvent.isRsvpd, equals(!initialRsvpd));
       expect(updatedEvent.attendeesCount, equals(initialRsvpd ? initialAttendees - 1 : initialAttendees + 1));
 
       // Filter by category
       container.read(eventsProvider.notifier).setFilter('Tech');
-      expect(container.read(eventsProvider).selectedFilter, equals('Tech'));
+      expect((await container.read(eventsProvider.future)).selectedFilter, equals('Tech'));
 
       // Add a new event
       const newEvent = Event(
@@ -72,8 +72,8 @@ void main() {
         isRsvpd: true,
       );
 
-      container.read(eventsProvider.notifier).addEvent(newEvent);
-      expect(container.read(eventsProvider).events.any((e) => e.id == 'test_event_99'), isTrue);
+      await container.read(eventsProvider.notifier).addEvent(newEvent);
+      expect((await container.read(eventsProvider.future)).events.any((e) => e.id == 'test_event_99'), isTrue);
     });
 
     test('CommunitiesNotifier handles search, categories, and creation', () {
@@ -158,7 +158,7 @@ void main() {
       container.read(stageProvider.notifier).toggleHandRaise();
       expect(container.read(stageProvider).isHandRaised, isTrue);
 
-      container.read(stageProvider.notifier).sendReaction('🔥');
+      container.read(stageProvider.notifier).sendReaction('ðŸ”¥');
       expect(container.read(stageProvider).activeReactions.isNotEmpty, isTrue);
     });
 
@@ -208,3 +208,4 @@ void main() {
     });
   });
 }
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -10,7 +10,7 @@ class ProfileScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final userState = ref.watch(userProvider);
+    final userState = (ref.watch(userProvider).value ?? UserState.initial());
 
     final stats = [
       {'label': 'Level', 'value': '${userState.level}'},
@@ -260,3 +260,4 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 }
+

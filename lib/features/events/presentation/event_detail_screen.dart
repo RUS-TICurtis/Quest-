@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,13 +16,13 @@ class EventDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final eventsState = ref.watch(eventsProvider);
+    final eventsState = (ref.watch(eventsProvider).value ?? EventsState.initial());
     final cleanId = eventId.replaceAll(RegExp(r'^e'), '');
     final event = eventsState.events.cast<Event?>().firstWhere(
           (e) => e?.id == eventId || e?.id == cleanId || 'e${e?.id}' == eventId,
           orElse: () => eventsState.events.isNotEmpty ? eventsState.events.first : null,
         );
-    final userState = ref.watch(userProvider);
+    final userState = (ref.watch(userProvider).value ?? UserState.initial());
 
     if (event == null) {
       return Scaffold(
@@ -206,7 +206,7 @@ class EventDetailScreen extends ConsumerWidget {
                             );
                           },
                           child: Text(
-                            isRsvpd ? 'RSVP\'d ✓' : 'RSVP Now',
+                            isRsvpd ? 'RSVP\'d âœ“' : 'RSVP Now',
                             style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
                           ),
                         )
@@ -386,3 +386,5 @@ class EventDetailScreen extends ConsumerWidget {
     );
   }
 }
+
+

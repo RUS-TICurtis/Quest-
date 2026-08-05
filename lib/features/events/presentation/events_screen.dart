@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -18,8 +18,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eventsState = ref.watch(eventsProvider);
-    final userState = ref.watch(userProvider);
+    final eventsState = (ref.watch(eventsProvider).value ?? EventsState.initial());
+    final userState = (ref.watch(userProvider).value ?? UserState.initial());
     final filteredEvents = eventsState.filteredEvents;
 
     return Scaffold(
@@ -170,7 +170,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(color: AppColors.emerald, borderRadius: BorderRadius.circular(6)),
-                      child: const Text('RSVP\'d ✓', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
+                      child: const Text('RSVP\'d âœ“', style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                     ),
                 ],
               ),
@@ -186,7 +186,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
-                      '${event.location} • ${event.attendeesCount + (isRsvpd ? 1 : 0)} attending',
+                      '${event.location} â€¢ ${event.attendeesCount + (isRsvpd ? 1 : 0)} attending',
                       style: const TextStyle(color: AppColors.textSecondary, fontSize: 13),
                     ),
                   ),
@@ -245,12 +245,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${event.date} • ${event.time}',
+                    '${event.date} â€¢ ${event.time}',
                     style: const TextStyle(color: AppColors.questBlue, fontSize: 12, fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${event.location} • ${event.attendeesCount + (isRsvpd ? 1 : 0)} going',
+                    '${event.location} â€¢ ${event.attendeesCount + (isRsvpd ? 1 : 0)} going',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
@@ -349,3 +349,5 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
     );
   }
 }
+
+

@@ -1,4 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../features/auth/data/auth_provider.dart';
 import '../../features/auth/presentation/landing_screen.dart';
 import '../../features/auth/presentation/onboarding_screen.dart';
 import '../../features/auth/presentation/splash_screen.dart';
@@ -19,9 +21,32 @@ import '../../features/radar/presentation/radar_screen.dart';
 import '../../features/leaderboard/presentation/leaderboard_screen.dart';
 import '../shell/main_shell.dart';
 
-final appRouter = GoRouter(
-  initialLocation: '/',
-  routes: [
+final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+
+  return GoRouter(
+    initialLocation: '/',
+    redirect: (context, state) {
+      if (authState.isLoading) return null;
+
+      final isAuth = authState.isAuthenticated;
+      final isSplash = state.matchedLocation == '/';
+      final isLanding = state.matchedLocation == '/landing';
+      final isOnboarding = state.matchedLocation == '/onboarding';
+      final isAuthRoute = isSplash || isLanding || isOnboarding;
+
+      if (!isAuth && !isAuthRoute) {
+        return '/landing';
+      }
+      
+      // Prevent authenticated users from going back to landing/onboarding
+      if (isAuth && (isLanding || isOnboarding)) {
+        return '/home';
+      }
+      
+      return null;
+    },
+    routes: [
     // Auth flow — no nav shell
     GoRoute(
       path: '/',
@@ -140,3 +165,4 @@ final appRouter = GoRouter(
     ),
   ],
 );
+});

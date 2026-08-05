@@ -18,11 +18,13 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
-    final userState = ref.watch(userProvider);
-    final eventsState = ref.watch(eventsProvider);
+    final userState = (ref.watch(userProvider).value ?? UserState.initial());
+    final eventsState = (ref.watch(eventsProvider).value ?? EventsState.initial());
 
     // Trigger level up modal if user recently leveled up
-    ref.listen<UserState>(userProvider, (previous, next) {
+    ref.listen<AsyncValue<UserState>>(userProvider, (previousAsync, nextAsync) {
+      final next = nextAsync.value;
+      if (next == null) return;
       if (next.recentlyLeveledUp) {
         LevelUpDialog.show(
           context,
@@ -224,7 +226,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               GestureDetector(
                                 onTap: () => context.push('/messages/ai_coach'),
                                 child: const Text(
-                                  'Ask Guide →',
+                                  'Ask Guide â†’',
                                   style: TextStyle(
                                     color: AppColors.skyBlue,
                                     fontWeight: FontWeight.w700,
@@ -570,3 +572,5 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 }
+
+

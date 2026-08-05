@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -19,7 +19,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userState = ref.watch(userProvider);
+    final userState = (ref.watch(userProvider).value ?? UserState.initial());
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -63,7 +63,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     children: [
                       Text(userState.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                       const SizedBox(height: 2),
-                      Text('Lvl ${userState.level} • ${userState.currentXp} XP', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                      Text('Lvl ${userState.level} â€¢ ${userState.currentXp} XP', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -177,7 +177,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // App Info
           const Center(
-            child: Text('Quest App • Version 2.0.0 (Build 42)', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            child: Text('Quest App â€¢ Version 2.0.0 (Build 42)', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
           ),
           const SizedBox(height: 40),
         ],
@@ -286,3 +286,4 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 }
+
