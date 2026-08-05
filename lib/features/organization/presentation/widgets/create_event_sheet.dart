@@ -91,7 +91,16 @@ class _CreateEventSheetState extends ConsumerState<CreateEventSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final communitiesState = ref.watch(communitiesProvider);
+    final communitiesStateAsync = ref.watch(communitiesProvider);
+    final communitiesState = communitiesStateAsync.value;
+    
+    if (communitiesState == null) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: CircularProgressIndicator(color: AppColors.questBlue)),
+      );
+    }
+
     if (_selectedCommunityId == null && communitiesState.communities.isNotEmpty) {
       _selectedCommunityId = communitiesState.communities.first.id;
     }

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'chat_repository.dart';
 
 enum MessageType { text, voice, voiceNote, linkPreview }
 
@@ -32,6 +33,38 @@ class ChatMessage {
   String get message => text;
   String? get linkDescription => linkSubtitle;
   String? get linkUrl => linkTargetRoute;
+
+  factory ChatMessage.fromJson(Map<String, dynamic> json) {
+    return ChatMessage(
+      id: json['id'] as String,
+      text: json['text'] as String,
+      isMe: json['isMe'] as bool,
+      time: json['time'] as String,
+      type: MessageType.values.firstWhere((e) => e.toString() == 'MessageType.${json['type']}', orElse: () => MessageType.text),
+      voiceDurationSeconds: json['voiceDurationSeconds'] as int? ?? 0,
+      audioDuration: json['audioDuration'] as String?,
+      waveform: (json['waveform'] as List<dynamic>?)?.map((e) => (e as num).toDouble()).toList(),
+      linkTitle: json['linkTitle'] as String?,
+      linkSubtitle: json['linkSubtitle'] as String?,
+      linkTargetRoute: json['linkTargetRoute'] as String?,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'text': text,
+      'isMe': isMe,
+      'time': time,
+      'type': type.toString().split('.').last,
+      'voiceDurationSeconds': voiceDurationSeconds,
+      'audioDuration': audioDuration,
+      'waveform': waveform,
+      'linkTitle': linkTitle,
+      'linkSubtitle': linkSubtitle,
+      'linkTargetRoute': linkTargetRoute,
+    };
+  }
 }
 
 class ChatThread {
@@ -81,6 +114,35 @@ class ChatThread {
       aiSuggestions: aiSuggestions ?? this.aiSuggestions,
     );
   }
+
+  factory ChatThread.fromJson(Map<String, dynamic> json) {
+    return ChatThread(
+      id: json['id'] as String,
+      title: json['title'] as String,
+      subtitle: json['subtitle'] as String,
+      time: json['time'] as String,
+      unread: json['unread'] as int? ?? 0,
+      isAiCoach: json['isAiCoach'] as bool? ?? false,
+      messages: (json['messages'] as List<dynamic>?)
+              ?.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      aiSuggestions: (json['aiSuggestions'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'subtitle': subtitle,
+      'time': time,
+      'unread': unread,
+      'isAiCoach': isAiCoach,
+      'messages': messages.map((e) => e.toJson()).toList(),
+      'aiSuggestions': aiSuggestions,
+    };
+  }
 }
 
 class ChatState {
@@ -104,136 +166,21 @@ class ChatState {
   }
 }
 
-class ChatNotifier extends Notifier<ChatState> {
+class ChatNotifier extends AsyncNotifier<ChatState> {
+  late final ChatRepository _repository;
+
   @override
-  ChatState build() {
-    return ChatState(
-      threads: [
-        ChatThread(
-          id: 'ai_coach',
-          title: 'Quest AI Guide',
-          subtitle: 'Here is a recommended connection for you based on Flutter...',
-          time: 'Just now',
-          unread: 1,
-          isAiCoach: true,
-          aiSuggestions: [
-            'Find events near me',
-            'Connect with Flutter developers',
-            'How do I earn more XP?',
-          ],
-          messages: [
-            const ChatMessage(
-              id: 'm1',
-              text: 'Hey Alex! 👋 I noticed you\'re exploring mobile architecture. There\'s an upcoming workshop tomorrow that matches your interests!',
-              isMe: false,
-              time: '10:00 AM',
-            ),
-            const ChatMessage(
-              id: 'm2',
-              text: 'Here is the event details card:',
-              isMe: false,
-              time: '10:01 AM',
-              type: MessageType.linkPreview,
-              linkTitle: 'Flutter Architecture Workshop',
-              linkSubtitle: 'Tomorrow @ 6:30 PM • Tech Campus Room 4B',
-              linkTargetRoute: 'quest://events/2',
-            ),
-            const ChatMessage(
-              id: 'm3',
-              text: 'Would you like me to RSVP for you or send you questions to ask the speaker?',
-              isMe: false,
-              time: '10:02 AM',
-            ),
-          ],
-        ),
-        ChatThread(
-          id: '1',
-          title: 'Flutter Builders',
-          subtitle: 'Sarah: Anyone attending the workshop tomorrow?',
-          time: '2m',
-          unread: 3,
-          isAiCoach: false,
-          aiSuggestions: ['I\'ll be there!', 'Can someone share the slides?', 'Looking forward to meeting everyone'],
-          messages: [
-            const ChatMessage(
-              id: 'm10',
-              text: 'Hey everyone! Who is heading to the Flutter meetup tomorrow?',
-              isMe: false,
-              time: '2:15 PM',
-            ),
-            const ChatMessage(
-              id: 'm11',
-              text: 'I\'ll be presenting on Riverpod 3.0 state management & clean architecture patterns!',
-              isMe: true,
-              time: '2:16 PM',
-            ),
-            const ChatMessage(
-              id: 'm12',
-              text: 'Voice note from Sarah',
-              isMe: false,
-              time: '2:18 PM',
-              type: MessageType.voiceNote,
-              voiceDurationSeconds: 24,
-              audioDuration: '0:24',
-              waveform: [0.2, 0.4, 0.8, 0.5, 0.9, 0.7, 0.3, 0.6, 0.8, 0.4, 0.2, 0.7, 0.9, 0.5, 0.3],
-            ),
-          ],
-        ),
-        const ChatThread(
-          id: '2',
-          title: 'Startup Founders',
-          subtitle: 'Marcus: Pitch deck feedback session starts in 1 hour',
-          time: '1h',
-          unread: 0,
-          isAiCoach: false,
-          messages: [
-            ChatMessage(
-              id: 'm20',
-              text: 'Pitch deck feedback session starts in 1 hour at the downtown hub!',
-              isMe: false,
-              time: '1:00 PM',
-            ),
-          ],
-        ),
-        const ChatThread(
-          id: '3',
-          title: 'Sarah Chen',
-          subtitle: 'Shared an event with you: Tech Startup Mixer',
-          time: '3h',
-          unread: 0,
-          isAiCoach: false,
-          messages: [
-            ChatMessage(
-              id: 'm30',
-              text: 'Hey Alex! Are you going to the Tech Startup Mixer tonight?',
-              isMe: false,
-              time: '11:30 AM',
-            ),
-            ChatMessage(
-              id: 'm31',
-              text: 'Tech Startup Mixer',
-              isMe: false,
-              time: '11:31 AM',
-              type: MessageType.linkPreview,
-              linkTitle: 'Tech Startup Mixer',
-              linkSubtitle: 'Tonight @ 7:00 PM • Downtown Innovation Hub',
-              linkTargetRoute: 'quest://events/1',
-            ),
-          ],
-        ),
-      ],
-    );
+  Future<ChatState> build() async {
+    _repository = ref.watch(chatRepositoryProvider);
+    final threads = await _repository.getThreads();
+    return ChatState(threads: threads);
   }
 
   ChatThread? getThreadById(String id) {
-    try {
-      return state.threads.firstWhere((t) => t.id == id);
-    } catch (_) {
-      return null;
-    }
+    return state.value?.getThreadById(id);
   }
 
-  void sendMessage({
+  Future<void> sendMessage({
     required String threadId,
     required String text,
     MessageType type = MessageType.text,
@@ -243,60 +190,46 @@ class ChatNotifier extends Notifier<ChatState> {
     String? linkTitle,
     String? linkSubtitle,
     String? linkTargetRoute,
-  }) {
-    final updatedThreads = state.threads.map((thread) {
-      if (thread.id == threadId) {
-        final newMsg = ChatMessage(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          text: text,
-          isMe: true,
-          time: 'Just now',
-          type: type,
-          voiceDurationSeconds: voiceDurationSeconds,
-          audioDuration: audioDuration,
-          waveform: waveform,
-          linkTitle: linkTitle,
-          linkSubtitle: linkSubtitle,
-          linkTargetRoute: linkTargetRoute,
-        );
-
-        final updatedMessages = [...thread.messages, newMsg];
-
-        return thread.copyWith(
-          messages: updatedMessages,
-          subtitle: text,
-          time: 'Just now',
-          unread: 0,
-        );
-      }
-      return thread;
-    }).toList();
-
-    state = state.copyWith(threads: updatedThreads);
-  }
-
-  void sendVoiceNote(String threadId) {
-    sendMessage(
+  }) async {
+    final updatedThread = await _repository.sendMessage(
       threadId: threadId,
-      text: 'Voice note (0:16)',
-      type: MessageType.voiceNote,
-      voiceDurationSeconds: 16,
-      audioDuration: '0:16',
-      waveform: [0.3, 0.6, 0.9, 0.7, 0.4, 0.8, 1.0, 0.6, 0.4, 0.8, 0.5, 0.3],
+      text: text,
+      type: type,
+      voiceDurationSeconds: voiceDurationSeconds,
+      audioDuration: audioDuration,
+      waveform: waveform,
+      linkTitle: linkTitle,
+      linkSubtitle: linkSubtitle,
+      linkTargetRoute: linkTargetRoute,
     );
+
+    state = AsyncData(state.value!.copyWith(
+      threads: state.value!.threads.map((t) => t.id == threadId ? updatedThread : t).toList(),
+    ));
   }
 
-  void markThreadRead(String threadId) {
-    final updatedThreads = state.threads.map((thread) {
+  Future<void> sendVoiceNote(String threadId) async {
+    await _repository.sendVoiceNote(threadId);
+    // Reload state after sending
+    final threads = await _repository.getThreads();
+    state = AsyncData(state.value!.copyWith(threads: threads));
+  }
+
+  Future<void> markThreadRead(String threadId) async {
+    await _repository.markThreadRead(threadId);
+    final updatedThreads = state.value?.threads.map((thread) {
       if (thread.id == threadId) {
         return thread.copyWith(unread: 0);
       }
       return thread;
     }).toList();
-    state = state.copyWith(threads: updatedThreads);
+    
+    if (updatedThreads != null) {
+      state = AsyncData(state.value!.copyWith(threads: updatedThreads));
+    }
   }
 }
 
-final chatProvider = NotifierProvider<ChatNotifier, ChatState>(() {
+final chatProvider = AsyncNotifierProvider<ChatNotifier, ChatState>(() {
   return ChatNotifier();
 });

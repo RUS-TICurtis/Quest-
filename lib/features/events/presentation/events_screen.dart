@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -96,8 +96,17 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
           Expanded(
             child: filteredEvents.isEmpty
-                ? const Center(
-                    child: Text('No events found for this filter.', style: TextStyle(color: AppColors.textMuted)),
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.event_busy, color: AppColors.textMuted, size: 64),
+                        const SizedBox(height: 16),
+                        const Text('No events found', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
+                        const SizedBox(height: 8),
+                        const Text('Try adjusting your filters or check back later.', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
+                      ],
+                    ),
                   )
                 : ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

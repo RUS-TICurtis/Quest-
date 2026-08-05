@@ -32,3 +32,4 @@ The codebase documentation has been modularized into the following sections:
 7. [Deep-Dive Feature Modules](file:///c:/Users/Curtis/Documents/_Github/Quest/docs/architecture/07_feature_modules.md)
 8. [Multi-Platform Build & Configuration Notes](file:///c:/Users/Curtis/Documents/_Github/Quest/docs/architecture/08_platform_notes.md)
 9. [Quality Assurance & Verification](file:///c:/Users/Curtis/Documents/_Github/Quest/docs/architecture/09_qa_verification.md)
+10. [External Services & APIs](file:///c:/Users/Curtis/Documents/_Github/Quest/docs/architecture/10_external_services.md)

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/theme/app_colors.dart';
+import 'stories_repository.dart';
 
 class StoryItem {
   final String id;
@@ -64,69 +65,75 @@ class StoryItem {
       isSpoiler: isSpoiler ?? this.isSpoiler,
     );
   }
+
+  factory StoryItem.fromJson(Map<String, dynamic> json) {
+    return StoryItem(
+      id: json['id'] as String,
+      authorName: json['authorName'] as String,
+      communityName: json['communityName'] as String? ?? 'Community',
+      caption: json['caption'] as String? ?? '',
+      ringColor: Color(json['ringColor'] as int? ?? AppColors.questBlue.toARGB32()),
+      // ignore: non_const_argument_for_const_parameter
+      icon: IconData(json['icon'] as int? ?? 0xe0e0, fontFamily: 'MaterialIcons'),
+      isSeen: json['isSeen'] as bool? ?? false,
+      timeAgo: json['timeAgo'] as String,
+      authorAvatar: json['authorAvatar'] as String?,
+      title: json['title'] as String?,
+      content: json['content'] as String?,
+      gradient: (json['gradient'] as List<dynamic>?)?.map((e) => Color(e as int)).toList(),
+      isSpoiler: json['isSpoiler'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'authorName': authorName,
+      'communityName': communityName,
+      'caption': caption,
+      'ringColor': ringColor.toARGB32(),
+      'icon': icon.codePoint,
+      'isSeen': isSeen,
+      'timeAgo': timeAgo,
+      'authorAvatar': authorAvatar,
+      'title': title,
+      'content': content,
+      'gradient': gradient?.map((e) => e.toARGB32()).toList(),
+      'isSpoiler': isSpoiler,
+    };
+  }
 }
 
-class StoriesNotifier extends Notifier<List<StoryItem>> {
+class StoriesNotifier extends AsyncNotifier<List<StoryItem>> {
+  late final StoriesRepository _repository;
+
   @override
-  List<StoryItem> build() {
-    return const [
-      StoryItem(
-        id: 's1',
-        authorName: 'Sarah C.',
-        communityName: 'Startup Founders',
-        caption: 'Live demo from the downtown venue! The turnout tonight is incredible.',
-        ringColor: AppColors.emerald,
-        icon: Icons.rocket_launch,
-        isSeen: false,
-        timeAgo: '12m ago',
-      ),
-      StoryItem(
-        id: 's2',
-        authorName: 'Marcus T.',
-        communityName: 'Flutter Builders',
-        caption: 'Benchmark tests are in: 120 FPS buttery smooth state transitions.',
-        ringColor: AppColors.questBlue,
-        icon: Icons.flutter_dash,
-        isSeen: false,
-        timeAgo: '45m ago',
-      ),
-      StoryItem(
-        id: 's3',
-        authorName: 'Elena V.',
-        communityName: 'Design Systems NYC',
-        caption: 'Testing the new fluid typography scale and dark contrast modes.',
-        ringColor: AppColors.auroraPurple,
-        icon: Icons.palette,
-        isSeen: false,
-        timeAgo: '2h ago',
-      ),
-      StoryItem(
-        id: 's4',
-        authorName: 'David K.',
-        communityName: 'City Photographers',
-        caption: 'Golden hour at Central Park bridge. Perfect light for street portraits.',
-        ringColor: AppColors.crimson,
-        icon: Icons.camera_alt,
-        isSeen: true,
-        timeAgo: '4h ago',
-      ),
-    ];
+  Future<List<StoryItem>> build() async {
+    _repository = ref.watch(storiesRepositoryProvider);
+    return _repository.getStories();
   }
 
-  void addStory(StoryItem newStory) {
-    state = [newStory, ...state];
+  Future<void> addStory(StoryItem newStory) async {
+    if (state.value == null) return;
+    
+    final addedStory = await _repository.addStory(newStory);
+    state = AsyncData([addedStory, ...state.value!]);
   }
 
-  void markAsSeen(String storyId) {
-    state = state.map((s) {
+  Future<void> markAsSeen(String storyId) async {
+    if (state.value == null) return;
+
+    await _repository.markAsSeen(storyId);
+    
+    state = AsyncData(state.value!.map((s) {
       if (s.id == storyId) {
         return s.copyWith(isSeen: true);
       }
       return s;
-    }).toList();
+    }).toList());
   }
 }
 
-final storiesProvider = NotifierProvider<StoriesNotifier, List<StoryItem>>(() {
+final storiesProvider = AsyncNotifierProvider<StoriesNotifier, List<StoryItem>>(() {
   return StoriesNotifier();
 });

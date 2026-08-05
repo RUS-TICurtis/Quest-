@@ -63,7 +63,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final chatState = ref.watch(chatProvider);
+    final chatStateAsync = ref.watch(chatProvider);
+    final chatState = chatStateAsync.value;
+
+    if (chatState == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        appBar: AppBar(
+          backgroundColor: AppColors.surface,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => context.pop(),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator(color: AppColors.questBlue)),
+      );
+    }
+
     final thread = chatState.getThreadById(widget.threadId) ??
         ChatThread(
           id: widget.threadId,

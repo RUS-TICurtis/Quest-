@@ -76,15 +76,15 @@ void main() {
       expect((await container.read(eventsProvider.future)).events.any((e) => e.id == 'test_event_99'), isTrue);
     });
 
-    test('CommunitiesNotifier handles search, categories, and creation', () {
+    test('CommunitiesNotifier handles search, categories, and creation', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
       container.read(communitiesProvider.notifier).setCategory('Technology');
-      expect(container.read(communitiesProvider).selectedCategory, equals('Technology'));
+      expect((await container.read(communitiesProvider.future)).selectedCategory, equals('Technology'));
 
       container.read(communitiesProvider.notifier).setSearchQuery('Flutter');
-      final filtered = container.read(communitiesProvider).filteredCommunities;
+      final filtered = (await container.read(communitiesProvider.future)).filteredCommunities;
       expect(filtered.every((c) => c.name.toLowerCase().contains('flutter') || c.description.toLowerCase().contains('flutter')), isTrue);
 
       // Add community
@@ -95,15 +95,15 @@ void main() {
         category: 'Technology',
         memberCount: 42,
       );
-      container.read(communitiesProvider.notifier).addCommunity(newCommunity);
-      expect(container.read(communitiesProvider).communities.any((c) => c.id == 'comm_99'), isTrue);
+      await container.read(communitiesProvider.notifier).addCommunity(newCommunity);
+      expect((await container.read(communitiesProvider.future)).communities.any((c) => c.id == 'comm_99'), isTrue);
     });
 
-    test('ChatNotifier handles sending messages and voice notes', () {
+    test('ChatNotifier handles sending messages and voice notes', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final initialThreads = container.read(chatProvider).threads;
+      final initialThreads = (await container.read(chatProvider.future)).threads;
       expect(initialThreads.isNotEmpty, isTrue);
 
       final targetThreadId = initialThreads.first.id;
@@ -114,22 +114,22 @@ void main() {
             text: 'Hello from test suite!',
           );
 
-      final updatedThread = container.read(chatProvider).getThreadById(targetThreadId);
+      final updatedThread = (await container.read(chatProvider.future)).getThreadById(targetThreadId);
       expect(updatedThread, isNotNull);
       expect(updatedThread!.messages.length, equals(initialMessageCount + 1));
       expect(updatedThread.messages.last.text, equals('Hello from test suite!'));
 
       // Send voice note
       container.read(chatProvider.notifier).sendVoiceNote(targetThreadId);
-      final threadWithVoice = container.read(chatProvider).getThreadById(targetThreadId);
+      final threadWithVoice = (await container.read(chatProvider.future)).getThreadById(targetThreadId);
       expect(threadWithVoice!.messages.last.type, equals(MessageType.voiceNote));
     });
 
-    test('StoriesNotifier adds and retrieves story highlights', () {
+    test('StoriesNotifier adds and retrieves story highlights', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final initialCount = container.read(storiesProvider).length;
+      final initialCount = (await container.read(storiesProvider.future)).length;
       const newStory = StoryItem(
         id: 'story_99',
         authorName: 'Curtis',
@@ -139,64 +139,64 @@ void main() {
         content: 'We just crossed 500 members!',
       );
 
-      container.read(storiesProvider.notifier).addStory(newStory);
-      expect(container.read(storiesProvider).length, equals(initialCount + 1));
-      expect(container.read(storiesProvider).first.id, equals('story_99'));
+      await container.read(storiesProvider.notifier).addStory(newStory);
+      expect((await container.read(storiesProvider.future)).length, equals(initialCount + 1));
+      expect((await container.read(storiesProvider.future)).first.id, equals('story_99'));
     });
 
-    test('StageNotifier handles mic toggles, hand raises, and reactions', () {
+    test('StageNotifier handles mic toggles, hand raises, and reactions', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final initialStage = container.read(stageProvider);
+      final initialStage = (await container.read(stageProvider.future));
       expect(initialStage.isMicMuted, isTrue);
       expect(initialStage.isHandRaised, isFalse);
 
       container.read(stageProvider.notifier).toggleMic();
-      expect(container.read(stageProvider).isMicMuted, isFalse);
+      expect((await container.read(stageProvider.future)).isMicMuted, isFalse);
 
       container.read(stageProvider.notifier).toggleHandRaise();
-      expect(container.read(stageProvider).isHandRaised, isTrue);
+      expect((await container.read(stageProvider.future)).isHandRaised, isTrue);
 
-      container.read(stageProvider.notifier).sendReaction('ðŸ”¥');
-      expect(container.read(stageProvider).activeReactions.isNotEmpty, isTrue);
+      container.read(stageProvider.notifier).sendReaction('🔥');
+      expect((await container.read(stageProvider.future)).activeReactions.isNotEmpty, isTrue);
     });
 
-    test('RadarNotifier handles hub selection and verified venue check-in', () {
+    test('RadarNotifier handles hub selection and verified venue check-in', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final initialRadar = container.read(radarProvider);
+      final initialRadar = (await container.read(radarProvider.future));
       expect(initialRadar.hubs.isNotEmpty, isTrue);
       expect(initialRadar.checkedInHubId, isNull);
 
       container.read(radarProvider.notifier).selectHub('hub_2');
-      expect(container.read(radarProvider).selectedHubId, equals('hub_2'));
+      expect((await container.read(radarProvider.future)).selectedHubId, equals('hub_2'));
 
       final didCheckIn = container.read(radarProvider.notifier).checkInToHub('hub_2');
       expect(didCheckIn, isTrue);
-      expect(container.read(radarProvider).checkedInHubId, equals('hub_2'));
+      expect((await container.read(radarProvider.future)).checkedInHubId, equals('hub_2'));
 
       // Check out
       final checkedOut = container.read(radarProvider.notifier).checkInToHub('hub_2');
       expect(checkedOut, isFalse);
-      expect(container.read(radarProvider).checkedInHubId, isNull);
+      expect((await container.read(radarProvider.future)).checkedInHubId, isNull);
     });
 
-    test('LeaderboardNotifier handles tabs and archetype filters', () {
+    test('LeaderboardNotifier handles tabs and archetype filters', () async {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final initialLeaderboard = container.read(leaderboardProvider);
+      final initialLeaderboard = (await container.read(leaderboardProvider.future));
       expect(initialLeaderboard.members.isNotEmpty, isTrue);
       expect(initialLeaderboard.guilds.isNotEmpty, isTrue);
 
       container.read(leaderboardProvider.notifier).setTab('Guild Leagues');
-      expect(container.read(leaderboardProvider).selectedTab, equals('Guild Leagues'));
+      expect((await container.read(leaderboardProvider.future)).selectedTab, equals('Guild Leagues'));
 
       container.read(leaderboardProvider.notifier).setArchetype('Builder');
-      expect(container.read(leaderboardProvider).selectedArchetype, equals('Builder'));
-      expect(container.read(leaderboardProvider).filteredMembers.every((m) => m.archetype == 'Builder'), isTrue);
+      expect((await container.read(leaderboardProvider.future)).selectedArchetype, equals('Builder'));
+      expect((await container.read(leaderboardProvider.future)).filteredMembers.every((m) => m.archetype == 'Builder'), isTrue);
     });
   });
 

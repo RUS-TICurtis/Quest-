@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'events_provider.dart';
 import '../../../core/theme/app_colors.dart';
 
@@ -77,6 +78,23 @@ class MockEventsRepository implements EventsRepository {
   }
 }
 
+class SupabaseEventsRepository implements EventsRepository {
+  final SupabaseClient _client;
+
+  SupabaseEventsRepository(this._client);
+
+  @override
+  Future<List<Event>> getEvents() async {
+    final data = await _client.from('events').select();
+    return data.map((json) => Event.fromJson(json)).toList();
+  }
+
+  @override
+  Future<void> updateEvent(Event event) async {
+    await _client.from('events').update(event.toJson()).eq('id', event.id);
+  }
+}
+
 final eventsRepositoryProvider = Provider<EventsRepository>((ref) {
-  return MockEventsRepository();
+  return SupabaseEventsRepository(Supabase.instance.client);
 });

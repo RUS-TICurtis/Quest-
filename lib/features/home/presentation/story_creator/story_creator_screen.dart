@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -88,7 +88,8 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final communities = ref.watch(communitiesProvider).communities;
+    final communitiesStateAsync = ref.watch(communitiesProvider);
+    final communities = communitiesStateAsync.value?.communities ?? [];
     final selectedColors = _gradientPresets[_selectedGradientIndex];
 
     return Scaffold(

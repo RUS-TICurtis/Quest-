@@ -24,4 +24,14 @@ Every feature module contains a dedicated `data/` provider managing immutable st
 └─────────────────────────────────────────────────────────────┘
 ```
 
-#
+## Implemented Modules (Phase 2 Refactoring)
+The following modules strictly adhere to this `AsyncNotifier` + `Repository` pattern:
+- **Auth**: `AuthProvider` -> `AuthRepository`
+- **Chat**: `ChatProvider` -> `ChatRepository`
+- **Radar**: `RadarProvider` -> `RadarRepository`
+- **Stage**: `StageProvider` -> `StageRepository`
+- **Communities**: `CommunitiesProvider` -> `CommunitiesRepository`
+- **Stories**: `StoriesProvider` -> `StoriesRepository`
+- **Leaderboard**: `LeaderboardProvider` -> `LeaderboardRepository`
+
+Each model (e.g. `User`, `ChatMessage`, `StageState`) implements `fromJson` and `toJson` serialization for seamless Supabase interoperability.

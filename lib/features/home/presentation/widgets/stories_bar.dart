@@ -11,7 +11,8 @@ class StoriesBar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stories = ref.watch(storiesProvider);
+    final storiesAsync = ref.watch(storiesProvider);
+    final stories = storiesAsync.value ?? [];
 
     return SizedBox(
       height: 104,

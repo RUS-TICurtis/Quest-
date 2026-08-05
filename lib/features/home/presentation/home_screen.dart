@@ -311,7 +311,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    ...upcomingEvents.map((e) => _eventTile(context, e)),
+                    if (upcomingEvents.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.card,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: AppColors.border),
+                        ),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.event_busy, color: AppColors.textMuted, size: 40),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'No upcoming events',
+                              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Join more communities to see what\'s happening.',
+                              style: TextStyle(color: AppColors.textMuted, fontSize: 13),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      ...upcomingEvents.map((e) => _eventTile(context, e)),
 
                     const SizedBox(height: 80),
                   ],

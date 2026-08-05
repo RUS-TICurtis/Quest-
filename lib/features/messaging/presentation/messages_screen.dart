@@ -16,7 +16,15 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final chatState = ref.watch(chatProvider);
+    final chatStateAsync = ref.watch(chatProvider);
+    final chatState = chatStateAsync.value;
+
+    if (chatState == null) {
+      return Scaffold(
+        backgroundColor: AppColors.background,
+        body: const Center(child: CircularProgressIndicator(color: AppColors.questBlue)),
+      );
+    }
 
     final filteredThreads = chatState.threads.where((t) {
       final q = _searchQuery.toLowerCase();

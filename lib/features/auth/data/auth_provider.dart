@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'auth_repository.dart';
 
 class AuthState {
   final User? user;
@@ -17,39 +18,51 @@ class AuthState {
   }
 }
 
+// Global provider for the repository
+final authRepositoryProvider = Provider<AuthRepository>((ref) {
+  return SupabaseAuthRepository(Supabase.instance.client);
+});
+
 class AuthNotifier extends Notifier<AuthState> {
+  late final AuthRepository _repository;
+
   @override
   AuthState build() {
-    // Listen to Supabase auth changes
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
-      final session = data.session;
-      state = state.copyWith(user: session?.user, isLoading: false);
+    _repository = ref.watch(authRepositoryProvider);
+    
+    // Listen to repository auth changes
+    _repository.authStateChanges.listen((user) {
+      state = state.copyWith(user: user, isLoading: false);
     });
 
-    // Initial state based on current session
-    final initialSession = Supabase.instance.client.auth.currentSession;
-    return AuthState(user: initialSession?.user, isLoading: false);
+    // Initial state
+    final initialUser = _repository.currentUser;
+    return AuthState(user: initialUser, isLoading: false);
   }
 
   Future<void> signOut() async {
-    await Supabase.instance.client.auth.signOut();
+    await _repository.signOut();
   }
-  
-  // For the sake of mock UI testing before real backend is connected:
-  void mockSignIn() {
-    // This is a temporary hack for development to bypass auth guards
-    // without actually connecting to Supabase yet.
-    // In a real app, you'd never do this.
-    state = state.copyWith(
-      user: const User(
-        id: 'mock-user-id', 
-        appMetadata: {}, 
-        userMetadata: {}, 
-        aud: 'authenticated', 
-        createdAt: ''
-      ),
-      isLoading: false
-    );
+  Future<void> signInWithEmail(String email, String password) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final user = await _repository.signInWithEmail(email, password);
+      state = state.copyWith(user: user, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
+  Future<void> signUpWithEmail(String email, String password, String name) async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final user = await _repository.signUpWithEmail(email, password, name);
+      state = state.copyWith(user: user, isLoading: false);
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
   }
 }
 

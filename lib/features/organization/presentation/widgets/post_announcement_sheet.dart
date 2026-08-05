@@ -50,7 +50,9 @@ class _PostAnnouncementSheetState extends ConsumerState<PostAnnouncementSheet> {
       return;
     }
 
-    final communitiesState = ref.read(communitiesProvider);
+    final communitiesState = ref.read(communitiesProvider).value;
+    if (communitiesState == null) return;
+    
     final targetComm = communitiesState.communities.firstWhere(
       (c) => c.id == (_selectedCommunityId ?? '1'),
       orElse: () => communitiesState.communities.first,
@@ -89,7 +91,16 @@ class _PostAnnouncementSheetState extends ConsumerState<PostAnnouncementSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final communitiesState = ref.watch(communitiesProvider);
+    final communitiesStateAsync = ref.watch(communitiesProvider);
+    final communitiesState = communitiesStateAsync.value;
+    
+    if (communitiesState == null) {
+      return const SizedBox(
+        height: 200,
+        child: Center(child: CircularProgressIndicator(color: AppColors.questBlue)),
+      );
+    }
+
     if (_selectedCommunityId == null && communitiesState.communities.isNotEmpty) {
       _selectedCommunityId = communitiesState.communities.first.id;
     }

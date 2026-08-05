@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/app_colors.dart';
+import 'communities_repository.dart';
 
 class Community {
   final String id;
@@ -44,6 +45,33 @@ class Community {
       tags: tags ?? this.tags,
     );
   }
+
+  factory Community.fromJson(Map<String, dynamic> json) {
+    return Community(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      description: json['description'] as String,
+      category: json['category'] as String,
+      memberCount: json['memberCount'] as int? ?? 1,
+      accentColor: Color(json['accentColor'] as int? ?? AppColors.questBlue.toARGB32()),
+      // ignore: non_const_argument_for_const_parameter
+      icon: IconData(json['icon'] as int? ?? 0xe2ef, fontFamily: 'MaterialIcons'),
+      tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? ['General'],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'category': category,
+      'memberCount': memberCount,
+      'accentColor': accentColor.toARGB32(),
+      'icon': icon.codePoint,
+      'tags': tags,
+    };
+  }
 }
 
 class CommunitiesState {
@@ -80,96 +108,46 @@ class CommunitiesState {
   }
 }
 
-class CommunitiesNotifier extends Notifier<CommunitiesState> {
+class CommunitiesNotifier extends AsyncNotifier<CommunitiesState> {
+  late final CommunitiesRepository _repository;
+
   @override
-  CommunitiesState build() {
-    return const CommunitiesState(
-      communities: [
-        Community(
-          id: '1',
-          name: 'Flutter Builders',
-          description: 'A community for Flutter developers of all skill levels building cross-platform experiences.',
-          category: 'Technology',
-          memberCount: 2340,
-          accentColor: AppColors.questBlue,
-          icon: Icons.phone_android,
-          tags: ['Mobile', 'Dart', 'Riverpod', 'UI/UX'],
-        ),
-        Community(
-          id: '2',
-          name: 'Startup Founders',
-          description: 'Connecting early-stage founders, mentors, and investors to build impactful ventures.',
-          category: 'Business',
-          memberCount: 891,
-          accentColor: AppColors.emerald,
-          icon: Icons.rocket_launch_outlined,
-          tags: ['Venture', 'Pitch', 'Product-Market-Fit'],
-        ),
-        Community(
-          id: '3',
-          name: 'Design Systems',
-          description: 'Typography, color, motion, design tokens, and component architecture.',
-          category: 'Design',
-          memberCount: 1204,
-          accentColor: AppColors.auroraPurple,
-          icon: Icons.palette_outlined,
-          tags: ['Tokens', 'Figma', 'Accessibility'],
-        ),
-        Community(
-          id: '4',
-          name: 'Local Run Club',
-          description: 'Weekly group runs in the city with morning coffee afterwards. All paces welcome.',
-          category: 'Fitness',
-          memberCount: 543,
-          accentColor: AppColors.amber,
-          icon: Icons.directions_run,
-          tags: ['Running', 'Social', 'Cardio'],
-        ),
-        Community(
-          id: '5',
-          name: 'AI & Machine Learning',
-          description: 'Deep dives into papers, autonomous agents, generative models, and LLM applications.',
-          category: 'Technology',
-          memberCount: 5120,
-          accentColor: AppColors.skyBlue,
-          icon: Icons.psychology_outlined,
-          tags: ['LLMs', 'Agents', 'PyTorch', 'Research'],
-        ),
-        Community(
-          id: '6',
-          name: 'City Photographers',
-          description: 'Share urban photography, street perspectives, and join monthly photo walks.',
-          category: 'Arts',
-          memberCount: 376,
-          accentColor: AppColors.crimson,
-          icon: Icons.photo_camera_outlined,
-          tags: ['Street', 'Landscape', 'Editing'],
-        ),
-      ],
-    );
+  Future<CommunitiesState> build() async {
+    _repository = ref.watch(communitiesRepositoryProvider);
+    final communities = await _repository.getCommunities();
+    return CommunitiesState(communities: communities);
   }
 
   void setCategory(String category) {
-    state = state.copyWith(selectedCategory: category);
+    if (state.value != null) {
+      state = AsyncData(state.value!.copyWith(selectedCategory: category));
+    }
   }
 
   void setSearchQuery(String query) {
-    state = state.copyWith(searchQuery: query);
+    if (state.value != null) {
+      state = AsyncData(state.value!.copyWith(searchQuery: query));
+    }
   }
 
-  void addCommunity(Community community) {
-    state = state.copyWith(communities: [...state.communities, community]);
+  Future<void> addCommunity(Community community) async {
+    if (state.value == null) return;
+    
+    final newCommunity = await _repository.addCommunity(community);
+    state = AsyncData(state.value!.copyWith(
+      communities: [...state.value!.communities, newCommunity],
+    ));
   }
 
   Community? getCommunityById(String id) {
     try {
-      return state.communities.firstWhere((c) => c.id == id);
+      return state.value?.communities.firstWhere((c) => c.id == id);
     } catch (_) {
       return null;
     }
   }
 }
 
-final communitiesProvider = NotifierProvider<CommunitiesNotifier, CommunitiesState>(() {
+final communitiesProvider = AsyncNotifierProvider<CommunitiesNotifier, CommunitiesState>(() {
   return CommunitiesNotifier();
 });

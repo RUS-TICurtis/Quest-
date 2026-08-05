@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'stage_repository.dart';
 
 class StageSpeaker {
   final String id;
@@ -39,6 +40,30 @@ class StageSpeaker {
       archetype: archetype ?? this.archetype,
     );
   }
+
+  factory StageSpeaker.fromJson(Map<String, dynamic> json) {
+    return StageSpeaker(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      role: json['role'] as String,
+      avatar: json['avatar'] as String,
+      isMuted: json['isMuted'] as bool? ?? false,
+      isSpeaking: json['isSpeaking'] as bool? ?? false,
+      archetype: json['archetype'] as String? ?? 'Builder',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'role': role,
+      'avatar': avatar,
+      'isMuted': isMuted,
+      'isSpeaking': isSpeaking,
+      'archetype': archetype,
+    };
+  }
 }
 
 class StageParticipant {
@@ -67,18 +92,52 @@ class StageParticipant {
       hasHandRaised: hasHandRaised ?? this.hasHandRaised,
     );
   }
+
+  factory StageParticipant.fromJson(Map<String, dynamic> json) {
+    return StageParticipant(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      avatar: json['avatar'] as String,
+      hasHandRaised: json['hasHandRaised'] as bool? ?? false,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'avatar': avatar,
+      'hasHandRaised': hasHandRaised,
+    };
+  }
 }
 
 class StageReaction {
   final String id;
   final String emoji;
-  final double xOffset; // 0.0 to 1.0
+  final double xOffset;
 
   const StageReaction({
     required this.id,
     required this.emoji,
     required this.xOffset,
   });
+
+  factory StageReaction.fromJson(Map<String, dynamic> json) {
+    return StageReaction(
+      id: json['id'] as String,
+      emoji: json['emoji'] as String,
+      xOffset: (json['xOffset'] as num?)?.toDouble() ?? 0.5,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'emoji': emoji,
+      'xOffset': xOffset,
+    };
+  }
 }
 
 class StageState {
@@ -127,91 +186,69 @@ class StageState {
       activeReactions: activeReactions ?? this.activeReactions,
     );
   }
-}
 
-class StageNotifier extends Notifier<StageState> {
-  @override
-  StageState build() {
-    return const StageState(
-      stageId: 'stage_1',
-      title: 'Founder Fireside: Zero to Scale',
-      topic: 'Live Q&A on early traction, product-market fit, and team velocity',
-      communityName: 'Startup Founders',
-      isMicMuted: true,
-      isHandRaised: false,
-      speakers: [
-        StageSpeaker(
-          id: 'spk_1',
-          name: 'Sarah Chen',
-          role: 'Host • Founder & YC Alum',
-          avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
-          isMuted: false,
-          isSpeaking: true,
-          archetype: 'Strategist',
-        ),
-        StageSpeaker(
-          id: 'spk_2',
-          name: 'Marcus Thorne',
-          role: 'Speaker • Staff Architect',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-          isMuted: false,
-          isSpeaking: false,
-          archetype: 'Builder',
-        ),
-        StageSpeaker(
-          id: 'spk_3',
-          name: 'Elena Rostova',
-          role: 'Speaker • Design Director',
-          avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
-          isMuted: true,
-          isSpeaking: false,
-          archetype: 'Pioneer',
-        ),
-      ],
-      audience: [
-        StageParticipant(
-          id: 'aud_1',
-          name: 'David Kim',
-          avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200',
-          hasHandRaised: true,
-        ),
-        StageParticipant(
-          id: 'aud_2',
-          name: 'Jessica Wu',
-          avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200',
-          hasHandRaised: false,
-        ),
-        StageParticipant(
-          id: 'aud_3',
-          name: 'Lucas Vance',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
-          hasHandRaised: false,
-        ),
-        StageParticipant(
-          id: 'aud_4',
-          name: 'Amara Okafor',
-          avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200',
-          hasHandRaised: true,
-        ),
-        StageParticipant(
-          id: 'aud_5',
-          name: 'Liam Patel',
-          avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=200',
-          hasHandRaised: false,
-        ),
-      ],
+  factory StageState.fromJson(Map<String, dynamic> json) {
+    return StageState(
+      stageId: json['stageId'] as String,
+      title: json['title'] as String,
+      topic: json['topic'] as String,
+      communityName: json['communityName'] as String,
+      isMicMuted: json['isMicMuted'] as bool? ?? true,
+      isHandRaised: json['isHandRaised'] as bool? ?? false,
+      speakers: (json['speakers'] as List<dynamic>?)
+              ?.map((e) => StageSpeaker.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      audience: (json['audience'] as List<dynamic>?)
+              ?.map((e) => StageParticipant.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
+      activeReactions: (json['activeReactions'] as List<dynamic>?)
+              ?.map((e) => StageReaction.fromJson(e as Map<String, dynamic>))
+              .toList() ??
+          [],
     );
   }
 
+  Map<String, dynamic> toJson() {
+    return {
+      'stageId': stageId,
+      'title': title,
+      'topic': topic,
+      'communityName': communityName,
+      'isMicMuted': isMicMuted,
+      'isHandRaised': isHandRaised,
+      'speakers': speakers.map((e) => e.toJson()).toList(),
+      'audience': audience.map((e) => e.toJson()).toList(),
+      'activeReactions': activeReactions.map((e) => e.toJson()).toList(),
+    };
+  }
+}
+
+class StageNotifier extends AsyncNotifier<StageState> {
+  late final StageRepository _repository;
+
+  @override
+  Future<StageState> build() async {
+    _repository = ref.watch(stageRepositoryProvider);
+    return _repository.getStageDetails('stage_1');
+  }
+
   void toggleMic() {
-    state = state.copyWith(isMicMuted: !state.isMicMuted);
+    if (state.value != null) {
+      state = AsyncData(state.value!.copyWith(isMicMuted: !state.value!.isMicMuted));
+    }
   }
 
   void toggleHandRaise() {
-    state = state.copyWith(isHandRaised: !state.isHandRaised);
+    if (state.value != null) {
+      state = AsyncData(state.value!.copyWith(isHandRaised: !state.value!.isHandRaised));
+    }
   }
 
   void sendReaction(String emoji) {
+    if (state.value == null) return;
+    
     final randomX = 0.2 + (Random().nextDouble() * 0.6);
     final reaction = StageReaction(
       id: '${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}',
@@ -219,19 +256,23 @@ class StageNotifier extends Notifier<StageState> {
       xOffset: randomX,
     );
 
-    state = state.copyWith(
-      activeReactions: [...state.activeReactions, reaction],
-    );
+    _repository.sendReaction(state.value!.stageId, emoji, randomX);
+
+    state = AsyncData(state.value!.copyWith(
+      activeReactions: [...state.value!.activeReactions, reaction],
+    ));
 
     // Auto cleanup after 2 seconds
     Future.delayed(const Duration(seconds: 2), () {
-      state = state.copyWith(
-        activeReactions: state.activeReactions.where((r) => r.id != reaction.id).toList(),
-      );
+      if (state.value != null) {
+        state = AsyncData(state.value!.copyWith(
+          activeReactions: state.value!.activeReactions.where((r) => r.id != reaction.id).toList(),
+        ));
+      }
     });
   }
 }
 
-final stageProvider = NotifierProvider<StageNotifier, StageState>(() {
+final stageProvider = AsyncNotifierProvider<StageNotifier, StageState>(() {
   return StageNotifier();
 });

@@ -54,7 +54,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
   void _markCurrentSeen() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final stories = ref.read(storiesProvider);
+      final stories = ref.read(storiesProvider).value ?? [];
       if (_currentIndex < stories.length) {
         ref.read(storiesProvider.notifier).markAsSeen(stories[_currentIndex].id);
       }
@@ -62,7 +62,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
   }
 
   void _nextStory() {
-    final stories = ref.read(storiesProvider);
+    final stories = ref.read(storiesProvider).value ?? [];
     if (_currentIndex < stories.length - 1) {
       HapticFeedback.selectionClick();
       setState(() {
@@ -97,7 +97,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
 
   @override
   Widget build(BuildContext context) {
-    final stories = ref.watch(storiesProvider);
+    final stories = ref.watch(storiesProvider).value ?? [];
     if (stories.isEmpty || _currentIndex >= stories.length) {
       return const SizedBox.shrink();
     }

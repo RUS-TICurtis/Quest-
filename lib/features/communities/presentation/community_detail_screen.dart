@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
@@ -16,8 +16,8 @@ class CommunityDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final communitiesNotifier = ref.watch(communitiesProvider.notifier);
-    final community = communitiesNotifier.getCommunityById(communityId);
+    final communitiesState = ref.watch(communitiesProvider).value;
+    final community = communitiesState?.communities.where((c) => c.id == communityId).firstOrNull;
     final userState = (ref.watch(userProvider).value ?? UserState.initial());
     final eventsState = (ref.watch(eventsProvider).value ?? EventsState.initial());
 

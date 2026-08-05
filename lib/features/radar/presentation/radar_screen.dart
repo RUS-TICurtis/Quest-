@@ -36,8 +36,17 @@ class _RadarScreenState extends ConsumerState<RadarScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final radarState = ref.watch(radarProvider);
+    final radarStateAsync = ref.watch(radarProvider);
+    final radarState = radarStateAsync.value;
     final radarNotifier = ref.read(radarProvider.notifier);
+
+    if (radarState == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.questBlue)),
+      );
+    }
+
     final currentHub = radarState.currentSelectedHub;
     final isCheckedIn = currentHub != null && radarState.isUserCheckedIn(currentHub.id);
 

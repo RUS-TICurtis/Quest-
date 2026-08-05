@@ -11,8 +11,16 @@ class LeaderboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(leaderboardProvider);
+    final stateAsync = ref.watch(leaderboardProvider);
+    final state = stateAsync.value;
     final notifier = ref.read(leaderboardProvider.notifier);
+
+    if (state == null) {
+      return const Scaffold(
+        backgroundColor: AppColors.background,
+        body: Center(child: CircularProgressIndicator(color: AppColors.questBlue)),
+      );
+    }
 
     return Scaffold(
       backgroundColor: AppColors.background,
