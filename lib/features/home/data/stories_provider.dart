@@ -73,8 +73,7 @@ class StoryItem {
       communityName: json['communityName'] as String? ?? 'Community',
       caption: json['caption'] as String? ?? '',
       ringColor: Color(json['ringColor'] as int? ?? AppColors.questBlue.toARGB32()),
-      // ignore: non_const_argument_for_const_parameter
-      icon: IconData(json['icon'] as int? ?? 0xe0e0, fontFamily: 'MaterialIcons'),
+      icon: _getStoryIcon(json['icon'] as int?),
       isSeen: json['isSeen'] as bool? ?? false,
       timeAgo: json['timeAgo'] as String,
       authorAvatar: json['authorAvatar'] as String?,
@@ -83,6 +82,14 @@ class StoryItem {
       gradient: (json['gradient'] as List<dynamic>?)?.map((e) => Color(e as int)).toList(),
       isSpoiler: json['isSpoiler'] as bool? ?? false,
     );
+  }
+
+  static IconData _getStoryIcon(int? codePoint) {
+    if (codePoint == Icons.code.codePoint) return Icons.code;
+    if (codePoint == Icons.rocket_launch.codePoint) return Icons.rocket_launch;
+    if (codePoint == Icons.architecture.codePoint) return Icons.architecture;
+    if (codePoint == Icons.brush.codePoint) return Icons.brush;
+    return Icons.history;
   }
 
   Map<String, dynamic> toJson() {

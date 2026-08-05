@@ -54,10 +54,19 @@ class Community {
       category: json['category'] as String,
       memberCount: json['memberCount'] as int? ?? 1,
       accentColor: Color(json['accentColor'] as int? ?? AppColors.questBlue.toARGB32()),
-      // ignore: non_const_argument_for_const_parameter
-      icon: IconData(json['icon'] as int? ?? 0xe2ef, fontFamily: 'MaterialIcons'),
+      icon: _getCommunityIcon(json['icon'] as int?),
       tags: (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ?? ['General'],
     );
+  }
+
+  static IconData _getCommunityIcon(int? codePoint) {
+    if (codePoint == Icons.phone_android.codePoint) return Icons.phone_android;
+    if (codePoint == Icons.rocket_launch_outlined.codePoint) return Icons.rocket_launch_outlined;
+    if (codePoint == Icons.palette_outlined.codePoint) return Icons.palette_outlined;
+    if (codePoint == Icons.directions_run.codePoint) return Icons.directions_run;
+    if (codePoint == Icons.psychology_outlined.codePoint) return Icons.psychology_outlined;
+    if (codePoint == Icons.photo_camera_outlined.codePoint) return Icons.photo_camera_outlined;
+    return Icons.groups;
   }
 
   Map<String, dynamic> toJson() {
