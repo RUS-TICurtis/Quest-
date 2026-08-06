@@ -70,42 +70,47 @@ class _QuestButtonState extends State<QuestButton> with SingleTickerProviderStat
         break;
     }
 
-    return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
-      onTapUp: (_) { _controller.reverse(); widget.onPressed?.call(); },
-      onTapCancel: () => _controller.reverse(),
-      child: ScaleTransition(
-        scale: _scaleAnim,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          width: widget.isFullWidth ? double.infinity : null,
-          decoration: BoxDecoration(
-            color: bgColor,
-            borderRadius: BorderRadius.circular(12),
-            border: widget.variant == QuestButtonVariant.secondary
-                ? Border.all(color: AppColors.border)
-                : null,
-            boxShadow: shadows,
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-          child: Row(
-            mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              if (widget.icon != null) ...[
-                Icon(widget.icon, color: fgColor, size: 20),
-                const SizedBox(width: 10),
-              ],
-              Text(
-                widget.label,
-                style: TextStyle(
-                  color: fgColor,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.1,
+    return Semantics(
+      button: true,
+      label: widget.label,
+      enabled: widget.onPressed != null,
+      child: GestureDetector(
+        onTapDown: (_) => _controller.forward(),
+        onTapUp: (_) { _controller.reverse(); widget.onPressed?.call(); },
+        onTapCancel: () => _controller.reverse(),
+        child: ScaleTransition(
+          scale: _scaleAnim,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: widget.isFullWidth ? double.infinity : null,
+            decoration: BoxDecoration(
+              color: bgColor,
+              borderRadius: BorderRadius.circular(12),
+              border: widget.variant == QuestButtonVariant.secondary
+                  ? Border.all(color: AppColors.border)
+                  : null,
+              boxShadow: shadows,
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+            child: Row(
+              mainAxisSize: widget.isFullWidth ? MainAxisSize.max : MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (widget.icon != null) ...[
+                  Icon(widget.icon, color: fgColor, size: 20),
+                  const SizedBox(width: 10),
+                ],
+                Text(
+                  widget.label,
+                  style: TextStyle(
+                    color: fgColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.1,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
