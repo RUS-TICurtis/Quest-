@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_repository.dart';
@@ -30,10 +31,11 @@ class AuthNotifier extends Notifier<AuthState> {
   AuthState build() {
     _repository = ref.watch(authRepositoryProvider);
     
-    // Listen to repository auth changes
-    _repository.authStateChanges.listen((user) {
+    // Listen to repository auth changes — cancel subscription on dispose
+    final StreamSubscription<User?> sub = _repository.authStateChanges.listen((user) {
       state = state.copyWith(user: user, isLoading: false);
     });
+    ref.onDispose(sub.cancel);
 
     // Initial state
     final initialUser = _repository.currentUser;

@@ -39,9 +39,9 @@ class _StageScreenState extends ConsumerState<StageScreen> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    final stageStateAsync = ref.watch(stageProvider);
+    final stageStateAsync = ref.watch(stageProvider(widget.stageId));
     final stageState = stageStateAsync.value;
-    final stageNotifier = ref.read(stageProvider.notifier);
+    final stageNotifier = ref.read(stageProvider(widget.stageId).notifier);
 
     if (stageState == null) {
       return const Scaffold(

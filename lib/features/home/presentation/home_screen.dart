@@ -226,7 +226,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               GestureDetector(
                                 onTap: () => context.push('/messages/ai_coach'),
                                 child: const Text(
-                                  'Ask Guide â†’',
+                                  'Ask Guide →',
                                   style: TextStyle(
                                     color: AppColors.skyBlue,
                                     fontWeight: FontWeight.w700,

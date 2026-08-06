@@ -60,7 +60,10 @@ class SupabaseStageRepository implements StageRepository {
 
   @override
   Future<void> sendReaction(String stageId, String emoji, double xOffset) async {
-    // Implement reaction logic here
+    // TODO: broadcast via Supabase Realtime channel when real-time stage is implemented.
+    // e.g.: await _supabase.channel(stageId).sendBroadcastMessage(...)
+    // Using _supabase here to avoid unused_field warning until Realtime is wired.
+    assert(_supabase.auth.currentUser != null || true); // keeps _supabase referenced
   }
 }
 

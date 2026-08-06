@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/data/auth_provider.dart';
@@ -21,11 +22,28 @@ import '../../features/radar/presentation/radar_screen.dart';
 import '../../features/leaderboard/presentation/leaderboard_screen.dart';
 import '../shell/main_shell.dart';
 
+/// A [ChangeNotifier] that wraps Riverpod's [Ref] so [GoRouter] can
+/// listen to auth-state changes and re-evaluate its redirect guard.
+class _RouterNotifier extends ChangeNotifier {
+  _RouterNotifier(Ref ref) {
+    // Whenever authProvider emits a new value, notify GoRouter to refresh.
+    ref.listen<AuthState>(authProvider, (prev, next) => notifyListeners());
+  }
+}
+
+final _routerNotifierProvider = Provider<_RouterNotifier>((ref) {
+  return _RouterNotifier(ref);
+});
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authProvider);
+  final notifier = ref.watch(_routerNotifierProvider);
 
   return GoRouter(
     initialLocation: '/',
+    // refreshListenable ensures redirect fires on every auth state change,
+    // including spontaneous session expiry and sign-out.
+    refreshListenable: notifier,
     redirect: (context, state) {
       if (authState.isLoading) return null;
 
@@ -38,12 +56,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!isAuth && !isAuthRoute) {
         return '/landing';
       }
-      
+
       // Prevent authenticated users from going back to landing/onboarding
       if (isAuth && (isLanding || isOnboarding)) {
         return '/home';
       }
-      
+
       return null;
     },
     routes: [

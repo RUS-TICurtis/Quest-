@@ -125,7 +125,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                         const SizedBox(height: 24),
                         const Text(
-                          'Quest',
+                          'Quest❗',
                           style: TextStyle(
                             fontSize: 42,
                             fontWeight: FontWeight.bold,

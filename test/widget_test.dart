@@ -148,18 +148,20 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final initialStage = (await container.read(stageProvider.future));
+      const testStageId = 'stage_1';
+
+      final initialStage = (await container.read(stageProvider(testStageId).future));
       expect(initialStage.isMicMuted, isTrue);
       expect(initialStage.isHandRaised, isFalse);
 
-      container.read(stageProvider.notifier).toggleMic();
-      expect((await container.read(stageProvider.future)).isMicMuted, isFalse);
+      container.read(stageProvider(testStageId).notifier).toggleMic();
+      expect((await container.read(stageProvider(testStageId).future)).isMicMuted, isFalse);
 
-      container.read(stageProvider.notifier).toggleHandRaise();
-      expect((await container.read(stageProvider.future)).isHandRaised, isTrue);
+      container.read(stageProvider(testStageId).notifier).toggleHandRaise();
+      expect((await container.read(stageProvider(testStageId).future)).isHandRaised, isTrue);
 
-      container.read(stageProvider.notifier).sendReaction('🔥');
-      expect((await container.read(stageProvider.future)).activeReactions.isNotEmpty, isTrue);
+      container.read(stageProvider(testStageId).notifier).sendReaction('🔥');
+      expect((await container.read(stageProvider(testStageId).future)).activeReactions.isNotEmpty, isTrue);
     });
 
     test('RadarNotifier handles hub selection and verified venue check-in', () async {

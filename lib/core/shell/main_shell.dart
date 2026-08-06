@@ -73,7 +73,7 @@ class MainShell extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Text('Quest', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                    const Text('Quest❗', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
                   ],
                 ),
               ),

@@ -146,14 +146,16 @@ class EventsNotifier extends AsyncNotifier<EventsState> {
   Future<EventsState> build() async {
     _repository = ref.watch(eventsRepositoryProvider);
     final events = await _repository.getEvents();
-    
-    // We derive the RSVP'd events from the userProvider instead of keeping duplicate state here.
-    final userState = ref.watch(userProvider).value;
-    final rsvpdIds = userState?.rsvpdEventIds ?? <String>[];
-    
+
+    // Only watch rsvpdEventIds to avoid rebuilding on unrelated user state changes
+    // (name, level, streak, etc.) — .select() narrows the dependency.
+    final rsvpdIds = ref.watch(
+      userProvider.select((async) => async.value?.rsvpdEventIds ?? <String>[]),
+    );
+
     // Update the isRsvpd field on events based on user state
     final updatedEvents = events.map((e) => e.copyWith(isRsvpd: rsvpdIds.contains(e.id))).toList();
-    
+
     return EventsState(events: updatedEvents);
   }
 

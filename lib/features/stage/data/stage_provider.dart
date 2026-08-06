@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'stage_repository.dart';
@@ -225,13 +226,32 @@ class StageState {
   }
 }
 
+/// Parameterized by [stageId] via constructor injection (Riverpod 3.x pattern).
+/// Each unique [stageId] gets its own isolated notifier instance.
 class StageNotifier extends AsyncNotifier<StageState> {
-  late final StageRepository _repository;
+  /// The stage to load. Set at construction time for family provider usage.
+  final String stageId;
+
+  StageNotifier(this.stageId);
+
+  /// Tracks reaction cleanup timers so we can cancel on disposal.
+  final List<Timer> _reactionTimers = [];
+
+  late StageRepository _repository;
 
   @override
   Future<StageState> build() async {
     _repository = ref.watch(stageRepositoryProvider);
-    return _repository.getStageDetails('stage_1');
+
+    // Cancel all pending reaction timers when the provider is disposed or rebuilt.
+    ref.onDispose(() {
+      for (final t in _reactionTimers) {
+        t.cancel();
+      }
+      _reactionTimers.clear();
+    });
+
+    return _repository.getStageDetails(stageId);
   }
 
   void toggleMic() {
@@ -248,7 +268,7 @@ class StageNotifier extends AsyncNotifier<StageState> {
 
   void sendReaction(String emoji) {
     if (state.value == null) return;
-    
+
     final randomX = 0.2 + (Random().nextDouble() * 0.6);
     final reaction = StageReaction(
       id: '${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}',
@@ -262,17 +282,22 @@ class StageNotifier extends AsyncNotifier<StageState> {
       activeReactions: [...state.value!.activeReactions, reaction],
     ));
 
-    // Auto cleanup after 2 seconds
-    Future.delayed(const Duration(seconds: 2), () {
+    // Auto cleanup after 2 seconds — stored so it can be cancelled on dispose.
+    final timer = Timer(const Duration(seconds: 2), () {
       if (state.value != null) {
         state = AsyncData(state.value!.copyWith(
-          activeReactions: state.value!.activeReactions.where((r) => r.id != reaction.id).toList(),
+          activeReactions:
+              state.value!.activeReactions.where((r) => r.id != reaction.id).toList(),
         ));
       }
     });
+    _reactionTimers.add(timer);
   }
 }
 
-final stageProvider = AsyncNotifierProvider<StageNotifier, StageState>(() {
-  return StageNotifier();
-});
+/// Family provider — call [stageProvider('stage_1')] to get a specific stage.
+/// Each unique stageId gets its own isolated notifier.
+final stageProvider =
+    AsyncNotifierProvider.family<StageNotifier, StageState, String>(
+  (stageId) => StageNotifier(stageId),
+);

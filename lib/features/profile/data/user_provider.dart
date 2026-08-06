@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'user_repository.dart';
 
 class QuestItem {
@@ -168,8 +169,9 @@ class UserNotifier extends AsyncNotifier<UserState> {
   @override
   Future<UserState> build() async {
     _repository = ref.watch(userRepositoryProvider);
-    // In a real app, get the user ID from authProvider
-    return _repository.getUser('current_user');
+    // Read the authenticated user's ID from Supabase — no magic strings.
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+    return _repository.getUser(userId);
   }
 
   Future<void> _updateState(UserState newState) async {

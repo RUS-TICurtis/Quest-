@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../features/auth/data/auth_provider.dart';
 import '../data/user_provider.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -63,7 +64,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     children: [
                       Text(userState.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.white)),
                       const SizedBox(height: 2),
-                      Text('Lvl ${userState.level} â€¢ ${userState.currentXp} XP', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                      Text('Lvl ${userState.level} • ${userState.currentXp} XP', style: const TextStyle(color: AppColors.textMuted, fontSize: 12)),
                     ],
                   ),
                 ),
@@ -177,7 +178,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // App Info
           const Center(
-            child: Text('Quest App â€¢ Version 2.0.0 (Build 42)', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+            child: Text('Quest❗ • Version 2.0.0 (Build 42)', style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
           ),
           const SizedBox(height: 40),
         ],
@@ -224,7 +225,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: const Text('Sign Out of Quest?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        title: const Text('Sign Out of Quest❗?', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         content: const Text('You will need to sign back in to access your guild standings and XP.', style: TextStyle(color: Colors.white70)),
         actions: [
           TextButton(
@@ -233,9 +234,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.crimson),
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              context.go('/landing');
+              // Sign out of Supabase session — GoRouter redirect guard handles navigation.
+              await ref.read(authProvider.notifier).signOut();
             },
             child: const Text('Sign Out', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
@@ -269,6 +271,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
+                  final newName = nameCtrl.text.trim();
+                  if (newName.isNotEmpty) {
+                    // M-2 fix: actually persist the name change
+                    ref.read(userProvider.notifier).updateName(newName);
+                  }
                   Navigator.pop(sheetCtx);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
