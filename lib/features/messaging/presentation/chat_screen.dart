@@ -74,6 +74,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
+          tooltip: 'Go back',
             onPressed: () => context.pop(),
           ),
         ),
@@ -100,6 +101,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          tooltip: 'Go back',
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -161,6 +163,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert),
+            tooltip: 'More options',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -240,6 +243,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   ),
                   child: IconButton(
                     icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    tooltip: 'Send message',
                     onPressed: _sendMessage,
                   ),
                 ),
