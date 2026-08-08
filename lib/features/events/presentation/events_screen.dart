@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/quest_button.dart';
 import '../../profile/data/user_provider.dart';
 import '../data/events_provider.dart';
 
@@ -100,8 +101,15 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.event_busy, color: AppColors.textMuted, size: 64),
-                        const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: const BoxDecoration(
+                          color: AppColors.card,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.event_busy, color: AppColors.textMuted, size: 48),
+                      ),
+                      const SizedBox(height: 24),
                         const Text('No events found', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w600)),
                         const SizedBox(height: 8),
                         const Text('Try adjusting your filters or check back later.', style: TextStyle(color: AppColors.textMuted, fontSize: 14)),
@@ -323,34 +331,32 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
               decoration: const InputDecoration(hintText: 'Time (e.g. 6:30 PM)...'),
             ),
             const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  if (titleCtrl.text.trim().isNotEmpty) {
-                    final newId = '${DateTime.now().millisecondsSinceEpoch}';
-                    final newEvent = Event(
-                      id: newId,
-                      communityId: '1',
-                      title: titleCtrl.text.trim(),
-                      host: 'Community Host',
-                      date: 'Tomorrow',
-                      time: timeCtrl.text.trim(),
-                      location: locCtrl.text.trim().isNotEmpty ? locCtrl.text.trim() : 'Downtown Hub',
-                      attendeesCount: 1,
-                      imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
-                      category: category,
-                      accentColor: AppColors.questBlue,
-                      description: 'An interactive gathering organized by Quest members.',
-                    );
-                    ref.read(eventsProvider.notifier).addEvent(newEvent);
-                    ref.read(userProvider.notifier).toggleRsvpEvent(newId);
-                    Navigator.pop(sheetContext);
-                    context.push('/events/$newId');
-                  }
-                },
-                child: const Text('Publish Event'),
-              ),
+            QuestButton(
+              label: 'Publish Event',
+              isFullWidth: true,
+              onPressed: () {
+                if (titleCtrl.text.trim().isNotEmpty) {
+                  final newId = '${DateTime.now().millisecondsSinceEpoch}';
+                  final newEvent = Event(
+                    id: newId,
+                    communityId: '1',
+                    title: titleCtrl.text.trim(),
+                    host: 'Community Host',
+                    date: 'Tomorrow',
+                    time: timeCtrl.text.trim(),
+                    location: locCtrl.text.trim().isNotEmpty ? locCtrl.text.trim() : 'Downtown Hub',
+                    attendeesCount: 1,
+                    imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
+                    category: category,
+                    accentColor: AppColors.questBlue,
+                    description: 'An interactive gathering organized by Quest members.',
+                  );
+                  ref.read(eventsProvider.notifier).addEvent(newEvent);
+                  ref.read(userProvider.notifier).toggleRsvpEvent(newId);
+                  Navigator.pop(sheetContext);
+                  context.push('/events/$newId');
+                }
+              },
             ),
           ],
         ),

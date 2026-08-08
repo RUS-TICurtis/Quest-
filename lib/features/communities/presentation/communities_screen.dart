@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_colors.dart';
+import '../../../shared/widgets/quest_button.dart';
 import '../../profile/data/user_provider.dart';
 import '../data/communities_provider.dart';
 
@@ -290,29 +291,27 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                   onChanged: (v) => setSheetState(() => category = v ?? 'Technology'),
                 ),
                 const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (nameCtrl.text.trim().isNotEmpty) {
-                        final newId = '${DateTime.now().millisecondsSinceEpoch}';
-                        final newCommunity = Community(
-                          id: newId,
-                          name: nameCtrl.text.trim(),
-                          description: descCtrl.text.trim().isNotEmpty ? descCtrl.text.trim() : 'Active community group',
-                          category: category,
-                          memberCount: 1,
-                          accentColor: AppColors.questBlue,
-                          icon: Icons.groups,
-                        );
-                        ref.read(communitiesProvider.notifier).addCommunity(newCommunity);
-                        ref.read(userProvider.notifier).toggleJoinCommunity(newId);
-                        Navigator.pop(sheetContext);
-                        context.push('/communities/$newId');
-                      }
-                    },
-                    child: const Text('Create Community'),
-                  ),
+                QuestButton(
+                  label: 'Create Community',
+                  isFullWidth: true,
+                  onPressed: () {
+                    if (nameCtrl.text.trim().isNotEmpty) {
+                      final newId = '${DateTime.now().millisecondsSinceEpoch}';
+                      final newCommunity = Community(
+                        id: newId,
+                        name: nameCtrl.text.trim(),
+                        description: descCtrl.text.trim().isNotEmpty ? descCtrl.text.trim() : 'Active community group',
+                        category: category,
+                        memberCount: 1,
+                        accentColor: AppColors.questBlue,
+                        icon: Icons.groups,
+                      );
+                      ref.read(communitiesProvider.notifier).addCommunity(newCommunity);
+                      ref.read(userProvider.notifier).toggleJoinCommunity(newId);
+                      Navigator.pop(sheetContext);
+                      context.push('/communities/$newId');
+                    }
+                  },
                 ),
               ],
             ),
