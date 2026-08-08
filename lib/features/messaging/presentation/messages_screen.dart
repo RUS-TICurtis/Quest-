@@ -72,10 +72,22 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
 
           Expanded(
             child: filteredThreads.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No messages found',
-                      style: TextStyle(color: AppColors.textMuted),
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.forum_outlined, size: 48, color: AppColors.textMuted),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'No messages found',
+                          style: TextStyle(color: AppColors.textMuted, fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                        if (_searchQuery.isNotEmpty)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 8),
+                            child: Text('Try a different search term', style: TextStyle(color: AppColors.textMuted, fontSize: 13)),
+                          )
+                      ],
                     ),
                   )
                 : ListView.separated(
