@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:quest/core/theme/app_colors.dart';
 
 /// Quest's primary button with glow effect
@@ -71,7 +72,10 @@ class _QuestButtonState extends State<QuestButton> with SingleTickerProviderStat
     }
 
     return GestureDetector(
-      onTapDown: (_) => _controller.forward(),
+      onTapDown: (_) {
+        HapticFeedback.lightImpact();
+        _controller.forward();
+      },
       onTapUp: (_) { _controller.reverse(); widget.onPressed?.call(); },
       onTapCancel: () => _controller.reverse(),
       child: ScaleTransition(
