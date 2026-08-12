@@ -10,10 +10,7 @@ import 'widgets/voice_note_bubble.dart';
 class ChatScreen extends ConsumerStatefulWidget {
   final String threadId;
 
-  const ChatScreen({
-    super.key,
-    required this.threadId,
-  });
+  const ChatScreen({super.key, required this.threadId});
 
   @override
   ConsumerState<ChatScreen> createState() => _ChatScreenState();
@@ -35,10 +32,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (text.isEmpty) return;
 
     HapticFeedback.lightImpact();
-    ref.read(chatProvider.notifier).sendMessage(
-          threadId: widget.threadId,
-          text: text,
-        );
+    ref
+        .read(chatProvider.notifier)
+        .sendMessage(threadId: widget.threadId, text: text);
     _textController.clear();
     _scrollToBottom();
   }
@@ -74,14 +70,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: Colors.white),
+            tooltip: 'Back',
             onPressed: () => context.pop(),
           ),
         ),
-        body: const Center(child: CircularProgressIndicator(color: AppColors.questBlue)),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.questBlue),
+        ),
       );
     }
 
-    final thread = chatState.getThreadById(widget.threadId) ??
+    final thread =
+        chatState.getThreadById(widget.threadId) ??
         ChatThread(
           id: widget.threadId,
           title: 'Discussion',
@@ -100,6 +100,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
+          tooltip: 'Back',
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -119,7 +120,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       ? Icon(Icons.auto_awesome, color: avatarColor, size: 18)
                       : Text(
                           thread.name.isNotEmpty ? thread.name[0] : 'Q',
-                          style: TextStyle(color: avatarColor, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: avatarColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                 ),
                 Positioned(
@@ -131,7 +135,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     decoration: BoxDecoration(
                       color: isAi ? AppColors.skyBlue : AppColors.emerald,
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.background, width: 1.5),
+                      border: Border.all(
+                        color: AppColors.background,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
@@ -144,7 +151,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 children: [
                   Text(
                     thread.name,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   Text(
                     isAi ? 'Always online • AI Guide' : 'Active now',
@@ -161,6 +171,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.more_vert),
+            tooltip: 'Chat options',
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
@@ -194,13 +205,20 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: ListView(
                 scrollDirection: Axis.horizontal,
-                children: thread.aiSuggestions.map((prompt) => _quickChip(prompt)).toList(),
+                children: thread.aiSuggestions
+                    .map((prompt) => _quickChip(prompt))
+                    .toList(),
               ),
             ),
 
           // Message input bar
           Container(
-            padding: EdgeInsets.fromLTRB(16, 8, 16, MediaQuery.of(context).padding.bottom + 8),
+            padding: EdgeInsets.fromLTRB(
+              16,
+              8,
+              16,
+              MediaQuery.of(context).padding.bottom + 8,
+            ),
             decoration: const BoxDecoration(
               color: AppColors.surface,
               border: Border(top: BorderSide(color: AppColors.border)),
@@ -208,7 +226,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             child: Row(
               children: [
                 IconButton(
-                  icon: const Icon(Icons.mic_outlined, color: AppColors.questBlue),
+                  icon: const Icon(
+                    Icons.mic_outlined,
+                    color: AppColors.questBlue,
+                  ),
                   tooltip: 'Send voice note',
                   onPressed: _sendVoiceNote,
                 ),
@@ -219,9 +240,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     style: const TextStyle(color: Colors.white, fontSize: 15),
                     textCapitalization: TextCapitalization.sentences,
                     decoration: InputDecoration(
-                      hintText: isAi ? 'Ask AI Guide anything...' : 'Type a message...',
-                      hintStyle: const TextStyle(color: AppColors.textMuted, fontSize: 14),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      hintText: isAi
+                          ? 'Ask AI Guide anything...'
+                          : 'Type a message...',
+                      hintStyle: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 14,
+                      ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
                       filled: true,
                       fillColor: AppColors.card,
                       border: OutlineInputBorder(
@@ -239,7 +268,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.send_rounded, color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.send_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
+                    tooltip: 'Send message',
                     onPressed: _sendMessage,
                   ),
                 ),
@@ -254,10 +288,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   Widget _quickChip(String prompt) {
     return GestureDetector(
       onTap: () {
-        ref.read(chatProvider.notifier).sendMessage(
-              threadId: widget.threadId,
-              text: prompt,
-            );
+        ref
+            .read(chatProvider.notifier)
+            .sendMessage(threadId: widget.threadId, text: prompt);
         _scrollToBottom();
       },
       child: Container(
@@ -270,7 +303,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         child: Text(
           prompt,
-          style: const TextStyle(color: AppColors.skyBlue, fontSize: 12, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            color: AppColors.skyBlue,
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
@@ -280,7 +317,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20),
       child: Row(
-        mainAxisAlignment: msg.isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: msg.isMe
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!msg.isMe) ...[
@@ -302,19 +341,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             const SizedBox(width: 32),
           Flexible(
             child: Column(
-              crossAxisAlignment: msg.isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: msg.isMe
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 Container(
                   padding: msg.type == MessageType.voiceNote
                       ? EdgeInsets.zero
-                      : const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      : const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                   decoration: BoxDecoration(
                     color: msg.isMe ? AppColors.questBlue : AppColors.card,
                     borderRadius: BorderRadius.circular(18).copyWith(
-                      bottomRight: msg.isMe ? const Radius.circular(4) : const Radius.circular(18),
-                      bottomLeft: !msg.isMe ? const Radius.circular(4) : const Radius.circular(18),
+                      bottomRight: msg.isMe
+                          ? const Radius.circular(4)
+                          : const Radius.circular(18),
+                      bottomLeft: !msg.isMe
+                          ? const Radius.circular(4)
+                          : const Radius.circular(18),
                     ),
-                    border: msg.isMe ? null : Border.all(color: AppColors.border),
+                    border: msg.isMe
+                        ? null
+                        : Border.all(color: AppColors.border),
                   ),
                   child: msg.type == MessageType.voiceNote
                       ? VoiceNoteBubble(
@@ -327,12 +377,15 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                             Text(
                               msg.text,
                               style: TextStyle(
-                                color: msg.isMe ? Colors.white : AppColors.textSecondary,
+                                color: msg.isMe
+                                    ? Colors.white
+                                    : AppColors.textSecondary,
                                 fontSize: 15,
                                 height: 1.4,
                               ),
                             ),
-                            if (msg.type == MessageType.linkPreview && msg.linkTitle != null)
+                            if (msg.type == MessageType.linkPreview &&
+                                msg.linkTitle != null)
                               LinkPreviewBubble(
                                 title: msg.linkTitle!,
                                 url: msg.linkUrl,
@@ -348,7 +401,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   children: [
                     Text(
                       msg.time,
-                      style: const TextStyle(color: AppColors.textMuted, fontSize: 10),
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 10,
+                      ),
                     ),
                     if (msg.isMe) ...[
                       const SizedBox(width: 4),
@@ -363,7 +419,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ],
             ),
           ),
-          if (msg.isMe) const SizedBox(width: 32) else const SizedBox(width: 32),
+          if (msg.isMe)
+            const SizedBox(width: 32)
+          else
+            const SizedBox(width: 32),
         ],
       ),
     );
