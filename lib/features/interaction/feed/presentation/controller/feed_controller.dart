@@ -8,7 +8,7 @@ import 'package:quest/shared/models/creator_video.dart';
 /// 1. Owns the canonical list of [videos] and the [currentIndex].
 /// 2. Manages pagination triggers — distinguishes between:
 ///      • Silent prefetch (user approaching end at normal speed, no loader)
-///      • Urgent fetch   (user within 2 items of end, show loader)
+///      • Urgent fetch   (user within 2 items of end, show loader via [isLoadingMore])
 /// 3. Implements "Dwell Debouncing" — only activates a page after one frame.
 ///
 /// ── Performance ─────────────────────────────────────────────────────────────
@@ -27,6 +27,10 @@ class FeedController {
   /// Emits the index of the video that has "dwelled" (stayed in view for at
   /// least one rendered frame). This is what truly triggers playback and analytics.
   final ValueNotifier<int> activeIndex = ValueNotifier<int>(0);
+
+  /// True when an URGENT fetch (within [_urgentThreshold] of end) is in flight.
+  /// The feed screen listens to this to show a bottom pagination spinner.
+  final ValueNotifier<bool> isLoadingMore = ValueNotifier<bool>(false);
 
   bool _disposed = false;
 
@@ -54,11 +58,13 @@ class FeedController {
   void setVideos(List<CreatorVideo> newVideos) {
     videos.value = List.of(newVideos);
     _isFetchingMore = false;
+    isLoadingMore.value = false;
   }
 
   void appendVideos(List<CreatorVideo> moreVideos) {
     videos.value = [...videos.value, ...moreVideos];
     _isFetchingMore = false;
+    isLoadingMore.value = false;
   }
 
   void onPageChanged(int index) {
@@ -67,14 +73,16 @@ class FeedController {
 
     final remaining = videos.value.length - 1 - index;
 
-    // ── Urgent fetch (user is at the very end, show loader if still pending) ──
+    // ── Urgent fetch (user is at the very end) — show spinner via isLoadingMore ──
     if (remaining <= _urgentThreshold && !_isFetchingMore) {
       _isFetchingMore = true;
+      isLoadingMore.value = true;
       onFetchMore?.call();
     }
-    // ── Silent prefetch (user approaching end, no loader) ──────────────────
+    // ── Silent prefetch (user approaching end) — no spinner shown ──────────
     else if (remaining <= _silentThreshold && !_isFetchingMore) {
       _isFetchingMore = true;
+      // isLoadingMore stays false — silent prefetch has no visible indicator.
       onSilentPrefetch?.call();
     }
 
@@ -95,6 +103,7 @@ class FeedController {
   /// is released and further pagination can trigger.
   void onFetchComplete() {
     _isFetchingMore = false;
+    isLoadingMore.value = false;
   }
 
   void dispose() {
@@ -102,5 +111,6 @@ class FeedController {
     videos.dispose();
     currentIndex.dispose();
     activeIndex.dispose();
+    isLoadingMore.dispose();
   }
 }

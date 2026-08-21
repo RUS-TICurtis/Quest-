@@ -56,7 +56,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // final isOnboarding = state.matchedLocation == '/onboarding';
       // final isAuthRoute = isSplash || isLanding || isOnboarding;
 
-      // Temporarily disabled for offline mode testing
+      // TODO(production): Re-enable auth guard before release.
+      // Temporarily disabled for offline/dev mode testing.
+      // Uncomment the block below and remove this comment to restore auth.
       // if (!isAuth && !isAuthRoute) {
       //   return '/landing';
       // }

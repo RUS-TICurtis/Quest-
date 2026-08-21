@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'auth_repository.dart';
+import 'package:quest/features/identity/auth/data/auth_repository.dart';
 
 class AuthState {
   final User? user;

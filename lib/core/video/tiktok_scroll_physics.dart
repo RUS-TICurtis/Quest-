@@ -62,7 +62,7 @@ class TikTokScrollPhysics extends PageScrollPhysics {
       position.pixels,
       targetPixels,
       velocity,
-      tolerance: tolerance,
+      tolerance: toleranceFor(position),
     );
   }
 }

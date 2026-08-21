@@ -1,5 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'chat_repository.dart';
+import 'package:quest/features/interaction/messaging/data/chat_repository.dart';
 
 enum MessageType { text, voice, voiceNote, linkPreview }
 

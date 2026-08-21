@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'user_repository.dart';
+import 'package:quest/features/identity/profile/data/user_repository.dart';
 import 'package:quest/core/storage/local_storage_service.dart';
 
 class QuestItem {

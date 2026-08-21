@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:quest/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'communities_repository.dart';
+import 'package:quest/features/society/communities/data/communities_repository.dart';
+
 class Community {
   final String id;
   final String name;
@@ -142,7 +144,7 @@ class CommunitiesNotifier extends AsyncNotifier<CommunitiesState> {
       final communities = await _repository.getCommunities();
       return CommunitiesState(communities: communities);
     } catch (e) {
-      print('Error fetching communities: \$e');
+      debugPrint('Error fetching communities: $e');
       return CommunitiesState(communities: []);
     }
   }

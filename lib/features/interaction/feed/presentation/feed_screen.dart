@@ -16,16 +16,13 @@ class FeedScreen extends ConsumerStatefulWidget {
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   late PageController _pageController;
+  // Guard: only call pool.setVideos when the list actually changes size.
+  int _lastSyncedCount = 0;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController();
-    
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      // The FeedController will now handle loading the videos from the provider.
-      // We will sync the feedControllerProvider's videos with the feedVideoPool.
-    });
   }
 
   @override
@@ -38,17 +35,19 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   Widget build(BuildContext context) {
     final pool = ref.watch(feedVideoPoolProvider.notifier);
     final feedController = ref.watch(feedControllerProvider);
-    
+
     return ValueListenableBuilder<List<CreatorVideo>>(
       valueListenable: feedController.videos,
       builder: (context, videos, child) {
-        // Sync with video pool
-        if (videos.isNotEmpty) {
+        // Only sync when the video list grows — prevents redundant
+        // VideoPlayerController re-initialization on repeated rebuilds.
+        if (videos.length != _lastSyncedCount && videos.isNotEmpty) {
+          _lastSyncedCount = videos.length;
           WidgetsBinding.instance.addPostFrameCallback((_) {
-            pool.setVideos(videos);
+            if (mounted) pool.setVideos(videos);
           });
         }
-        
+
         final videoCount = videos.length;
 
         return Scaffold(
@@ -56,99 +55,138 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           body: VisibilityDetector(
             key: const Key('feed-visibility'),
             onVisibilityChanged: (info) {
-              if (info.visibleFraction == 0) {
-                pool.setGlobalPause(true);
-              } else {
-                pool.setGlobalPause(false);
-              }
+              pool.setGlobalPause(info.visibleFraction == 0);
             },
-            child: PageView.builder(
-              controller: _pageController,
-              scrollDirection: Axis.vertical,
-              itemCount: videoCount,
-              onPageChanged: (index) {
-                feedController.onPageChanged(index);
-                pool.onPageChanged(index);
-              },
-              itemBuilder: (context, index) {
-                final video = videos[index];
-                final controller = pool.getController(index);
-                final isInitialized = pool.isInitialized(index);
-            
-            return Stack(
-              fit: StackFit.expand,
-              children: [
-                if (controller != null && isInitialized)
-                  GestureDetector(
-                    onTap: () {
-                      if (controller.value.isPlaying) {
-                        controller.pause();
-                      } else {
-                        controller.play();
-                      }
-                    },
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: controller.value.size.width,
-                        height: controller.value.size.height,
-                        child: VideoPlayer(controller),
-                      ),
+            child: videoCount == 0
+                ? Center(
+                    child: CircularProgressIndicator(
+                      color: context.colors.questBlue,
                     ),
                   )
-                else
-                  Center(
-                    child: CircularProgressIndicator(color: context.colors.questBlue),
+                : PageView.builder(
+                    controller: _pageController,
+                    scrollDirection: Axis.vertical,
+                    itemCount: videoCount,
+                    onPageChanged: (index) {
+                      feedController.onPageChanged(index);
+                      pool.onPageChanged(index);
+                    },
+                    itemBuilder: (context, index) {
+                      final video = videos[index];
+                      final controller = pool.getController(index);
+                      final isInitialized = pool.isInitialized(index);
+
+                      return Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (controller != null && isInitialized)
+                            GestureDetector(
+                              onTap: () {
+                                if (controller.value.isPlaying) {
+                                  controller.pause();
+                                } else {
+                                  controller.play();
+                                }
+                              },
+                              child: FittedBox(
+                                fit: BoxFit.cover,
+                                child: SizedBox(
+                                  width: controller.value.size.width,
+                                  height: controller.value.size.height,
+                                  child: VideoPlayer(controller),
+                                ),
+                              ),
+                            )
+                          else
+                            Center(
+                              child: CircularProgressIndicator(
+                                color: context.colors.questBlue,
+                              ),
+                            ),
+
+                          // Urgent pagination loader — shown at the bottom of the
+                          // last visible item when isLoadingMore is true.
+                          ValueListenableBuilder<bool>(
+                            valueListenable: feedController.isLoadingMore,
+                            builder: (_, isLoading, __) {
+                              if (!isLoading || index != videoCount - 1) {
+                                return const SizedBox.shrink();
+                              }
+                              return const Positioned(
+                                bottom: 16,
+                                left: 0,
+                                right: 0,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+
+                          // Creator info overlay
+                          Positioned(
+                            bottom: 40,
+                            left: 20,
+                            right: 80,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '@${video.creatorUsername ?? 'creator'}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  video.description,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                  ),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          // Right-side action buttons
+                          Positioned(
+                            bottom: 40,
+                            right: 16,
+                            child: Column(
+                              children: [
+                                _buildActionIcon(
+                                  Icons.favorite_border,
+                                  '${video.likeCount}',
+                                ),
+                                const SizedBox(height: 16),
+                                _buildActionIcon(
+                                  Icons.chat_bubble_outline,
+                                  '${video.commentCount}',
+                                ),
+                                const SizedBox(height: 16),
+                                _buildActionIcon(Icons.share_outlined, 'Share'),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
-                
-                // Overlay text
-                Positioned(
-                  bottom: 40,
-                  left: 20,
-                  right: 80,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        '@${video.creatorUsername ?? 'creator'}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        video.description,
-                        style: const TextStyle(color: Colors.white, fontSize: 14),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-                
-                // Right actions (like, comment, share)
-                Positioned(
-                  bottom: 40,
-                  right: 16,
-                  child: Column(
-                    children: [
-                      _buildActionIcon(Icons.favorite_border, '${video.likeCount}'),
-                      const SizedBox(height: 16),
-                      _buildActionIcon(Icons.chat_bubble_outline, '${video.commentCount}'),
-                      const SizedBox(height: 16),
-                      _buildActionIcon(Icons.share_outlined, 'Share'),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-      }
+          ),
+        );
+      },
     );
   }
 
@@ -156,10 +194,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     return Column(
       children: [
         Icon(icon, color: Colors.white, size: 32),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           label,
-          style: TextStyle(color: Colors.white, fontSize: 12),
+          style: const TextStyle(color: Colors.white, fontSize: 12),
         ),
       ],
     );

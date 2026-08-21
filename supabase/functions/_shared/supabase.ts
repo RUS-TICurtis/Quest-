@@ -20,16 +20,29 @@ export function getSupabaseAdmin(): SupabaseClient {
   return createClient(supabaseUrl, supabaseServiceRoleKey);
 }
 
-export async function verifyAuth(req: Request): Promise<any> {
+/**
+ * Verifies the Bearer JWT from the request.
+ *
+ * Pass an existing `client` to avoid a redundant 3rd Supabase instantiation
+ * (callers that already called getSupabaseClient / getSupabaseAdmin can reuse).
+ * When `client` is omitted a temporary anon client is created internally.
+ */
+export async function verifyAuth(
+  req: Request,
+  client?: SupabaseClient
+): Promise<any> {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     throw new Error("Missing Authorization header");
   }
   const jwt = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : authHeader;
-  
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+
+  // Reuse a provided client or create a minimal one for auth verification.
+  const supabaseClient = client ?? (() => {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    return createClient(supabaseUrl, supabaseAnonKey);
+  })();
 
   const { data: { user }, error: authError } = await supabaseClient.auth.getUser(jwt);
   if (authError || !user) {

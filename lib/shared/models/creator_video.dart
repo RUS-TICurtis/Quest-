@@ -67,4 +67,55 @@ class CreatorVideo {
       creatorAvatarUrl: json['creator_avatar_url'] as String?,
     );
   }
+
+  CreatorVideo copyWith({
+    String? id,
+    String? creatorId,
+    String? videoUrl,
+    String? thumbnailUrl,
+    String? title,
+    String? description,
+    int? viewCount,
+    int? likeCount,
+    int? commentCount,
+    int? shareCount,
+    DateTime? createdAt,
+    double? engagementScore,
+    bool? isLiked,
+    int? durationSeconds,
+    String? muxPlaybackId,
+    String? muxStatus,
+    String? creatorUsername,
+    String? creatorAvatarUrl,
+  }) {
+    return CreatorVideo(
+      id: id ?? this.id,
+      creatorId: creatorId ?? this.creatorId,
+      videoUrl: videoUrl ?? this.videoUrl,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      viewCount: viewCount ?? this.viewCount,
+      likeCount: likeCount ?? this.likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      shareCount: shareCount ?? this.shareCount,
+      createdAt: createdAt ?? this.createdAt,
+      engagementScore: engagementScore ?? this.engagementScore,
+      isLiked: isLiked ?? this.isLiked,
+      durationSeconds: durationSeconds ?? this.durationSeconds,
+      muxPlaybackId: muxPlaybackId ?? this.muxPlaybackId,
+      muxStatus: muxStatus ?? this.muxStatus,
+      creatorUsername: creatorUsername ?? this.creatorUsername,
+      creatorAvatarUrl: creatorAvatarUrl ?? this.creatorAvatarUrl,
+    );
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is CreatorVideo && other.id == id;
+  }
+
+  @override
+  int get hashCode => id.hashCode;
 }

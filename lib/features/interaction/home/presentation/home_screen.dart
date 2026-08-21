@@ -281,7 +281,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               GestureDetector(
                                 onTap: () {
                                   HapticFeedback.lightImpact();
-                                  context.push('/messages/ai_coach');
+                                  context.push('/connect/ai_coach');
                                 },
                                 child: Text(
                                   'Ask Guide →',
@@ -451,7 +451,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   Widget _questTile(BuildContext context, QuestItem quest) {
     return GestureDetector(
       onTap: () {
-        HapticFeedback.lightImpact();
         HapticFeedback.lightImpact();
         ref.read(userProvider.notifier).toggleQuest(quest.id);
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -758,7 +757,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 onTap: () {
                   HapticFeedback.lightImpact();
                   Navigator.pop(context);
-                  context.push('/messages/ai_coach');
+                  context.push('/connect/ai_coach');
                 },
               ),
             ],

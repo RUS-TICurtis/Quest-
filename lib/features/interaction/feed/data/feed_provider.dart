@@ -5,47 +5,45 @@ import 'package:quest/shared/models/creator_video.dart';
 
 final feedControllerProvider = Provider.autoDispose<FeedController>((ref) {
   final repository = ref.watch(feedRepositoryProvider);
-  
+
   Map<String, dynamic>? nextCursor;
   bool isFetching = false;
   bool hasMore = true;
 
   late final FeedController controller;
 
-  controller = FeedController(
-    onFetchMore: () async {
-      if (isFetching || !hasMore) return;
-      isFetching = true;
-      try {
-        final result = await repository.getFeed(cursor: nextCursor);
-        if (result.videos.isEmpty) {
-          hasMore = false;
-        } else {
-          nextCursor = result.nextCursor;
-          controller.appendVideos(result.videos);
-        }
-      } finally {
-        isFetching = false;
+  // Shared fetch logic — used by both callbacks.
+  Future<void> _doFetch({bool silent = false}) async {
+    if (isFetching || !hasMore) return;
+    isFetching = true;
+    try {
+      final result = await repository.getFeed(cursor: nextCursor);
+      if (result.videos.isEmpty) {
+        hasMore = false;
         controller.onFetchComplete();
+      } else {
+        nextCursor = result.nextCursor;
+        controller.appendVideos(result.videos);
+        // appendVideos already calls onFetchComplete internally via
+        // setting _isFetchingMore = false and isLoadingMore = false.
       }
-    },
-    onSilentPrefetch: () async {
-      if (isFetching || !hasMore) return;
-      isFetching = true;
-      try {
-        final result = await repository.getFeed(cursor: nextCursor);
-        if (result.videos.isEmpty) {
-          hasMore = false;
-        } else {
-          nextCursor = result.nextCursor;
-          controller.appendVideos(result.videos);
-        }
-      } finally {
-        isFetching = false;
-        controller.onFetchComplete();
-      }
+    } catch (_) {
+      controller.onFetchComplete();
+    } finally {
+      isFetching = false;
     }
+  }
+
+  controller = FeedController(
+    // Urgent: user within 2 items of end — spinner already shown via isLoadingMore.
+    onFetchMore: () => _doFetch(silent: false),
+    // Silent: user within 5 items of end — no spinner, prefetch in background.
+    onSilentPrefetch: () => _doFetch(silent: true),
   );
+
+  // Register dispose callback so ValueNotifiers are released when the
+  // feedControllerProvider is auto-disposed (e.g., when FeedScreen exits).
+  ref.onDispose(controller.dispose);
 
   // Initial fetch
   Future.microtask(() async {
@@ -63,7 +61,7 @@ final feedControllerProvider = Provider.autoDispose<FeedController>((ref) {
       controller.onFetchComplete();
     }
   });
-  
+
   return controller;
 });
 

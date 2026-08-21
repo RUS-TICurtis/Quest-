@@ -1,0 +1,2 @@
+INFO|HINT|DEPRECATED_MEMBER_USE|C:\\Users\\Curtis\\Documents\\_Github\\Quest\\lib\\core\\video\\tiktok_scroll_physics.dart|65|18|9|'tolerance' is deprecated and shouldn't be used. Call toleranceFor instead. This feature was deprecated after v3.7.0-13.0.pre.
+INFO|LINT|AVOID_PRINT|C:\\Users\\Curtis\\Documents\\_Github\\Quest\\lib\\features\\society\\communities\\data\\communities_provider.dart|145|7|5|Don't invoke 'print' in production code.
