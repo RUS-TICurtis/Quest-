@@ -102,3 +102,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+Quest-*.apk
+Quest.apk
+
+# Temporary files
+*.bak
+analyze_output.txt
+files_to_revert.txt

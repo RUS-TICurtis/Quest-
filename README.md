@@ -56,7 +56,7 @@ One codebase. All platforms.
 > Clone this repository to a path **without** special characters (e.g., `!`, `#`, `$`).
 > 
 > ✅ Good: `C:\Users\YourName\Projects\Quest`  
-> ❌ Bad:  `C:\Users\YourName\Documents\_Github\Quest!`
+> ❌ Bad:  `C:\Users\YourName\Documents\_Github\Quest_Bad_Name`
 
 ### Run the app
 

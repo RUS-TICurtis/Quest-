@@ -9,7 +9,7 @@ _Last Modified: 2026-08-06_
 | Package | `com.example.quest` |
 | Min SDK | 21 (Android 5.0 Lollipop) |
 | Target SDK | 34 (Android 14) |
-| App Label | `Quest❕` |
+| App Label | `Quest` |
 | Build System | Gradle (Kotlin DSL) |
 | Native Arch | `arm64-v8a`, `armeabi-v7a`, `x86_64` |
 
@@ -23,7 +23,7 @@ _Last Modified: 2026-08-06_
 | Property | Value |
 |---|---|
 | Bundle ID | `com.example.quest` |
-| CFBundleName | `Quest❕` |
+| CFBundleName | `Quest` |
 | Deployment Target | iOS 13.0 |
 | Supported Architectures | `arm64` (device), `x86_64` (simulator) |
 

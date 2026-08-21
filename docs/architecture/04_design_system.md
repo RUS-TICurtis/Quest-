@@ -2,7 +2,7 @@ _Last Modified: 2026-08-06_
 
 # 4. Design System
 
-Quest❕ uses a centralized design system built entirely with Dart constants — no external theming packages.
+Quest uses a centralized design system built entirely with Dart constants — no external theming packages.
 
 ## Color Palette (`lib/core/theme/app_colors.dart`)
 

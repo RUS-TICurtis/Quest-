@@ -2,14 +2,14 @@ _Last Modified: 2026-08-06_
 
 # 1. Executive Summary & Product Vision
 
-## What is Quest❕?
+## What is Quest?
 
-**Quest❕** is a Flutter multiplatform **social operating system** for real-world connection. It gamifies community participation — members earn XP, level up, complete daily quests, RSVP to events, and engage in live audio stage rooms — all within a single cohesive app.
+**Quest** is a Flutter multiplatform **social operating system** for real-world connection. It gamifies community participation — members earn XP, level up, complete daily quests, RSVP to events, and engage in live audio stage rooms — all within a single cohesive app.
 
 ## Core Philosophy
 > "Level up your life."
 
-Quest❕ bridges the gap between online communities and real-world action. Every interaction — joining a community, attending an event, checking in at a hub, completing a daily quest — generates XP and builds a persistent reputation.
+Quest bridges the gap between online communities and real-world action. Every interaction — joining a community, attending an event, checking in at a hub, completing a daily quest — generates XP and builds a persistent reputation.
 
 ## Product Pillars
 

@@ -38,7 +38,7 @@ lib/features/<feature>/
 | `userProvider` | `AsyncNotifier<UserState>` | `addXp()`, `toggleQuest()`, `updateName()`, `toggleRsvp()` |
 | `eventsProvider` | `AsyncNotifier<EventsState>` | `toggleRsvp()`, `addEvent()`, `setFilter()` |
 | `communitiesProvider` | `AsyncNotifier<CommunitiesState>` | `toggleJoin()`, `addCommunity()`, `setCategory()`, `setSearchQuery()` |
-| `chatProvider` | `AsyncNotifier<ChatState>` | `sendMessage()`, `sendVoiceNote()`, `markThreadRead()` |
+| `chatProvider` | `StreamNotifier<ChatState> (Supabase Realtime)` | `sendMessage()`, `sendVoiceNote()`, `markThreadRead()` |
 | `stageProvider(id)` | `AsyncNotifier<StageState>` (family) | `toggleMic()`, `toggleHandRaise()`, `sendReaction()` |
 | `radarProvider` | `AsyncNotifier<RadarState>` | `selectHub()`, `checkInToHub()` |
 | `leaderboardProvider` | `AsyncNotifier<LeaderboardState>` | `setTab()`, `setArchetype()` |

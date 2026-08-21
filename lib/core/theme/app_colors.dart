@@ -43,6 +43,18 @@ class AppColors {
 
   // Text
   static const Color textPrimary = Colors.white;
+  static const Color textPrimary87 = Color(0xDEFFFFFF);
+  static const Color textPrimary70 = Color(0xB3FFFFFF);
+  static const Color textPrimary54 = Color(0x8AFFFFFF);
+  static const Color textPrimary38 = Color(0x61FFFFFF);
+  static const Color textPrimary24 = Color(0x3DFFFFFF);
+  static const Color textPrimary12 = Color(0x1EFFFFFF);
+  
   static const Color textSecondary = Color(0xFF9CA3AF);
   static const Color textMuted = Color(0xFF6B7280);
+
+  // Background transparent variations
+  static const Color background87 = Color(0xDE030712);
+  static const Color background54 = Color(0x8A030712);
+  static const Color background45 = Color(0x73030712);
 }

@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-05_
+_Last Modified: 2026-08-07_
 
 ## 2. Technology Stack & Dependencies
 
@@ -13,5 +13,6 @@ _Last Modified: 2026-08-05_
 | **Typography** | `google_fonts` (Inter) | `^8.2.0` | Consistent, readable modern sans-serif typography |
 | **Vector & Images** | `flutter_svg`, `cached_network_image` | `^2.3.0`, `^3.4.1` | Crisp SVGs and cached CDN media rendering |
 | **Visual Effects** | `shimmer`, `intl` | `^3.0.0`, `^0.20.3` | Polished skeleton loading & localized formatting |
+| **Emojis & Parsing** | `emoji_extension` | `^1.3.0` | Parsing Unicode 17.0 emojis, shortcodes, and modifiers |
 
 ---

@@ -1,8 +1,11 @@
-_Last Modified: 2026-08-05_
+_Last Modified: 2026-08-21_
 
 ## 6. State Management Architecture (Riverpod 3.x)
 
 Every feature module contains a dedicated `data/` provider managing immutable state through an `AsyncNotifier` or `Notifier`. The codebase is actively transitioning to the Repository Pattern backed by `AsyncNotifier` to prepare for backend integrations.
+
+> [!IMPORTANT]
+> **Strict UI Requirement:** All screens (even static ones) must use `ConsumerWidget` or `ConsumerStatefulWidget` to maintain architectural consistency and prepare for future Riverpod integration. Plain `StatelessWidget` and `StatefulWidget` are prohibited at the screen level.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐

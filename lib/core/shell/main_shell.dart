@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../theme/app_colors.dart';
-
+import 'package:quest/core/theme/app_colors_extension.dart';
 class MainShell extends StatelessWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
 
   int _selectedIndex(BuildContext context) {
-    final location = GoRouterState.of(context).uri.path;
-    if (location.startsWith('/home')) return 0;
-    if (location.startsWith('/communities')) return 1;
-    if (location.startsWith('/events')) return 2;
-    if (location.startsWith('/messages')) return 3;
+    final String location = GoRouterState.of(context).matchedLocation;
+    if (location.startsWith('/explore')) return 1;
+    if (location.startsWith('/create')) return 2;
+    if (location.startsWith('/connect')) return 3;
     if (location.startsWith('/profile')) return 4;
     return 0;
   }
@@ -22,13 +20,13 @@ class MainShell extends StatelessWidget {
         context.go('/home');
         break;
       case 1:
-        context.go('/communities');
+        context.go('/explore');
         break;
       case 2:
-        context.go('/events');
+        context.go('/create');
         break;
       case 3:
-        context.go('/messages');
+        context.go('/connect');
         break;
       case 4:
         context.go('/profile');
@@ -44,48 +42,90 @@ class MainShell extends StatelessWidget {
     if (isWide) {
       // Desktop/tablet: side navigation rail
       return Scaffold(
-        backgroundColor: AppColors.background,
+        backgroundColor: context.colors.background,
         body: Row(
           children: [
             NavigationRail(
-              backgroundColor: AppColors.surface,
+              backgroundColor: context.colors.surface,
               selectedIndex: idx,
               onDestinationSelected: (i) => _onTap(context, i),
               labelType: NavigationRailLabelType.all,
-              selectedIconTheme: const IconThemeData(color: AppColors.questBlue),
-              selectedLabelTextStyle: const TextStyle(color: AppColors.questBlue, fontWeight: FontWeight.w600),
-              unselectedIconTheme: const IconThemeData(color: AppColors.textMuted),
-              unselectedLabelTextStyle: const TextStyle(color: AppColors.textMuted),
+              selectedIconTheme: IconThemeData(
+                color: context.colors.questBlue,
+              ),
+              selectedLabelTextStyle: TextStyle(
+                color: context.colors.questBlue,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedIconTheme: IconThemeData(
+                color: context.colors.textMuted,
+              ),
+              unselectedLabelTextStyle: TextStyle(
+                color: context.colors.textMuted,
+              ),
               leading: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
+                padding: EdgeInsets.symmetric(vertical: 24),
                 child: Column(
                   children: [
                     Container(
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        color: AppColors.questBlue,
+                        color: context.colors.questBlue,
                         borderRadius: BorderRadius.circular(10),
-                        boxShadow: [BoxShadow(color: AppColors.questBlue.withValues(alpha: 0.4), blurRadius: 12)],
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.colors.questBlue.withValues(alpha: 0.4),
+                            blurRadius: 12,
+                          ),
+                        ],
                       ),
-                      child: const Center(
+                      child: Center(
                         child: Icon(Icons.bolt, color: Colors.white, size: 22),
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    const Text('Quest❗', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                    SizedBox(height: 6),
+                    Text(
+                      'Quest',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        fontSize: 13,
+                      ),
+                    ),
                   ],
                 ),
               ),
-              destinations: const [
-                NavigationRailDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: Text('Home')),
-                NavigationRailDestination(icon: Icon(Icons.people_outline), selectedIcon: Icon(Icons.people), label: Text('Communities')),
-                NavigationRailDestination(icon: Icon(Icons.event_outlined), selectedIcon: Icon(Icons.event), label: Text('Events')),
-                NavigationRailDestination(icon: Icon(Icons.chat_bubble_outline), selectedIcon: Icon(Icons.chat_bubble), label: Text('Messages')),
-                NavigationRailDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: Text('Profile')),
+              destinations: [
+                NavigationRailDestination(
+                  icon: Icon(Icons.home_outlined),
+                  selectedIcon: Icon(Icons.home),
+                  label: Text('Home'),
+                ),
+
+                NavigationRailDestination(
+                  icon: Icon(Icons.explore_outlined),
+                  selectedIcon: Icon(Icons.explore),
+                  label: Text('Explore'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.add_circle_outline),
+                  selectedIcon: Icon(Icons.add_circle),
+                  label: Text('Create'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.people_alt_outlined),
+                  selectedIcon: Icon(Icons.people_alt),
+                  label: Text('Connect'),
+                ),
+                NavigationRailDestination(
+                  icon: Icon(Icons.person_outline),
+                  selectedIcon: Icon(Icons.person),
+                  label: Text('You'),
+                ),
               ],
             ),
-            const VerticalDivider(width: 1),
+            VerticalDivider(width: 1),
             Expanded(child: child),
           ],
         ),
@@ -94,21 +134,42 @@ class MainShell extends StatelessWidget {
 
     // Mobile: bottom navigation bar
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       body: child,
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.border, width: 1)),
+        decoration: BoxDecoration(
+          border: Border(top: BorderSide(color: context.colors.border, width: 1)),
         ),
         child: BottomNavigationBar(
           currentIndex: idx,
           onTap: (i) => _onTap(context, i),
-          items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.home_outlined), activeIcon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(icon: Icon(Icons.people_outline), activeIcon: Icon(Icons.people), label: 'Communities'),
-            BottomNavigationBarItem(icon: Icon(Icons.event_outlined), activeIcon: Icon(Icons.event), label: 'Events'),
-            BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_outline), activeIcon: Icon(Icons.chat_bubble), label: 'Messages'),
-            BottomNavigationBarItem(icon: Icon(Icons.person_outline), activeIcon: Icon(Icons.person), label: 'Profile'),
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+
+            BottomNavigationBarItem(
+              icon: Icon(Icons.explore_outlined),
+              activeIcon: Icon(Icons.explore),
+              label: 'Explore',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline),
+              activeIcon: Icon(Icons.add_circle),
+              label: 'Create',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people_alt_outlined),
+              activeIcon: Icon(Icons.people_alt),
+              label: 'Connect',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'You',
+            ),
           ],
         ),
       ),
