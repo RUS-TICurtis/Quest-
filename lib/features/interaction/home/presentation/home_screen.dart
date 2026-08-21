@@ -53,136 +53,145 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
         child: Icon(Icons.add, color: context.colors.textPrimary),
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.lightImpact();
-                        context.go('/profile');
-                      },
-                      child: CircleAvatar(
-                        radius: 26,
-                        backgroundColor: context.colors.questBlue,
-                        child: Text(
-                          userState.initials,
-                          style: TextStyle(
-                            color: context.colors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15,
+      body: CustomScrollView(
+        slivers: [
+          // Hero Banner
+          SliverAppBar(
+            expandedHeight: 180.0,
+            floating: false,
+            pinned: true,
+            backgroundColor: context.colors.background,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      context.colors.questBlue,
+                      context.colors.skyBlue,
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.lightImpact();
+                            context.go('/profile');
+                          },
+                          child: CircleAvatar(
+                            radius: 26,
+                            backgroundColor: Colors.white24,
+                            child: Text(
+                              userState.initials,
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Good morning, ${userState.name.split(' ').first}.',
-                            style: TextStyle(
-                              fontSize: 19,
-                              fontWeight: FontWeight.w800,
-                              color: context.colors.textPrimary,
-                            ),
+                        SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Good morning, ${userState.name.split(' ').first}.',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w800,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Ready to continue your journey?',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(height: 2),
-                          Text(
-                            'Ready to continue your journey?',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: context.colors.textSecondary,
-                            ),
+                        ),
+                        Container(
+                          padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.black26,
+                            borderRadius: BorderRadius.circular(20),
                           ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: context.colors.card,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: context.colors.border),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.local_fire_department,
-                            color: context.colors.amber,
-                            size: 16,
+                          child: Row(
+                            children: [
+                              Icon(Icons.local_fire_department, color: context.colors.amber, size: 16),
+                              SizedBox(width: 4),
+                              Text(
+                                '${userState.streak}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
                           ),
-                          SizedBox(width: 4),
-                          Text(
-                            '${userState.streak}',
-                            style: TextStyle(
-                              color: context.colors.textPrimary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 18),
-
-              // Stories Bar (Highlights)
-              StoriesBar(),
-
-              SizedBox(height: 16),
-              
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    context.push('/feed');
-                  },
-                  icon: Icon(Icons.play_circle_fill, color: Colors.white),
-                  label: Text(
-                    'Watch Video Feed',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: context.colors.questBlue,
-                    minimumSize: Size(double.infinity, 50),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    elevation: 2,
-                    shadowColor: context.colors.questBlue.withValues(alpha: 0.5),
                   ),
                 ),
               ),
-
-              SizedBox(height: 16),
-
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // XP Bar card
-                    Container(
+            ),
+          ),
+          
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  StoriesBar(),
+                  SizedBox(height: 16),
+                  
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: ElevatedButton.icon(
+                      onPressed: () {
+                        HapticFeedback.lightImpact();
+                        context.push('/feed');
+                      },
+                      icon: Icon(Icons.play_circle_fill, color: Colors.white),
+                      label: Text(
+                        'Watch Video Feed',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.colors.questBlue,
+                        minimumSize: Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 2,
+                        shadowColor: context.colors.questBlue.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  
+                  // XP Bar card
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: context.colors.card,
@@ -225,19 +234,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               value: progress,
                               minHeight: 8,
                               backgroundColor: context.colors.surface,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                context.colors.gold,
-                              ),
+                              valueColor: AlwaysStoppedAnimation<Color>(context.colors.gold),
                             ),
                           ),
                         ],
                       ),
                     ),
+                  ),
+                  SizedBox(height: 20),
 
-                    SizedBox(height: 20),
-
-                    // AI Coach Card
-                    Container(
+                  // AI Coach Card
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Container(
                       padding: EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
@@ -261,11 +270,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(
-                                    Icons.auto_awesome,
-                                    color: context.colors.skyBlue,
-                                    size: 16,
-                                  ),
+                                  Icon(Icons.auto_awesome, color: context.colors.skyBlue, size: 16),
                                   SizedBox(width: 8),
                                   Text(
                                     'AI COACH SUGGESTION',
@@ -317,10 +322,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: context.colors.skyBlue,
                               foregroundColor: context.colors.background,
-                              padding: EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 10,
-                              ),
+                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -331,20 +333,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             },
                             child: Text(
                               'View Event',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w700,
-                                fontSize: 13,
-                              ),
+                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
                             ),
                           ),
                         ],
                       ),
                     ),
+                  ),
+                  SizedBox(height: 28),
 
-                    SizedBox(height: 28),
-
-                    // Daily Quests
-                    Row(
+                  // Daily Quests (Horizontal Carousel)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
@@ -364,13 +365,25 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 12),
-                    ...userState.dailyQuests.map((q) => _questTile(context, q)),
+                  ),
+                  SizedBox(height: 12),
+                  SizedBox(
+                    height: 90,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      itemCount: userState.dailyQuests.length,
+                      itemBuilder: (context, index) {
+                        return _questTile(context, userState.dailyQuests[index]);
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 28),
 
-                    SizedBox(height: 28),
-
-                    // Upcoming Events
-                    Row(
+                  // Upcoming Events (Horizontal Carousel)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
@@ -397,9 +410,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 12),
-                    if (upcomingEvents.isEmpty)
-                      Container(
+                  ),
+                  SizedBox(height: 12),
+                  if (upcomingEvents.isEmpty)
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20),
+                      child: Container(
                         width: double.infinity,
                         padding: EdgeInsets.all(24),
                         decoration: BoxDecoration(
@@ -409,11 +425,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         child: Column(
                           children: [
-                            Icon(
-                              Icons.event_busy,
-                              color: context.colors.textMuted,
-                              size: 40,
-                            ),
+                            Icon(Icons.event_busy, color: context.colors.textMuted, size: 40),
                             SizedBox(height: 12),
                             Text(
                               'No upcoming events',
@@ -433,17 +445,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                           ],
                         ),
-                      )
-                    else
-                      ...upcomingEvents.map((e) => _eventTile(context, e)),
-
-                    SizedBox(height: 80),
-                  ],
-                ),
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      height: 120,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        itemCount: upcomingEvents.length,
+                        itemBuilder: (context, index) {
+                          return _eventTile(context, upcomingEvents[index]);
+                        },
+                      ),
+                    ),
+                  SizedBox(height: 80),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -481,52 +502,59 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         );
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: 10),
-        padding: EdgeInsets.all(14),
+        width: 200,
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: context.colors.card,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: quest.isDone
                 ? context.colors.emerald.withValues(alpha: 0.3)
                 : context.colors.border,
           ),
         ),
-        child: Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(
-              quest.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-              color: quest.isDone ? context.colors.emerald : context.colors.border,
-              size: 24,
-            ),
-            SizedBox(width: 14),
-            Expanded(
-              child: Text(
-                quest.title,
-                style: TextStyle(
-                  color: quest.isDone
-                      ? context.colors.textMuted
-                      : context.colors.textPrimary,
-                  decoration: quest.isDone ? TextDecoration.lineThrough : null,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Icon(
+                  quest.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
+                  color: quest.isDone ? context.colors.emerald : context.colors.border,
+                  size: 20,
                 ),
-              ),
-            ),
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: context.colors.gold.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '+${quest.xp} XP',
-                style: TextStyle(
-                  color: context.colors.gold,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 12,
+                Container(
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: context.colors.gold.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '+${quest.xp} XP',
+                    style: TextStyle(
+                      color: context.colors.gold,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 10,
+                    ),
+                  ),
                 ),
+              ],
+            ),
+            Text(
+              quest.title,
+              style: TextStyle(
+                color: quest.isDone
+                    ? context.colors.textMuted
+                    : context.colors.textPrimary,
+                decoration: quest.isDone ? TextDecoration.lineThrough : null,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -541,11 +569,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         context.push('/events/${event.id}');
       },
       child: Container(
-        margin: EdgeInsets.only(bottom: 10),
-        padding: EdgeInsets.all(16),
+        width: 220,
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: context.colors.card,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: context.colors.border),
         ),
         child: Column(
@@ -557,46 +586,48 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Expanded(
                   child: Text(
                     event.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: context.colors.textPrimary,
                       fontWeight: FontWeight.w700,
-                      fontSize: 15,
+                      fontSize: 14,
                     ),
                   ),
                 ),
+                SizedBox(width: 8),
                 Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 3,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: context.colors.surface,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(6),
                     border: Border.all(color: context.colors.border),
                   ),
                   child: Text(
                     '${event.attendeesCount} going',
                     style: TextStyle(
                       color: context.colors.textMuted,
-                      fontSize: 11,
+                      fontSize: 10,
                     ),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 6),
+            Spacer(),
             Text(
               '${event.date}, ${event.time}',
               style: TextStyle(
                 color: context.colors.questBlue,
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            SizedBox(height: 4),
+            SizedBox(height: 2),
             Text(
               event.location,
-              style: TextStyle(color: context.colors.textMuted, fontSize: 12),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: context.colors.textMuted, fontSize: 11),
             ),
           ],
         ),

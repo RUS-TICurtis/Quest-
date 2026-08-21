@@ -157,78 +157,128 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
           Expanded(
             child: CustomScrollView(
               slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  sliver: SliverList(
-                    delegate: SliverChildListDelegate([
-                      if (joined.isNotEmpty &&
-                          communitiesState.searchQuery.isEmpty &&
-                          communitiesState.selectedCategory == 'All') ...[
-                        _sectionHeader('Your Communities', '${joined.length}'),
-                        SizedBox(height: 10),
-                        ...joined.map((c) => _communityCard(c, true, context)),
-                        SizedBox(height: 24),
-                      ],
-                      if (discover.isNotEmpty) ...[
-                        _sectionHeader('Discover', '${discover.length}'),
-                        SizedBox(height: 16),
-                      ],
-                    ]),
-                  ),
-                ),
-                if (discover.isNotEmpty)
-                  SliverPadding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    sliver: SliverGrid(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                        childAspectRatio: 0.85,
-                      ),
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => _communityGridCard(
-                          discover[index],
-                          userState.joinedCommunityIds.contains(discover[index].id),
-                          context,
+                // Hero Banner
+                if (communitiesState.searchQuery.isEmpty &&
+                    communitiesState.selectedCategory == 'All')
+                  SliverAppBar(
+                    expandedHeight: 200.0,
+                    floating: false,
+                    pinned: true,
+                    backgroundColor: context.colors.background,
+                    flexibleSpace: FlexibleSpaceBar(
+                      title: Text(
+                        'Communities',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
                         ),
-                        childCount: discover.length,
+                      ),
+                      background: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              context.colors.questBlue,
+                              context.colors.auroraPurple,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.groups,
+                            size: 80,
+                            color: Colors.white.withValues(alpha: 0.3),
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                if (allCommunities.isEmpty)
-                  SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Padding(
-                      padding: EdgeInsets.only(top: 60),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Icons.people_outline,
-                            color: context.colors.textMuted,
-                            size: 48,
+
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(vertical: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (joined.isNotEmpty &&
+                            communitiesState.searchQuery.isEmpty &&
+                            communitiesState.selectedCategory == 'All') ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: _sectionHeader('Your Communities', '${joined.length}'),
                           ),
-                          SizedBox(height: 16),
-                          Text(
-                            'No communities found',
-                            style: TextStyle(
-                              color: context.colors.textMuted,
-                              fontSize: 16,
+                          SizedBox(height: 12),
+                          SizedBox(
+                            height: 140,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              itemCount: joined.length,
+                              itemBuilder: (context, index) {
+                                return _buildHorizontalCard(joined[index], true, context);
+                              },
                             ),
                           ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Try adjusting your search or filters.',
-                            style: TextStyle(
-                              color: context.colors.textMuted,
-                              fontSize: 13,
+                          SizedBox(height: 32),
+                        ],
+                        
+                        if (discover.isNotEmpty) ...[
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                            child: _sectionHeader('Discover', '${discover.length}'),
+                          ),
+                          SizedBox(height: 12),
+                          SizedBox(
+                            height: 140,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              padding: EdgeInsets.symmetric(horizontal: 12),
+                              itemCount: discover.length,
+                              itemBuilder: (context, index) {
+                                return _buildHorizontalCard(discover[index], false, context);
+                              },
                             ),
                           ),
                         ],
-                      ),
+
+                        if (allCommunities.isEmpty)
+                          Padding(
+                            padding: EdgeInsets.only(top: 60),
+                            child: Center(
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.people_outline,
+                                    color: context.colors.textMuted,
+                                    size: 48,
+                                  ),
+                                  SizedBox(height: 16),
+                                  Text(
+                                    'No communities found',
+                                    style: TextStyle(
+                                      color: context.colors.textMuted,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    'Try adjusting your search or filters.',
+                                    style: TextStyle(
+                                      color: context.colors.textMuted,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        SizedBox(height: 80),
+                      ],
                     ),
                   ),
-                SliverPadding(padding: EdgeInsets.only(bottom: 80)),
+                ),
               ],
             ),
           ),
@@ -269,217 +319,72 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
     );
   }
 
-  Widget _communityGridCard(Community c, bool isJoined, BuildContext context) {
+  Widget _buildHorizontalCard(Community c, bool isJoined, BuildContext context) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
         context.push('/communities/${c.id}');
       },
       child: Container(
+        width: 140,
+        margin: EdgeInsets.symmetric(horizontal: 4),
+        padding: EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: context.colors.card,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(color: context.colors.border),
         ),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Expanded(
-              flex: 3,
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      c.accentColor.withValues(alpha: 0.3),
-                      c.accentColor.withValues(alpha: 0.1),
-                    ],
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: c.accentColor.withValues(alpha: 0.1),
+                    shape: BoxShape.circle,
                   ),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(15)),
+                  child: Icon(c.icon, color: c.accentColor, size: 24),
                 ),
-                child: Center(
-                  child: Icon(c.icon, color: c.accentColor, size: 38),
-                ),
-              ),
+                if (isJoined)
+                  Icon(Icons.check_circle, color: context.colors.emerald, size: 16),
+              ],
             ),
-            Expanded(
-              flex: 4,
-              child: Padding(
-                padding: EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  c.name,
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                SizedBox(height: 4),
+                Row(
                   children: [
-                    Text(
-                      c.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 14,
-                        color: context.colors.textPrimary,
-                      ),
+                    Icon(
+                      Icons.people_outline,
+                      size: 12,
+                      color: context.colors.textMuted,
                     ),
-                    SizedBox(height: 4),
+                    SizedBox(width: 4),
                     Text(
-                      c.description,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                      _formatCount(c.memberCount),
                       style: TextStyle(
                         color: context.colors.textMuted,
                         fontSize: 11,
-                        height: 1.3,
                       ),
-                    ),
-                    Spacer(),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.people_outline,
-                          size: 12,
-                          color: context.colors.textMuted,
-                        ),
-                        SizedBox(width: 4),
-                        Text(
-                          _formatCount(c.memberCount),
-                          style: TextStyle(
-                            color: context.colors.textMuted,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ],
                     ),
                   ],
                 ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _communityCard(Community c, bool isJoined, BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        context.push('/communities/${c.id}');
-      },
-      child: Container(
-        margin: EdgeInsets.only(bottom: 10),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.colors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.colors.border),
-        ),
-        child: Row(
-          children: [
-            // Icon badge
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: c.accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: c.accentColor.withValues(alpha: 0.3)),
-              ),
-              child: Icon(c.icon, color: c.accentColor, size: 26),
-            ),
-            SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          c.name,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15,
-                            color: context.colors.textPrimary,
-                          ),
-                        ),
-                      ),
-                      if (isJoined)
-                        Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 7,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: context.colors.emerald.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'Joined',
-                            style: TextStyle(
-                              color: context.colors.emerald,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    c.description,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: context.colors.textMuted,
-                      fontSize: 12,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.people_outline,
-                        size: 13,
-                        color: context.colors.textMuted,
-                      ),
-                      SizedBox(width: 4),
-                      Text(
-                        '${_formatCount(c.memberCount)} members',
-                        style: TextStyle(
-                          color: context.colors.textMuted,
-                          fontSize: 11,
-                        ),
-                      ),
-                      SizedBox(width: 12),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: context.colors.surface,
-                          borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: context.colors.border),
-                        ),
-                        child: Text(
-                          c.category,
-                          style: TextStyle(
-                            color: context.colors.textSecondary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(width: 8),
-            Icon(
-              Icons.chevron_right,
-              color: context.colors.textMuted,
-              size: 20,
+              ],
             ),
           ],
         ),
