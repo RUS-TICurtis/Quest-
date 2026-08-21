@@ -13,7 +13,7 @@ final feedControllerProvider = Provider.autoDispose<FeedController>((ref) {
   late final FeedController controller;
 
   // Shared fetch logic — used by both callbacks.
-  Future<void> _doFetch({bool silent = false}) async {
+  Future<void> doFetch({bool silent = false}) async {
     if (isFetching || !hasMore) return;
     isFetching = true;
     try {
@@ -36,9 +36,9 @@ final feedControllerProvider = Provider.autoDispose<FeedController>((ref) {
 
   controller = FeedController(
     // Urgent: user within 2 items of end — spinner already shown via isLoadingMore.
-    onFetchMore: () => _doFetch(silent: false),
+    onFetchMore: () => doFetch(silent: false),
     // Silent: user within 5 items of end — no spinner, prefetch in background.
-    onSilentPrefetch: () => _doFetch(silent: true),
+    onSilentPrefetch: () => doFetch(silent: true),
   );
 
   // Register dispose callback so ValueNotifiers are released when the

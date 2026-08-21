@@ -108,7 +108,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                           // last visible item when isLoadingMore is true.
                           ValueListenableBuilder<bool>(
                             valueListenable: feedController.isLoadingMore,
-                            builder: (_, isLoading, __) {
+                            builder: (_, isLoading, _a) {
                               if (!isLoading || index != videoCount - 1) {
                                 return const SizedBox.shrink();
                               }
