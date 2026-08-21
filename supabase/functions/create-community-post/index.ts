@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.177.0/http/server.ts";
 import { corsHeaders } from "../_shared/cors.ts";
-import { getSupabaseAdmin, verifyAuth } from "../_shared/supabase.ts";
+import { getSupabaseAdmin, getSupabaseClient, verifyAuth } from "../_shared/supabase.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -8,7 +8,10 @@ serve(async (req) => {
   }
 
   try {
-    const user = await verifyAuth(req);
+    // Create a single user-scoped anon client and pass it to verifyAuth so
+    // we don't spin up a second internal client inside verifyAuth.
+    const anonClient = getSupabaseClient(req);
+    const user = await verifyAuth(req, anonClient);
     const supabaseAdmin = getSupabaseAdmin();
 
     const body = await req.json();

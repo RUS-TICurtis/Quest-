@@ -19,7 +19,7 @@
 
 import { serve } from 'https://deno.land/std@0.177.0/http/server.ts';
 import { corsHeaders } from '../_shared/cors.ts';
-import { getSupabaseAdmin, verifyAuth } from '../_shared/supabase.ts';
+import { getSupabaseAdmin, getSupabaseClient, verifyAuth } from '../_shared/supabase.ts';
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -30,7 +30,8 @@ serve(async (req) => {
   try {
     let userId: string | null = null;
     try {
-      const user = await verifyAuth(req);
+      const anonClient = getSupabaseClient(req);
+      const user = await verifyAuth(req, anonClient);
       userId = user.id;
     } catch (e) {
       console.warn('[get-feed] Invalid bearer token, falling back to guest mode:', (e as any).message);
