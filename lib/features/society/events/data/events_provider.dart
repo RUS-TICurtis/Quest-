@@ -19,6 +19,8 @@ class Event {
   final String description;
   final int xpReward;
   final bool isRsvpd;
+  final String? muxPlaybackId;
+  final String? videoUrl;
 
   Event({
     required this.id,
@@ -36,6 +38,8 @@ class Event {
     required this.description,
     this.xpReward = 150,
     this.isRsvpd = false,
+    this.muxPlaybackId,
+    this.videoUrl,
   });
 
   Event copyWith({
@@ -53,6 +57,8 @@ class Event {
     String? description,
     int? xpReward,
     bool? isRsvpd,
+    String? muxPlaybackId,
+    String? videoUrl,
   }) {
     return Event(
       id: id ?? this.id,
@@ -69,6 +75,8 @@ class Event {
       description: description ?? this.description,
       xpReward: xpReward ?? this.xpReward,
       isRsvpd: isRsvpd ?? this.isRsvpd,
+      muxPlaybackId: muxPlaybackId ?? this.muxPlaybackId,
+      videoUrl: videoUrl ?? this.videoUrl,
     );
   }
 
@@ -92,6 +100,8 @@ class Event {
       description: json['description'] as String,
       xpReward: json['xpReward'] as int? ?? 150,
       isRsvpd: json['isRsvpd'] as bool? ?? false,
+      muxPlaybackId: json['muxPlaybackId'] as String?,
+      videoUrl: json['videoUrl'] as String?,
     );
   }
 
@@ -111,6 +121,8 @@ class Event {
       'description': description,
       'xpReward': xpReward,
       'isRsvpd': isRsvpd,
+      'muxPlaybackId': muxPlaybackId,
+      'videoUrl': videoUrl,
     };
   }
 }

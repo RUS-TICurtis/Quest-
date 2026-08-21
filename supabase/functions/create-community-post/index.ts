@@ -49,28 +49,6 @@ serve(async (req) => {
       throw new Error(`Failed to insert post: ${insertError?.message}`);
     }
 
-    // 2. Queue Notification Job
-    const jobPayload = {
-      community_id,
-      post_id: post.id,
-      author_id: user.id,
-      content,
-      show_id
-    };
-
-    const { error: jobError } = await supabaseAdmin
-      .from('notification_jobs')
-      .insert({
-        type: 'community_post',
-        payload: jobPayload
-      });
-
-    if (jobError) {
-      console.error("Failed to queue notification job:", jobError);
-      // We don't fail the post creation if notification queuing fails,
-      // but we log it. In a stricter system, you might want a transaction.
-    }
-
     return new Response(JSON.stringify({ success: true, post }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

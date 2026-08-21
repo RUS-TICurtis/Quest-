@@ -17,6 +17,8 @@ class StoryItem {
   final String? content;
   final List<Color>? gradient;
   final bool isSpoiler;
+  final String? muxPlaybackId;
+  final String? videoUrl;
 
   StoryItem({
     required this.id,
@@ -32,6 +34,8 @@ class StoryItem {
     this.content,
     this.gradient,
     this.isSpoiler = false,
+    this.muxPlaybackId,
+    this.videoUrl,
   });
 
   StoryItem copyWith({
@@ -48,6 +52,8 @@ class StoryItem {
     String? content,
     List<Color>? gradient,
     bool? isSpoiler,
+    String? muxPlaybackId,
+    String? videoUrl,
   }) {
     return StoryItem(
       id: id ?? this.id,
@@ -63,6 +69,8 @@ class StoryItem {
       content: content ?? this.content,
       gradient: gradient ?? this.gradient,
       isSpoiler: isSpoiler ?? this.isSpoiler,
+      muxPlaybackId: muxPlaybackId ?? this.muxPlaybackId,
+      videoUrl: videoUrl ?? this.videoUrl,
     );
   }
 
@@ -85,6 +93,8 @@ class StoryItem {
           ?.map((e) => Color(e as int))
           .toList(),
       isSpoiler: json['isSpoiler'] as bool? ?? false,
+      muxPlaybackId: json['muxPlaybackId'] as String?,
+      videoUrl: json['videoUrl'] as String?,
     );
   }
 
@@ -111,6 +121,8 @@ class StoryItem {
       'content': content,
       'gradient': gradient?.map((e) => e.toARGB32()).toList(),
       'isSpoiler': isSpoiler,
+      'muxPlaybackId': muxPlaybackId,
+      'videoUrl': videoUrl,
     };
   }
 }

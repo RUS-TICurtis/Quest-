@@ -1,5 +1,4 @@
 import 'package:video_player/video_player.dart';
-import 'package:quest/shared/models/creator_video.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PoolEntry {
@@ -12,16 +11,16 @@ class PoolEntry {
 
 class FeedVideoPool extends Notifier<void> {
   final Map<int, PoolEntry> _entries = {};
-  List<CreatorVideo> _videos = [];
+  List<String> _urls = [];
   int _currentIndex = 0;
   bool _isGloballyPaused = false;
 
   @override
   void build() {}
 
-  void setVideos(List<CreatorVideo> videos) {
-    _videos = videos;
-    if (_videos.isNotEmpty) {
+  void setVideos(List<String> urls) {
+    _urls = urls;
+    if (_urls.isNotEmpty) {
       _activateWindow(_currentIndex);
     }
   }
@@ -54,7 +53,7 @@ class FeedVideoPool extends Notifier<void> {
 
   void _activateWindow(int centerIndex) {
     for (int i = centerIndex - 1; i <= centerIndex + 1; i++) {
-      if (i >= 0 && i < _videos.length) {
+      if (i >= 0 && i < _urls.length) {
         if (!_entries.containsKey(i)) {
           _initializeEntry(i, autoPlay: i == _currentIndex && !_isGloballyPaused);
         }
@@ -63,13 +62,7 @@ class FeedVideoPool extends Notifier<void> {
   }
 
   Future<void> _initializeEntry(int index, {required bool autoPlay}) async {
-    final video = _videos[index];
-    final String url;
-    if (video.muxPlaybackId != null && video.muxPlaybackId!.isNotEmpty) {
-      url = 'https://stream.mux.com/${video.muxPlaybackId!}.m3u8';
-    } else {
-      url = video.videoUrl;
-    }
+    final String url = _urls[index];
 
     if (url.isEmpty) return;
 
@@ -120,5 +113,13 @@ class FeedVideoPool extends Notifier<void> {
 }
 
 final feedVideoPoolProvider = NotifierProvider<FeedVideoPool, void>(() {
+  return FeedVideoPool();
+});
+
+final eventsVideoPoolProvider = NotifierProvider<FeedVideoPool, void>(() {
+  return FeedVideoPool();
+});
+
+final storiesVideoPoolProvider = NotifierProvider<FeedVideoPool, void>(() {
   return FeedVideoPool();
 });
