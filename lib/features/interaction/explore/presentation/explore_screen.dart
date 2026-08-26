@@ -13,42 +13,7 @@ class ExploreScreen extends ConsumerWidget {
       backgroundColor: context.colors.background,
       body: CustomScrollView(
         slivers: [
-          // Hero Banner
-          SliverAppBar(
-            expandedHeight: 200.0,
-            floating: false,
-            pinned: true,
-            backgroundColor: context.colors.background,
-            flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                'Explore Quest',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                  shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
-                ),
-              ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      context.colors.questBlue,
-                      context.colors.auroraPurple,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-                child: Center(
-                  child: Icon(
-                    Icons.explore,
-                    size: 80,
-                    color: Colors.white.withValues(alpha: 0.3),
-                  ),
-                ),
-              ),
-            ),
-          ),
+
           
           SliverToBoxAdapter(
             child: Padding(

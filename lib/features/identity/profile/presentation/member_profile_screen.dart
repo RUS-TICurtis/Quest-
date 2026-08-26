@@ -59,9 +59,11 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
         slivers: [
           // App Bar with Gradient Banner
           SliverAppBar(
-            expandedHeight: 180,
+            expandedHeight: 0,
             pinned: true,
-            backgroundColor: context.colors.surface,
+            elevation: 0,
+            backgroundColor: context.colors.background,
+            title: Text(name, style: TextStyle(color: context.colors.textPrimary)),
             leading: IconButton(
               icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
               onPressed: () {
@@ -73,21 +75,6 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
                 }
               },
             ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      context.colors.auroraPurple,
-                      context.colors.questBlue,
-                      context.colors.background,
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                ),
-              ),
-            ),
           ),
 
           SliverToBoxAdapter(
@@ -97,8 +84,8 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Avatar & Action Row
-                  Transform.translate(
-                    offset: Offset(0, -40),
+                  Padding(
+                    padding: EdgeInsets.only(top: 16),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -209,8 +196,8 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
                   ),
 
                   // Name, Bio & Level
-                  Transform.translate(
-                    offset: Offset(0, -24),
+                  Padding(
+                    padding: EdgeInsets.only(top: 16),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [

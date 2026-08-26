@@ -23,6 +23,7 @@ import 'package:quest/features/identity/leaderboard/presentation/leaderboard_scr
 import 'package:quest/features/interaction/explore/presentation/explore_screen.dart';
 import 'package:quest/features/interaction/feed/presentation/feed_screen.dart';
 import 'package:quest/features/interaction/create/presentation/create_screen.dart';
+import 'package:quest/features/interaction/create/presentation/share_experience_screen.dart';
 import 'package:quest/core/shell/main_shell.dart';
 
 /// A [ChangeNotifier] that wraps Riverpod's [Ref] so [GoRouter] can
@@ -198,6 +199,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/leaderboard',
         name: 'leaderboard',
         builder: (context, state) => LeaderboardScreen(),
+      ),
+      GoRoute(
+        path: '/share-experience',
+        name: 'share_experience',
+        builder: (context, state) => ShareExperienceScreen(),
       ),
     ],
   );

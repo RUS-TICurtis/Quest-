@@ -45,12 +45,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     // Navigate to landing or home after a delay based on auth state
     Future.delayed(Duration(milliseconds: 2500), () {
       if (mounted) {
-        final authState = ref.read(authProvider);
-        if (authState.isAuthenticated) {
-          context.go('/home');
-        } else {
-          context.go('/landing');
-        }
+        context.go('/home');
       }
     });
   }
@@ -127,7 +122,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ),
                         SizedBox(height: 24),
                         Text(
-                          'Quest❗',
+                          'Quest',
                           style: TextStyle(
                             fontSize: 42,
                             fontWeight: FontWeight.bold,

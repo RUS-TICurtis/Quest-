@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
@@ -12,6 +13,17 @@ class MainShell extends StatelessWidget {
     if (location.startsWith('/connect')) return 3;
     if (location.startsWith('/profile')) return 4;
     return 0;
+  }
+
+  String _getTitle(int index) {
+    switch (index) {
+      case 0: return 'Home';
+      case 1: return 'Explore';
+      case 2: return 'Create & Share Experience';
+      case 3: return 'Connect';
+      case 4: return 'Profile';
+      default: return 'Quest';
+    }
   }
 
   void _onTap(BuildContext context, int index) {
@@ -135,6 +147,23 @@ class MainShell extends StatelessWidget {
     // Mobile: bottom navigation bar
     return Scaffold(
       backgroundColor: context.colors.background,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(kToolbarHeight),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: AppBar(
+              backgroundColor: context.colors.surface.withValues(alpha: 0.5),
+              elevation: 0,
+              centerTitle: true,
+              title: Text(
+                _getTitle(idx),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: context.colors.textPrimary),
+              ),
+            ),
+          ),
+        ),
+      ),
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -143,35 +172,41 @@ class MainShell extends StatelessWidget {
         child: BottomNavigationBar(
           currentIndex: idx,
           onTap: (i) => _onTap(context, i),
-          items: [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
+          backgroundColor: context.colors.background,
+          elevation: 0,
+          type: BottomNavigationBarType.fixed,
+          selectedItemColor: context.colors.questBlue,
+          unselectedItemColor: context.colors.textMuted,
+          showSelectedLabels: false,
+          showUnselectedLabels: false,
+              items: [
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.home_outlined),
+                  activeIcon: Icon(Icons.home),
+                  label: 'Home',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.explore_outlined),
+                  activeIcon: Icon(Icons.explore),
+                  label: 'Explore',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.add_circle_outline, size: 32),
+                  activeIcon: Icon(Icons.add_circle, size: 32),
+                  label: 'Create',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.people_alt_outlined),
+                  activeIcon: Icon(Icons.people_alt),
+                  label: 'Connect',
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_outline),
+                  activeIcon: Icon(Icons.person),
+                  label: 'You',
+                ),
+              ],
             ),
-
-            BottomNavigationBarItem(
-              icon: Icon(Icons.explore_outlined),
-              activeIcon: Icon(Icons.explore),
-              label: 'Explore',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle_outline),
-              activeIcon: Icon(Icons.add_circle),
-              label: 'Create',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.people_alt_outlined),
-              activeIcon: Icon(Icons.people_alt),
-              label: 'Connect',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'You',
-            ),
-          ],
-        ),
       ),
     );
   }

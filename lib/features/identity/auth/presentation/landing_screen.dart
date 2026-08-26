@@ -71,7 +71,7 @@ class LandingScreen extends ConsumerWidget {
                       ),
                       SizedBox(width: 10),
                       Text(
-                        'Quest❗',
+                        'Quest',
                         style: TextStyle(
                           fontSize: 22,
                           fontWeight: FontWeight.bold,

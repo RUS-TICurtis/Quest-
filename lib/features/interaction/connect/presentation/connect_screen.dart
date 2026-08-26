@@ -39,40 +39,10 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen>
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
             SliverAppBar(
-              expandedHeight: 180.0,
-              floating: false,
+              floating: true,
               pinned: true,
               elevation: 0,
               backgroundColor: context.colors.background,
-              flexibleSpace: FlexibleSpaceBar(
-                title: Text(
-                  'Connect',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
-                  ),
-                ),
-                background: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        context.colors.emerald,
-                        context.colors.questBlue,
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                  ),
-                  child: Center(
-                    child: Icon(
-                      Icons.hub_outlined,
-                      size: 80,
-                      color: Colors.white.withValues(alpha: 0.3),
-                    ),
-                  ),
-                ),
-              ),
               bottom: PreferredSize(
                 preferredSize: Size.fromHeight(48),
                 child: Container(

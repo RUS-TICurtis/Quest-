@@ -48,9 +48,11 @@ class CommunityDetailScreen extends ConsumerWidget {
         slivers: [
           // Header
           SliverAppBar(
-            expandedHeight: 200,
+            expandedHeight: 0,
             pinned: true,
-            backgroundColor: AppColors.surface,
+            elevation: 0,
+            backgroundColor: AppColors.background,
+            title: Text(community.name, style: TextStyle(color: AppColors.textPrimary)),
             leading: IconButton(
               icon: Icon(Icons.arrow_back),
               onPressed: () {
@@ -61,53 +63,6 @@ class CommunityDetailScreen extends ConsumerWidget {
                   context.go('/communities');
                 }
               },
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      community.accentColor.withValues(alpha: 0.35),
-                      AppColors.surface,
-                    ],
-                  ),
-                ),
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      SizedBox(height: 48),
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          color: community.accentColor.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: community.accentColor.withValues(alpha: 0.5),
-                          ),
-                        ),
-                        child: Icon(
-                          community.icon,
-                          color: community.accentColor,
-                          size: 38,
-                        ),
-                      ),
-                      SizedBox(height: 12),
-                      Text(
-                        community.name,
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
             ),
           ),
 

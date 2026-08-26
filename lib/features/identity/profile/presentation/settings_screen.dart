@@ -311,7 +311,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // App Info
           Center(
             child: Text(
-              'Quest❗ • Version 2.0.0 (Build 42)',
+              'Quest • Version 2.0.0 (Build 42)',
               style: TextStyle(color: context.colors.textMuted, fontSize: 12),
             ),
           ),
@@ -388,7 +388,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: context.colors.surface,
         title: Text(
-          'Sign Out of Quest❗?',
+          'Sign Out of Quest?',
           style: TextStyle(
             color: context.colors.textPrimary,
             fontWeight: FontWeight.bold,

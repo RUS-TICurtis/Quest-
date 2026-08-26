@@ -45,55 +45,11 @@ class EventDetailScreen extends ConsumerWidget {
         slivers: [
           // Hero image app bar
           SliverAppBar(
-            expandedHeight: 280,
+            expandedHeight: 0,
             pinned: true,
-            backgroundColor: AppColors.surface,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back),
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                HapticFeedback.lightImpact();
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/events');
-                }
-              },
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    event.imageUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
-                      color: AppColors.card,
-                      child: Center(
-                        child: Icon(
-                          Icons.image_not_supported,
-                          color: AppColors.textMuted,
-                          size: 48,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          AppColors.background.withValues(alpha: 0.8),
-                          AppColors.background,
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            backgroundColor: AppColors.background,
+            elevation: 0,
+            title: Text('Event Details', style: TextStyle(color: AppColors.textPrimary)),
           ),
 
           SliverToBoxAdapter(
