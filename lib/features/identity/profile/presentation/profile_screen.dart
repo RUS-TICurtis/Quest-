@@ -37,9 +37,7 @@ class ProfileScreen extends ConsumerWidget {
             icon: Icon(Icons.settings_outlined),
             tooltip: 'Settings',
             onPressed: () {
-              HapticFeedback.lightImpact();
-              HapticFeedback.lightImpact();
-              context.push('/settings');
+              context.push('/profile/edit');
             },
           ),
         ],
@@ -57,15 +55,20 @@ class ProfileScreen extends ConsumerWidget {
                     children: [
                       CircleAvatar(
                         radius: 48,
-                        backgroundColor: AppColors.questBlue,
-                        child: Text(
-                          userState.initials,
-                          style: TextStyle(
-                            color: AppColors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 24,
-                          ),
-                        ),
+                        backgroundColor: AppColors.border,
+                        backgroundImage: userState.avatarUrl != null
+                            ? NetworkImage(userState.avatarUrl!)
+                            : null as ImageProvider?,
+                        child: userState.avatarUrl == null
+                            ? Text(
+                                userState.initials,
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 24,
+                                ),
+                              )
+                            : null,
                       ),
                       Positioned(
                         bottom: 2,
@@ -94,7 +97,28 @@ class ProfileScreen extends ConsumerWidget {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  if (userState.username != null && userState.username!.isNotEmpty) ...[
+                    SizedBox(height: 2),
+                    Text(
+                      '@${userState.username}',
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                  if (userState.bio != null && userState.bio!.isNotEmpty) ...[
+                    SizedBox(height: 12),
+                    Text(
+                      userState.bio!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: AppColors.textPrimary.withValues(alpha: 0.9),
+                      ),
+                    ),
+                  ],
+                  SizedBox(height: 12),
                   Container(
                     padding: EdgeInsets.symmetric(
                       horizontal: 12,

@@ -315,18 +315,29 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
 
               // Overlay: Video caption
               if (hasVideoUrl && story.caption.isNotEmpty)
-                Positioned(
-                  bottom: 32,
-                  left: 16,
-                  right: 16,
-                  child: Text(
-                    story.caption,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      shadows: [
-                        Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 2))
-                      ]
+                Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                    child: Text(
+                      story.caption,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.8),
+                            blurRadius: 8,
+                            offset: Offset(1, 2),
+                          ),
+                          Shadow(
+                            color: Colors.black.withValues(alpha: 0.8),
+                            blurRadius: 2,
+                            offset: Offset(-1, -1),
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -343,10 +354,10 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                       children: List.generate(stories.length, (index) {
                         return Expanded(
                           child: Container(
-                            height: 3,
+                            height: 2.5,
                             margin: EdgeInsets.symmetric(horizontal: 2),
                             decoration: BoxDecoration(
-                              color: Colors.white24,
+                              color: Colors.white.withValues(alpha: 0.3),
                               borderRadius: BorderRadius.circular(2),
                             ),
                             child: AnimatedBuilder(
@@ -362,9 +373,9 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                                   value: value,
                                   backgroundColor: Colors.transparent,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    story.ringColor,
+                                    Colors.white,
                                   ),
-                                  minHeight: 3,
+                                  minHeight: 2.5,
                                 );
                               },
                             ),
@@ -374,61 +385,149 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                     ),
                     SizedBox(height: 12),
 
-                    // Author info & Close button
+                    // Author info & Actions
                     Row(
                       children: [
-                        CircleAvatar(
-                          radius: 18,
-                          backgroundColor: story.ringColor,
-                          child: Text(
-                            story.authorName
-                                .split(' ')
-                                .map((s) => s[0])
-                                .take(2)
-                                .join(),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        Container(
+                          width: 36,
+                          height: 36,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.white, width: 1.5),
                           ),
+                          clipBehavior: Clip.antiAlias,
+                          child: story.authorAvatar != null && story.authorAvatar!.isNotEmpty
+                              ? Image.network(
+                                  story.authorAvatar!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, _, _) => _buildFallbackAvatar(story),
+                                )
+                              : _buildFallbackAvatar(story),
                         ),
                         SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              story.authorName,
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                fontSize: 14,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                story.authorName,
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 14,
+                                  shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                                ),
                               ),
-                            ),
-                            Text(
-                              '${story.communityName} • ${story.timeAgo}',
-                              style: TextStyle(
-                                color: context.colors.textMuted,
-                                fontSize: 11,
+                              Text(
+                                story.formattedTimeAgo, // "today at 11:34 AM"
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w500,
+                                  shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                        Spacer(),
                         IconButton(
                           icon: Icon(
-                            Icons.close,
+                            controller?.value.volume == 0 ? Icons.volume_off : Icons.volume_up,
                             color: Colors.white,
                             size: 24,
+                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
                           ),
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () {
+                            if (controller != null) {
+                              final isMuted = controller.value.volume == 0;
+                              controller.setVolume(isMuted ? 1.0 : 0.0);
+                              setState(() {}); // Update icon
+                            }
+                          },
+                        ),
+                        IconButton(
+                          icon: Icon(
+                            Icons.more_vert,
+                            color: Colors.white,
+                            size: 24,
+                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                          ),
+                          onPressed: () {
+                            // Show options menu
+                          },
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
+              
+              // Bottom Interaction Bar
+              Positioned(
+                bottom: 16,
+                left: 16,
+                right: 16,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        height: 48,
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Reply privately...',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(width: 16),
+                    Icon(
+                      Icons.shortcut,
+                      color: Colors.white,
+                      size: 28,
+                      shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                    ),
+                    SizedBox(width: 16),
+                    Icon(
+                      Icons.favorite_border,
+                      color: Colors.white,
+                      size: 28,
+                      shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                    ),
+                  ],
+                ),
+              ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFallbackAvatar(StoryItem story) {
+    return Container(
+      color: story.ringColor,
+      child: Center(
+        child: Text(
+          story.authorName.split(' ').map((s) => s.isNotEmpty ? s[0] : '').take(2).join(),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ),

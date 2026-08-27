@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-06_
+_Last Modified: 2026-08-26_
 
 # 7. Feature Modules
 
@@ -16,6 +16,7 @@ _Last Modified: 2026-08-06_
 | **Radar** | `lib/features/radar/` | 🟡 Partial | `radar_nodes` ✅, `radar_members` pending PostGIS |
 | **Leaderboard** | `lib/features/leaderboard/` | 🟡 Partial | `leaderboard` ✅, guilds are mock |
 | **Organization** | `lib/features/organization/` | 🟡 Scaffold | Host/admin portal |
+| **Create** | `lib/features/interaction/create/` | ✅ Complete | Mux, Cloudinary, `stories`, `community_posts` |
 
 ## Module Structure (per feature)
 

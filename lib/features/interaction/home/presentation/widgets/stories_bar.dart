@@ -15,7 +15,7 @@ class StoriesBar extends ConsumerWidget {
     final stories = storiesAsync.value ?? [];
 
     return SizedBox(
-      height: 104,
+      height: 116,
       child: ListView.separated(
         padding: EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
@@ -23,29 +23,35 @@ class StoriesBar extends ConsumerWidget {
         separatorBuilder: (_, _) => SizedBox(width: 14),
         itemBuilder: (context, index) {
           if (index == 0) {
-            // "Your Story" / "Share Update" button
+            // "My Story" button
             return GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
-                context.push('/create-story');
+                context.push('/create'); 
               },
               child: Column(
                 children: [
                   Stack(
                     children: [
                       Container(
-                        width: 66,
-                        height: 66,
+                        width: 72,
+                        height: 72,
+                        padding: EdgeInsets.all(2.5),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: context.colors.surface,
                           border: Border.all(color: context.colors.border, width: 2),
                         ),
-                        child: Center(
-                          child: Icon(
-                            Icons.add,
-                            color: context.colors.questBlue,
-                            size: 28,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: context.colors.surface,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.person,
+                              color: context.colors.textMuted,
+                              size: 36,
+                            ),
                           ),
                         ),
                       ),
@@ -53,15 +59,16 @@ class StoriesBar extends ConsumerWidget {
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          padding: EdgeInsets.all(3),
+                          padding: EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: context.colors.questBlue,
                             shape: BoxShape.circle,
+                            border: Border.all(color: context.colors.background, width: 2),
                           ),
                           child: Icon(
-                            Icons.flash_on,
+                            Icons.add,
                             color: Colors.white,
-                            size: 12,
+                            size: 16,
                           ),
                         ),
                       ),
@@ -69,7 +76,7 @@ class StoriesBar extends ConsumerWidget {
                   ),
                   SizedBox(height: 6),
                   Text(
-                    'Share Live',
+                    'My Story',
                     style: TextStyle(
                       color: context.colors.textSecondary,
                       fontSize: 11,
@@ -90,8 +97,8 @@ class StoriesBar extends ConsumerWidget {
             child: Column(
               children: [
                 Container(
-                  width: 66,
-                  height: 66,
+                  width: 72,
+                  height: 72,
                   padding: EdgeInsets.all(2.5),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
@@ -111,38 +118,34 @@ class StoriesBar extends ConsumerWidget {
                         : null,
                   ),
                   child: Container(
-                    padding: EdgeInsets.all(2),
                     decoration: BoxDecoration(
                       color: context.colors.background,
                       shape: BoxShape.circle,
                     ),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: story.ringColor.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Icon(
-                          story.icon,
-                          color: story.ringColor,
-                          size: 24,
-                        ),
-                      ),
-                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: story.authorAvatar != null && story.authorAvatar!.isNotEmpty
+                        ? Image.network(
+                            story.authorAvatar!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                _buildFallbackIcon(story, context),
+                          )
+                        : _buildFallbackIcon(story, context),
                   ),
                 ),
                 SizedBox(height: 6),
                 SizedBox(
-                  width: 70,
+                  width: 74,
                   child: Text(
                     story.authorName,
                     textAlign: TextAlign.center,
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: hasSeen ? context.colors.textMuted : Colors.white,
                       fontSize: 11,
                       fontWeight: hasSeen ? FontWeight.normal : FontWeight.w700,
+                      height: 1.2,
                     ),
                   ),
                 ),
@@ -150,6 +153,22 @@ class StoriesBar extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildFallbackIcon(StoryItem story, BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: story.ringColor.withValues(alpha: 0.15),
+        shape: BoxShape.circle,
+      ),
+      child: Center(
+        child: Icon(
+          story.icon,
+          color: story.ringColor,
+          size: 32,
+        ),
       ),
     );
   }

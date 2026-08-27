@@ -1,6 +1,7 @@
 import 'package:quest/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quest/core/utils/time_utils.dart';
 import 'stories_repository.dart';
 
 class StoryItem {
@@ -11,7 +12,7 @@ class StoryItem {
   final Color ringColor;
   final IconData icon;
   final bool isSeen;
-  final String timeAgo;
+  final DateTime? createdAt;
   final String? authorAvatar;
   final String? title;
   final String? content;
@@ -28,7 +29,7 @@ class StoryItem {
     this.ringColor = AppColors.questBlue,
     this.icon = Icons.bolt,
     this.isSeen = false,
-    required this.timeAgo,
+    this.createdAt,
     this.authorAvatar,
     this.title,
     this.content,
@@ -46,7 +47,7 @@ class StoryItem {
     Color? ringColor,
     IconData? icon,
     bool? isSeen,
-    String? timeAgo,
+    DateTime? createdAt,
     String? authorAvatar,
     String? title,
     String? content,
@@ -63,7 +64,7 @@ class StoryItem {
       ringColor: ringColor ?? this.ringColor,
       icon: icon ?? this.icon,
       isSeen: isSeen ?? this.isSeen,
-      timeAgo: timeAgo ?? this.timeAgo,
+      createdAt: createdAt ?? this.createdAt,
       authorAvatar: authorAvatar ?? this.authorAvatar,
       title: title ?? this.title,
       content: content ?? this.content,
@@ -85,7 +86,7 @@ class StoryItem {
       ),
       icon: _getStoryIcon(json['icon'] as int?),
       isSeen: json['isSeen'] as bool? ?? false,
-      timeAgo: json['timeAgo'] as String,
+      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
       authorAvatar: json['authorAvatar'] as String?,
       title: json['title'] as String?,
       content: json['content'] as String?,
@@ -115,7 +116,7 @@ class StoryItem {
       'ringColor': ringColor.toARGB32(),
       'icon': icon.codePoint,
       'isSeen': isSeen,
-      'timeAgo': timeAgo,
+      'createdAt': createdAt?.toIso8601String(),
       'authorAvatar': authorAvatar,
       'title': title,
       'content': content,
@@ -125,6 +126,8 @@ class StoryItem {
       'videoUrl': videoUrl,
     };
   }
+
+  String get formattedTimeAgo => TimeUtils.formatStoryTime(createdAt);
 }
 
 class StoriesNotifier extends AsyncNotifier<List<StoryItem>> {

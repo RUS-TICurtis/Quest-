@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-06_
+_Last Modified: 2026-08-26_
 
 # 5. Navigation & Routing
 
@@ -34,6 +34,7 @@ GoRouter is initialized via `appRouterProvider` in `lib/core/router/app_router.d
 | `/radar` | `radar` | `RadarScreen` | Yes (no Shell) |
 | `/create-story` | `create_story` | `StoryCreatorScreen` | Yes (no Shell) |
 | `/leaderboard` | `leaderboard` | `LeaderboardScreen` | Yes (no Shell) |
+| `/share-experience` | `share_experience` | `ShareExperienceScreen` | Yes (no Shell) |
 
 ## Auth Redirect Logic
 

@@ -4,8 +4,14 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   app_links
+  audioplayers_windows
   connectivity_plus
+  emoji_picker_flutter
+  file_selector_windows
   flutter_inappwebview_windows
+  permission_handler_windows
+  record_windows
+  secure_application
   url_launcher_windows
 )
 

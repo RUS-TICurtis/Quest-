@@ -15,12 +15,14 @@ import 'package:quest/features/interaction/connect/presentation/connect_screen.d
 import 'package:quest/features/interaction/messaging/presentation/chat_screen.dart';
 import 'package:quest/features/society/organization/presentation/organization_dashboard_screen.dart';
 import 'package:quest/features/identity/profile/presentation/profile_screen.dart';
+import 'package:quest/features/identity/profile/presentation/edit_profile_screen.dart';
 import 'package:quest/features/identity/profile/presentation/member_profile_screen.dart';
 import 'package:quest/features/identity/profile/presentation/settings_screen.dart';
 import 'package:quest/features/interaction/stage/presentation/stage_screen.dart';
 import 'package:quest/features/world/radar/presentation/radar_screen.dart';
 import 'package:quest/features/identity/leaderboard/presentation/leaderboard_screen.dart';
 import 'package:quest/features/interaction/explore/presentation/explore_screen.dart';
+import 'package:quest/features/interaction/explore/presentation/user_search_screen.dart';
 import 'package:quest/features/interaction/feed/presentation/feed_screen.dart';
 import 'package:quest/features/interaction/create/presentation/create_screen.dart';
 import 'package:quest/features/interaction/create/presentation/share_experience_screen.dart';
@@ -107,6 +109,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/explore',
             name: 'explore',
             builder: (context, state) => ExploreScreen(),
+            routes: [
+              GoRoute(
+                path: 'search',
+                name: 'user_search',
+                builder: (context, state) => UserSearchScreen(),
+              ),
+            ],
           ),
           GoRoute(
             path: '/create',
@@ -180,6 +189,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => SettingsScreen(),
       ),
       GoRoute(
+        path: '/profile/edit',
+        name: 'edit_profile',
+        builder: (context, state) => EditProfileScreen(),
+      ),
+      GoRoute(
         path: '/stage/:id',
         name: 'stage',
         builder: (context, state) =>
@@ -203,7 +217,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/share-experience',
         name: 'share_experience',
-        builder: (context, state) => ShareExperienceScreen(),
+        builder: (context, state) => ShareExperienceScreen(
+          mediaPath: state.extra as String?,
+        ),
       ),
     ],
   );

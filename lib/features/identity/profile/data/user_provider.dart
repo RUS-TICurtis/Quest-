@@ -43,6 +43,9 @@ class QuestItem {
 
 class UserState {
   final String name;
+  final String? username;
+  final String? avatarUrl;
+  final String? bio;
   final String initials;
   final int level;
   final int currentXp;
@@ -57,6 +60,9 @@ class UserState {
 
   UserState({
     required this.name,
+    this.username,
+    this.avatarUrl,
+    this.bio,
     required this.initials,
     required this.level,
     required this.currentXp,
@@ -73,6 +79,9 @@ class UserState {
   factory UserState.initial() {
     return UserState(
       name: '',
+      username: null,
+      avatarUrl: null,
+      bio: null,
       initials: '',
       level: 1,
       currentXp: 0,
@@ -88,6 +97,9 @@ class UserState {
 
   UserState copyWith({
     String? name,
+    String? username,
+    String? avatarUrl,
+    String? bio,
     String? initials,
     int? level,
     int? currentXp,
@@ -102,6 +114,9 @@ class UserState {
   }) {
     return UserState(
       name: name ?? this.name,
+      username: username ?? this.username,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      bio: bio ?? this.bio,
       initials: initials ?? this.initials,
       level: level ?? this.level,
       currentXp: currentXp ?? this.currentXp,
@@ -119,6 +134,9 @@ class UserState {
   factory UserState.fromJson(Map<String, dynamic> json) {
     return UserState(
       name: json['name'] as String? ?? '',
+      username: json['username'] as String?,
+      avatarUrl: json['avatarUrl'] as String?,
+      bio: json['bio'] as String?,
       initials: json['initials'] as String? ?? '',
       level: json['level'] as int? ?? 1,
       currentXp: json['currentXp'] as int? ?? 0,
@@ -156,6 +174,9 @@ class UserState {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
+      'username': username,
+      'avatarUrl': avatarUrl,
+      'bio': bio,
       'initials': initials,
       'level': level,
       'currentXp': currentXp,
@@ -218,6 +239,10 @@ class UserNotifier extends AsyncNotifier<UserState> {
     );
 
     await _repository.updateUser(newState);
+  }
+
+  Future<void> updateProfile(UserState newState) async {
+    await _updateState(newState);
   }
 
   Future<void> addXp(int amount) async {

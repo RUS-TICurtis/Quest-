@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quest/features/interaction/messaging/data/chat_repository.dart';
 
-enum MessageType { text, voice, voiceNote, linkPreview }
+enum MessageType { text, voice, voiceNote, linkPreview, image, video }
 
 class ChatMessage {
   final String id;

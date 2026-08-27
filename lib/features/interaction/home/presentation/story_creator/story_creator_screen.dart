@@ -58,7 +58,7 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
       authorName: user.name,
       authorAvatar:
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
-      timeAgo: 'Just now',
+      createdAt: DateTime.now(),
       title: title,
       content: content,
       isSpoiler: _isSpoiler,

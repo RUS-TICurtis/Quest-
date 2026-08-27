@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:camera/camera.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 
 class CreateScreen extends ConsumerStatefulWidget {
@@ -12,7 +13,7 @@ class CreateScreen extends ConsumerStatefulWidget {
   ConsumerState<CreateScreen> createState() => _CreateScreenState();
 }
 
-class _CreateScreenState extends ConsumerState<CreateScreen> {
+class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBindingObserver {
   int _selectedOptionIndex = 1; // Start with Image by default so camera opens
   final List<String> _options = ['Text', 'Image', 'Vlog'];
   
@@ -25,24 +26,42 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _initCamera();
+  }
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final CameraController? cameraController = _cameraController;
+    if (cameraController == null || !cameraController.value.isInitialized) {
+      return;
+    }
+    if (state == AppLifecycleState.inactive) {
+      cameraController.dispose();
+      _isCameraInitialized = false;
+    } else if (state == AppLifecycleState.resumed) {
+      _initCamera();
+    }
   }
   
   Future<void> _initCamera() async {
     try {
       _cameras = await availableCameras();
       if (_cameras != null && _cameras!.isNotEmpty) {
-        _cameraController = CameraController(
+        final controller = CameraController(
           _cameras![0],
           ResolutionPreset.high,
           enableAudio: true,
         );
-        await _cameraController!.initialize();
-        if (mounted) {
-          setState(() {
-            _isCameraInitialized = true;
-          });
+        await controller.initialize();
+        if (!mounted) {
+          controller.dispose();
+          return;
         }
+        _cameraController = controller;
+        setState(() {
+          _isCameraInitialized = true;
+        });
       }
     } catch (e) {
       debugPrint('Error initializing camera: $e');
@@ -57,9 +76,24 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _cameraController?.dispose();
     _textController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickFromGallery() async {
+    final picker = ImagePicker();
+    final file = await picker.pickMedia(); // Allows both images and videos
+    if (file != null) {
+      HapticFeedback.lightImpact();
+      if (!mounted) return;
+      _disposeCamera(); // Free up camera when navigating away
+      await context.push('/share-experience', extra: file.path);
+      if (mounted && _selectedOptionIndex == 1) {
+        _initCamera();
+      }
+    }
   }
 
   void _onOptionSelected(int index) {
@@ -135,11 +169,19 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
                   onTap: () async {
                     HapticFeedback.heavyImpact();
                     if (!isTextMode && _isCameraInitialized) {
-                      // Optionally simulate capturing a photo/video here
-                      // final file = await _cameraController!.takePicture();
+                      try {
+                        final file = await _cameraController!.takePicture();
+                        if (!context.mounted) return;
+                        _disposeCamera();
+                        await context.push('/share-experience', extra: file.path);
+                        if (mounted) _initCamera();
+                      } catch (e) {
+                        debugPrint('Error taking picture: $e');
+                      }
+                    } else if (isTextMode) {
+                      if (!context.mounted) return;
+                      context.push('/share-experience', extra: _textController.text);
                     }
-                    // Go to Share/Edit screen
-                    context.push('/share-experience');
                   },
                   child: Container(
                     width: 72,
@@ -166,6 +208,16 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
               ],
             ),
           ),
+          // Gallery Button (top left or bottom right)
+          if (!isTextMode)
+            Positioned(
+              left: 24,
+              bottom: 50,
+              child: IconButton(
+                icon: Icon(Icons.photo_library, color: Colors.white, size: 32),
+                onPressed: _pickFromGallery,
+              ),
+            ),
         ],
       ),
     );
@@ -179,10 +231,8 @@ class _CreateScreenState extends ConsumerState<CreateScreen> {
     }
     
     // Scale the camera preview to fill the screen
-    final size = MediaQuery.of(context).size;
-    final deviceRatio = size.width / size.height;
     return Transform.scale(
-      scale: 1.0, // _cameraController!.value.aspectRatio / deviceRatio (often needs adjustment)
+      scale: 1.0, 
       child: Center(
         child: CameraPreview(_cameraController!),
       ),

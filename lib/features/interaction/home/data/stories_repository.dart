@@ -21,7 +21,7 @@ class MockStoriesRepository implements StoriesRepository {
       ringColor: AppColors.emerald,
       icon: Icons.rocket_launch,
       isSeen: false,
-      timeAgo: '12m ago',
+      createdAt: DateTime.now().subtract(const Duration(minutes: 12)),
     ),
     StoryItem(
       id: 's2',
@@ -32,7 +32,7 @@ class MockStoriesRepository implements StoriesRepository {
       ringColor: AppColors.questBlue,
       icon: Icons.flutter_dash,
       isSeen: false,
-      timeAgo: '45m ago',
+      createdAt: DateTime.now().subtract(const Duration(minutes: 45)),
     ),
     StoryItem(
       id: 's3',
@@ -43,7 +43,7 @@ class MockStoriesRepository implements StoriesRepository {
       ringColor: AppColors.auroraPurple,
       icon: Icons.palette,
       isSeen: false,
-      timeAgo: '2h ago',
+      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
     ),
     StoryItem(
       id: 's4',
@@ -54,7 +54,7 @@ class MockStoriesRepository implements StoriesRepository {
       ringColor: AppColors.crimson,
       icon: Icons.camera_alt,
       isSeen: true,
-      timeAgo: '4h ago',
+      createdAt: DateTime.now().subtract(const Duration(hours: 4)),
     ),
   ];
 
@@ -83,7 +83,11 @@ class SupabaseStoriesRepository implements StoriesRepository {
 
   @override
   Future<List<StoryItem>> getStories() async {
-    final data = await _client.from('stories').select();
+    final twentyFourHoursAgo = DateTime.now().subtract(const Duration(hours: 24)).toIso8601String();
+    final data = await _client
+        .from('stories')
+        .select()
+        .gte('createdAt', twentyFourHoursAgo);
     return data.map((json) => StoryItem.fromJson(json)).toList();
   }
 

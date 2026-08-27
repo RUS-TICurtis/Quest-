@@ -4,9 +4,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:emoji_extension/emoji_extension.dart' hide Color;
 import 'package:quest/features/interaction/messaging/data/chat_provider.dart';
-import 'widgets/link_preview_bubble.dart';
+import 'package:v_chat_bubbles/v_chat_bubbles.dart';
 import 'widgets/voice_note_bubble.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+
+class CustomPayload extends VCustomBubbleData {
+  final dynamic payload;
+  const CustomPayload(this.payload);
+
+  @override
+  String get contentType => 'custom';
+}
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String threadId;
@@ -193,14 +201,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           // Messages list
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              itemCount: thread.messages.length,
-              itemBuilder: (context, i) {
-                final msg = thread.messages[i];
-                return _buildMessageBubble(msg, isAi, avatarColor);
-              },
+            child: VBubbleScope(
+              style: VBubbleStyle.telegram,
+              config: const VBubbleConfig(),
+              callbacks: VBubbleCallbacks(
+                onTap: (messageId) {
+                  HapticFeedback.lightImpact();
+                },
+              ),
+              child: ListView.builder(
+                controller: _scrollController,
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                itemCount: thread.messages.length,
+                itemBuilder: (context, i) {
+                  final msg = thread.messages[i];
+                  return _buildMessageBubble(msg, isAi, avatarColor);
+                },
+              ),
             ),
           ),
 
@@ -323,134 +340,64 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   Widget _buildMessageBubble(ChatMessage msg, bool isAi, Color avatarColor) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 20),
-      child: Row(
-        mainAxisAlignment: msg.isMe
-            ? MainAxisAlignment.end
-            : MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          if (!msg.isMe) ...[
-            Container(
-              width: 28,
-              height: 28,
-              margin: EdgeInsets.only(right: 8),
-              decoration: BoxDecoration(
-                color: avatarColor.withValues(alpha: 0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: isAi
-                    ? Icon(Icons.auto_awesome, color: avatarColor, size: 14)
-                    : Icon(
-                        Icons.person,
-                        color: context.colors.textPrimary70,
-                        size: 16,
-                      ),
-              ),
-            ),
-          ] else
-            SizedBox(width: 32),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: msg.isMe
-                  ? CrossAxisAlignment.end
-                  : CrossAxisAlignment.start,
-              children: [
-                Builder(
-                  builder: (context) {
-                    final isEmojiOnly =
-                        msg.type == MessageType.text && msg.text.emojis.only;
+    final isMe = msg.isMe;
+    final senderName = isMe ? null : (isAi ? 'AI Guide' : 'User');
 
-                    return Container(
-                      padding: msg.type == MessageType.voiceNote || isEmojiOnly
-                          ? EdgeInsets.zero
-                          : EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                      decoration: BoxDecoration(
-                        color: isEmojiOnly
-                            ? Colors.transparent
-                            : (msg.isMe ? context.colors.questBlue : context.colors.card),
-                        borderRadius: BorderRadius.circular(18).copyWith(
-                          bottomRight: msg.isMe
-                              ? Radius.circular(4)
-                              : Radius.circular(18),
-                          bottomLeft: !msg.isMe
-                              ? Radius.circular(4)
-                              : Radius.circular(18),
-                        ),
-                        border: msg.isMe || isEmojiOnly
-                            ? null
-                            : Border.all(color: context.colors.border),
-                      ),
-                      child: msg.type == MessageType.voiceNote
-                          ? VoiceNoteBubble(
-                              durationSeconds: msg.voiceDurationSeconds,
-                              isMe: msg.isMe,
-                            )
-                          : Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  msg.text,
-                                  style: TextStyle(
-                                    color: msg.isMe
-                                        ? context.colors.textPrimary
-                                        : context.colors.textSecondary,
-                                    fontSize:
-                                        msg.type == MessageType.text &&
-                                            msg.text.emojis.only
-                                        ? 40
-                                        : 15,
-                                    height: 1.4,
-                                  ),
-                                ),
-                                if (msg.type == MessageType.linkPreview &&
-                                    msg.linkTitle != null)
-                                  LinkPreviewBubble(
-                                    title: msg.linkTitle!,
-                                    url: msg.linkUrl,
-                                    description: msg.linkDescription,
-                                    isMe: msg.isMe,
-                                  ),
-                              ],
-                            ),
-                    );
-                  },
-                ),
-                SizedBox(height: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      msg.time,
-                      style: TextStyle(
-                        color: context.colors.textMuted,
-                        fontSize: 10,
-                      ),
-                    ),
-                    if (msg.isMe) ...[
-                      SizedBox(width: 4),
-                      Icon(
-                        Icons.done_all,
-                        size: 13,
-                        color: context.colors.skyBlue,
-                      ),
-                    ],
-                  ],
-                ),
-              ],
-            ),
+    if (msg.type == MessageType.image) {
+      return VImageBubble(
+        messageId: msg.id,
+        isMeSender: isMe,
+        time: msg.time,
+        imageFile: VPlatformFile.fromUrl(networkUrl: msg.text),
+        senderName: senderName,
+        senderColor: avatarColor,
+      );
+    } else if (msg.type == MessageType.video) {
+      return VCustomBubble(
+        messageId: msg.id,
+        isMeSender: isMe,
+        time: msg.time,
+        senderName: senderName,
+        senderColor: avatarColor,
+        data: CustomPayload(msg.text),
+        builder: (context, data) => Container(
+          width: 200,
+          height: 150,
+          decoration: BoxDecoration(
+            color: Colors.black45,
+            borderRadius: BorderRadius.circular(8),
           ),
-          if (msg.isMe)
-            SizedBox(width: 32)
-          else
-            SizedBox(width: 32),
-        ],
-      ),
+          child: Center(
+            child: Icon(Icons.play_circle_fill, color: Colors.white, size: 48),
+          ),
+        ),
+      );
+    } else if (msg.type == MessageType.voiceNote) {
+      return VCustomBubble(
+        messageId: msg.id,
+        isMeSender: isMe,
+        time: msg.time,
+        senderName: senderName,
+        senderColor: avatarColor,
+        data: CustomPayload(msg),
+        builder: (context, data) {
+          final m = data.payload as ChatMessage;
+          return VoiceNoteBubble(
+            durationSeconds: m.voiceDurationSeconds,
+            isMe: m.isMe,
+          );
+        },
+      );
+    }
+
+    // Text message
+    return VTextBubble(
+      messageId: msg.id,
+      isMeSender: isMe,
+      time: msg.time,
+      text: msg.text,
+      senderName: senderName,
+      senderColor: avatarColor,
     );
   }
 }

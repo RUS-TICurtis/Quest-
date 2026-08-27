@@ -65,7 +65,7 @@ class _PostAnnouncementSheetState extends ConsumerState<PostAnnouncementSheet> {
       authorName: targetComm.name,
       authorAvatar:
           'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
-      timeAgo: 'Just now',
+      createdAt: DateTime.now(),
       title: title,
       content: message,
       gradient: [context.colors.crimson, context.colors.auroraPurple],
