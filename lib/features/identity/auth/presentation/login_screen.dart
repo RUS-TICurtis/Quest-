@@ -607,54 +607,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           final router = GoRouter.of(context);
                           final colors = context.colors;
                           final redirectParam = GoRouterState.of(context).uri.queryParameters['redirect'];
+
                           try {
-                            // 1. Attempt native in-app modal sheet/popup first
-                            final res = await ref.read(authProvider.notifier).signInWithGoogleNative();
-                            if (res != null) {
-                              if (!mounted) return;
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: const Text('Signed in with Google!'),
-                                  backgroundColor: colors.emerald,
-                                ),
-                              );
-                              if (redirectParam != null && redirectParam.isNotEmpty) {
-                                router.go(redirectParam);
-                              } else {
-                                router.go('/home');
-                              }
-                            }
-                          } catch (nativeErr) {
-                            // 2. Fallback to browser OAuth redirect if native popup fails
-                            try {
+                            if (kIsWeb) {
                               await Supabase.instance.client.auth.signInWithOAuth(
                                 OAuthProvider.google,
-                                redirectTo: kIsWeb ? null : 'io.supabase.quest://login-callback',
                               );
-                            } on AuthException catch (e) {
-                              if (!mounted) return;
-                              final msg = e.message.contains('not enabled')
-                                  ? 'Google Sign-In is not enabled yet in your Supabase Dashboard (Authentication > Providers > Google).'
-                                  : e.message;
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(msg),
-                                  backgroundColor: colors.crimson,
-                                ),
-                              );
-                            } catch (e) {
-                              if (!mounted) return;
-                              final errStr = e.toString();
-                              final msg = errStr.contains('not enabled')
-                                  ? 'Google Sign-In is not enabled yet in your Supabase Dashboard (Authentication > Providers > Google).'
-                                  : 'Google Sign-In: $nativeErr';
-                              messenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(msg),
-                                  backgroundColor: colors.crimson,
-                                ),
-                              );
+                            } else {
+                              // Mobile (Android / iOS): Strictly in-app native Google Sign-In
+                              final res = await ref.read(authProvider.notifier).signInWithGoogleNative();
+                              if (res != null) {
+                                if (!mounted) return;
+                                messenger.showSnackBar(
+                                  SnackBar(
+                                    content: const Text('Signed in with Google!'),
+                                    backgroundColor: colors.emerald,
+                                  ),
+                                );
+                                if (redirectParam != null && redirectParam.isNotEmpty) {
+                                  router.go(redirectParam);
+                                } else {
+                                  router.go('/home');
+                                }
+                              }
+                              // Note: if res == null, the user simply cancelled or dismissed the Google modal sheet
                             }
+                          } on AuthException catch (e) {
+                            if (!mounted) return;
+                            final msg = e.message.contains('not enabled')
+                                ? 'Google Sign-In is not enabled yet in your Supabase Dashboard (Authentication > Providers > Google).'
+                                : e.message;
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(msg),
+                                backgroundColor: colors.crimson,
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
+                          } catch (e) {
+                            if (!mounted) return;
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text('Google Sign-In: ${e.toString()}'),
+                                backgroundColor: colors.crimson,
+                                duration: const Duration(seconds: 4),
+                              ),
+                            );
                           }
                         },
                       ),

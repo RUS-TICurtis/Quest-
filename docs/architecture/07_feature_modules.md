@@ -35,7 +35,7 @@ lib/features/<feature>/
 
 | Provider | Type | Key Actions |
 |---|---|---|
-| `authProvider` | `Notifier<AuthState>` | `signIn()`, `signOut()`, `signUp()` |
+| `authProvider` | `Notifier<AuthState>` | `signInWithEmail()`, `signOut()`, `signUpWithEmail()`, `signInWithGoogleNative()` |
 | `userProvider` | `AsyncNotifier<UserState>` | `addXp()`, `toggleQuest()`, `updateName()`, `toggleRsvp()` |
 | `eventsProvider` | `AsyncNotifier<EventsState>` | `toggleRsvp()`, `addEvent()`, `setFilter()` |
 | `communitiesProvider` | `AsyncNotifier<CommunitiesState>` | `toggleJoin()`, `addCommunity()`, `setCategory()`, `setSearchQuery()` |

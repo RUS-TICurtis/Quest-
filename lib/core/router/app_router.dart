@@ -44,15 +44,15 @@ final _routerNotifierProvider = Provider<_RouterNotifier>((ref) {
 });
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
-  final notifier = ref.watch(_routerNotifierProvider);
+  final notifier = ref.read(_routerNotifierProvider);
 
   return GoRouter(
     initialLocation: '/',
     // refreshListenable ensures redirect fires on every auth state change,
-    // including spontaneous session expiry and sign-out.
+    // including spontaneous session expiry and sign-out, without recreating the router.
     refreshListenable: notifier,
     redirect: (context, state) {
+      final authState = ref.read(authProvider);
       if (authState.isLoading) return null;
 
       final isAuth = authState.isAuthenticated;

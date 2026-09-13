@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-06_
+_Last Modified: 2026-09-13_
 
 # 8. Platform Notes
 
@@ -6,17 +6,18 @@ _Last Modified: 2026-08-06_
 
 | Property | Value |
 |---|---|
-| Package | `com.example.quest` |
-| Min SDK | 21 (Android 5.0 Lollipop) |
-| Target SDK | 34 (Android 14) |
+| Package | `com.quest.quest` |
+| Min SDK | Flutter Min SDK |
+| Target SDK | Flutter Target SDK |
 | App Label | `Quest` |
 | Build System | Gradle (Kotlin DSL) |
-| Native Arch | `arm64-v8a`, `armeabi-v7a`, `x86_64` |
+| Native Arch | `arm64-v8a`, `armeabi-v7a`, `x86_64` (Split APKs available) |
 
 **Notes:**
-- `compileSdkVersion` must be ≥ 34 for Material3 dynamic color support
-- `connectivity_plus` requires `android.permission.ACCESS_NETWORK_STATE` in manifest (already added)
-- `url_launcher` requires `<queries>` block for SMS intent on Android 11+ (already added in manifest)
+- `android.permission.INTERNET` and `android.permission.ACCESS_NETWORK_STATE` in `android/app/src/main/AndroidManifest.xml` ensure release APK builds have full network connectivity for Supabase and Google Auth.
+- Deep link intent-filter configured for `io.supabase.quest://login-callback`.
+- Google Sign-In requires an Android OAuth Client ID in Google Cloud Console configured with package `com.quest.quest` and debug keystore SHA-1 fingerprint (`7B:41:DF:F2:38:D1:E1:1E:48:FE:E4:0A:58:66:9D:17:63:39:CE:A2`).
+- `url_launcher` requires `<queries>` block in manifest for text processing.
 
 ## iOS
 

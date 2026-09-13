@@ -8,7 +8,7 @@ GoRouter is initialized via `appRouterProvider` in `lib/core/router/app_router.d
 
 ## Key Features
 
-- **`refreshListenable`**: A `_RouterNotifier extends ChangeNotifier` wraps Riverpod's `authProvider` and calls `notifyListeners()` on every auth state change. This guarantees GoRouter's `redirect` fires immediately on sign-in, sign-out, and session expiry — not just on navigation events.
+- **`refreshListenable` & Singleton Router**: A `_RouterNotifier extends ChangeNotifier` wraps Riverpod's `authProvider` and calls `notifyListeners()` on auth changes. `appRouterProvider` uses `ref.read` (never `ref.watch(authProvider)`), preventing GoRouter from being recreated and resetting back to `/` (splash) whenever auth state changes.
 - **Auth Guard**: The `redirect` function checks `authState.isAuthenticated` to enforce protected/unprotected routes.
 - **Shell Route**: `ShellRoute` wraps main app screens with `MainShell` (persistent bottom nav / navigation rail).
 

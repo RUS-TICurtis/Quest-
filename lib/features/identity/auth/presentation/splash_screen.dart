@@ -16,6 +16,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
+  bool _navigated = false;
 
   @override
   void initState() {
@@ -44,7 +45,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     // Navigate to landing or home based on real auth state
     Future.delayed(const Duration(milliseconds: 2200), () {
-      if (mounted) {
+      if (mounted && !_navigated) {
+        _navigated = true;
         final isAuth = ref.read(authProvider).isAuthenticated;
         if (isAuth) {
           context.go('/home');

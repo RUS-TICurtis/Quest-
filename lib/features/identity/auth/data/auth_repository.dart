@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -61,13 +62,32 @@ class SupabaseAuthRepository implements AuthRepository {
     final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
     final iosClientId = dotenv.env['GOOGLE_IOS_CLIENT_ID'];
 
+    if (webClientId == null || webClientId.trim().isEmpty) {
+      throw const AuthException(
+        'Google Web Client ID is not configured. Please set GOOGLE_WEB_CLIENT_ID in your .env file.',
+      );
+    }
+
     final GoogleSignIn googleSignIn = GoogleSignIn(
       clientId: iosClientId,
       serverClientId: webClientId,
       scopes: ['email', 'profile', 'openid'],
     );
 
-    final googleUser = await googleSignIn.signIn();
+    GoogleSignInAccount? googleUser;
+    try {
+      googleUser = await googleSignIn.signIn();
+    } on PlatformException catch (e) {
+      final errString = e.toString();
+      if (errString.contains('10') || errString.contains('DEVELOPER_ERROR')) {
+        throw const AuthException(
+          'Google Sign-In configuration error (Developer Error 10):\n'
+          'The SHA-1 fingerprint is not registered in Google Cloud Console under an Android OAuth Client ID for package "com.quest.quest".',
+        );
+      }
+      throw AuthException('Google Sign-In failed: ${e.message ?? e.toString()}');
+    }
+
     if (googleUser == null) {
       // User dismissed or cancelled the modal
       return null;
