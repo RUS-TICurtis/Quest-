@@ -59,15 +59,36 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
-  Future<void> signUpWithEmail(
+  Future<AuthResponse> signUpWithEmail(
     String email,
     String password,
     String name,
   ) async {
     state = state.copyWith(isLoading: true);
     try {
-      final user = await _repository.signUpWithEmail(email, password, name);
-      state = state.copyWith(user: user, isLoading: false);
+      final response = await _repository.signUpWithEmail(email, password, name);
+      if (response.session != null) {
+        state = state.copyWith(user: response.user, isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+      return response;
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
+
+  Future<AuthResponse?> signInWithGoogleNative() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final response = await _repository.signInWithGoogleNative();
+      if (response != null && response.user != null) {
+        state = state.copyWith(user: response.user, isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+      return response;
     } catch (e) {
       state = state.copyWith(isLoading: false);
       rethrow;

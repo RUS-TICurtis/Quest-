@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-26_
+_Last Modified: 2026-09-13_
 
 # 7. Feature Modules
 
@@ -7,16 +7,16 @@ _Last Modified: 2026-08-26_
 | Feature | Path | Status | Backend |
 |---|---|---|---|
 | **Auth** | `lib/features/auth/` | ✅ Complete | Supabase Auth |
-| **Profile / XP** | `lib/features/profile/` | ✅ Complete | `profiles`, `daily_quests` tables |
-| **Home / Stories** | `lib/features/home/` | ✅ Complete | `stories` table (fallback to mock) |
+| **Profile / XP** | `lib/features/identity/profile/` | ✅ Complete (UI Refactored) | `profiles`, `daily_quests` tables |
+| **Home / Stories** | `lib/features/interaction/home/` | ✅ Complete | `stories` table (`createdAt`, `isSeen`, `mux_playback_id`) with local fallback |
 | **Events** | `lib/features/events/` | ✅ Complete | `events` table |
 | **Communities** | `lib/features/communities/` | ✅ Complete | `communities` table |
-| **Messaging / Chat** | `lib/features/messaging/` | 🟡 Mock Data | `chat_messages` table pending schema |
+| **Messaging / Chat** | `lib/features/interaction/messaging/` | ✅ Complete (1:1 Telegram Replica) | Supabase Realtime + Offline Outbox + `v_chat_bubbles 2.2.0` Engine |
 | **Stage (Audio)** | `lib/features/stage/` | 🟡 Mock Data | Agora/LiveKit not yet integrated |
 | **Radar** | `lib/features/radar/` | 🟡 Partial | `radar_nodes` ✅, `radar_members` pending PostGIS |
 | **Leaderboard** | `lib/features/leaderboard/` | 🟡 Partial | `leaderboard` ✅, guilds are mock |
 | **Organization** | `lib/features/organization/` | 🟡 Scaffold | Host/admin portal |
-| **Create** | `lib/features/interaction/create/` | ✅ Complete | Mux, Cloudinary, `stories`, `community_posts` |
+| **Create** | `lib/features/interaction/create/` | ✅ Complete | Mux, Cloudinary, `stories`, `creator_videos`, `community_posts` |
 
 ## Module Structure (per feature)
 
@@ -39,11 +39,93 @@ lib/features/<feature>/
 | `userProvider` | `AsyncNotifier<UserState>` | `addXp()`, `toggleQuest()`, `updateName()`, `toggleRsvp()` |
 | `eventsProvider` | `AsyncNotifier<EventsState>` | `toggleRsvp()`, `addEvent()`, `setFilter()` |
 | `communitiesProvider` | `AsyncNotifier<CommunitiesState>` | `toggleJoin()`, `addCommunity()`, `setCategory()`, `setSearchQuery()` |
-| `chatProvider` | `StreamNotifier<ChatState> (Supabase Realtime)` | `sendMessage()`, `sendVoiceNote()`, `markThreadRead()` |
+| `chatProvider` | `StreamNotifier<ChatState> (Supabase Realtime)` | `sendMessage()`, `sendVoiceNote()`, `markThreadRead()`, `toggleReaction()`, `votePoll()`, `pinMessage()`, `deleteMessage()` |
 | `stageProvider(id)` | `AsyncNotifier<StageState>` (family) | `toggleMic()`, `toggleHandRaise()`, `sendReaction()` |
 | `radarProvider` | `AsyncNotifier<RadarState>` | `selectHub()`, `checkInToHub()` |
 | `leaderboardProvider` | `AsyncNotifier<LeaderboardState>` | `setTab()`, `setArchetype()` |
-| `storiesProvider` | `AsyncNotifier<List<StoryItem>>` | `addStory()`, `markAsSeen()` |
+| `storiesProvider` | `AsyncNotifier<List<StoryItem>>` | `addStory()`, `deleteStory()`, `markAsSeen()` |
+
+## Telegram Replica Messaging Engine
+
+The messaging architecture is built as a **1:1 Telegram replica** powered by `v_chat_bubbles: ^2.2.0`:
+- **Visual Style & Themes**: `VBubbleStyle.telegram` and `VBubbleTheme.telegramDark()` rendering authentic Telegram gradients, tail shapes, date chips (`VDateChip`), and read checkmarks.
+- **Dynamic Bubble Grouping**: Resolves message sender and temporal proximity via `VMessageGrouping.resolve(...)`, seamlessly clustering consecutive bubbles with custom continuous corner radii.
+- **Canvas & Wallpapers**: `TelegramWallpaper` paints Telegram's iconic subtle textured doodle canvas with theme-aware opacity.
+- **Rich Message Types**: Supports `VTextBubble` (full markdown parsing, mentions, links), `VImageBubble`, `VVoiceBubble` (waveform scrubber), `VFileBubble`, and interactive `VPollBubble`.
+- **Interactive Capabilities**:
+  - Swipe-to-reply with active quotation preview banner (`VReplyData`).
+  - Actor-aware emoji reaction pills (`VBubbleReaction`) with quick toggle.
+  - In-chat search with real-time character-level substring highlighting (`searchQuery`).
+  - Category tabs on `MessagesScreen` (*All, Direct, Groups, Channels, Bots*), unread count pills, and floating action pencil button.
+
+## Media & WhatsApp-Style Status Updates Engine
+
+The media and story ingestion layer follows a **WhatsApp-style status flow**:
+- **WhatsApp-Style Status Flow (`StoriesBar` & `MyStatusModal`)**:
+  - When the user has no active stories: "My Story" renders a gray ring with a `+` badge; tapping routes to `/create`.
+  - When the user has active stories: the outer ring turns from gray to **Quest Blue** with glowing border, displaying the latest story's media thumbnail.
+  - Tapping "My Story" with active stories opens `MyStatusModal`:
+    - Shows list of uploaded status items (thumbnails, timestamps, view counter pills).
+    - 3-dots action menu with "View update" and "Delete update" (calls `ref.read(storiesProvider.notifier).deleteStory(id)`).
+    - WhatsApp-style floating camera/add button and header `+` action routing to `/create`.
+  - Full-screen `StoryViewerModal` supports `customStories`, rendering both Mux/HLS videos and high-resolution images, with bottom views pill (`${viewsCount} views`) for own stories and delete options in `more_vert`.
+  - **Video & Image Story Playback Timing**:
+    - Video stories synchronize directly with the native video player duration (setLooping is disabled during story playback), advancing automatically only when the video actually reaches completion.
+    - Image and text status updates default to a generous 8-second display window.
+    - Hold-to-pause gesture: holding down halts playback and progress, releasing resumes playback instantly.
+- **Web (`kIsWeb`) Compatibility**: Uses byte streams (`XFile.readAsBytes()`) to bypass `dart:io` `_Namespace` restrictions on the web platform.
+- **Mux Direct Video Ingestion**: Generates direct upload URLs via `https://api.mux.com/video/v1/uploads` and streams bytes directly with `Dio.put()`, then polls for the ready asset `playback_id`.
+- **Cloudinary Image/Video Ingestion**: Generates client-side sha1 signatures with timestamp and secret, uploading via multipart form data (`MultipartFile.fromBytes`).
+- **Resilient Real Backend Sync**: When remote records are returned from Supabase, mock seeds are cleanly replaced by the real database data. Fallback seeds are preserved only if the remote table is empty or the network is unavailable.
+- **Feed & Community Distribution**: `ShareExperienceScreen` persists feeds to the `creator_videos` table, stories to `stories` (`createdAt`, `isSeen`), and community discussions to `community_posts`.
+
+## Authentication & Account Lifecycle
+
+The authentication stack is powered by Supabase Auth (`lib/features/identity/auth/`):
+- **Sign In & Sign Up Flow (`LoginScreen`)**:
+  - Segmented toggle between **Sign In** and **Create Account**.
+  - Direct integration with Supabase Auth (`signInWithPassword` and `signUp`).
+  - Full validation: email format checks, min 6-char passwords, password confirmation checks for registrations.
+  - "Forgot Password?" dialog triggering Supabase `resetPasswordForEmail`.
+  - Social login: **Native In-App Google Sign-In** (`google_sign_in: ^6.3.0` + Supabase `signInWithIdToken`), opening an in-app bottom sheet/modal card without leaving or redirecting the application, with fallback to web OAuth redirect.
+  - **Email Confirmation Session Verification**: Detects when email confirmation is required (`session == null`) and prompts the user to verify their inbox before switching to Sign In, preventing redirect loops back to splash/landing.
+  - Clean error mapping to user-friendly messages for standard Supabase `AuthException` states.
+- **Sign Out & Session Revocation**:
+  - `authProvider.notifier.signOut()` revokes the Supabase session, resets authentication state, and redirects the user to `/landing`.
+  - Confirmation dialog with tactile haptic feedback prevents accidental logouts.
+- **OAuth 2.1 Server & MCP Identity Provider (`OAuthConsentScreen` & `OAuthServerService`)**:
+  - Acts as an OAuth 2.1 and OpenID Connect (OIDC) identity provider for external apps, developer tools, and Model Context Protocol (MCP) servers.
+  - When third-party apps initiate authorization, users land on `/oauth/consent?authorization_id=<id>`.
+  - Unauthenticated users are forwarded to `/login?redirect=...` preserving the authorization challenge for seamless post-login authorization.
+  - Fetches client info and requested scopes via `GET /auth/v1/oauth/authorizations/{authorization_id}` with Bearer token authentication.
+  - Explains requested scopes clearly (`profile`, `email`, `offline_access`, `openid`, `phone`, or custom scopes).
+  - Calls `POST /auth/v1/oauth/authorizations/{authorization_id}/consent` with `{"action": "approve"}` or `{"action": "deny"}`.
+  - Seamlessly redirects to the client's registered callback URL with authorization code or error status via `url_launcher`.
+
+## Settings & Profile Management Architecture
+
+The Settings experience (`SettingsScreen` at `/settings`) combines best-in-class features from Telegram, WhatsApp, Snapchat, and Instagram:
+- **Profile Header & Quick Actions**:
+  - Account summary card with real Supabase avatar, display name, `@username`, and level/XP badge.
+  - Dedicated "Edit Profile" button leading directly to `/profile/edit`.
+- **Account & Security**:
+  - Read-only display of the authenticated Supabase email.
+  - In-app "Change Password" dialog leveraging `Supabase.instance.client.auth.updateUser(UserAttributes(password: ...))`.
+  - Privacy controls: Story visibility dropdown (*Everyone*, *Friends*, *Private*), read receipts switch.
+- **Appearance & Accent Customization**:
+  - Theme palette selector (*Midnight OLED*, *Deep Cyber Dark*, *Aurora Nebula*, *Emerald Matrix*).
+  - Dynamic accent color chips (*Quest Blue*, *Emerald*, *Aurora Purple*, *Crimson*, *Gold*).
+  - Tactile haptic feedback toggle.
+- **Notifications & Storage Controls**:
+  - Granular notification toggles for DMs, Group chats, Event alerts, and In-app sounds.
+  - Telegram-style storage manager: Wi-Fi only auto-download toggle and instant "Clear Media Cache" button (`imageCache.clear()` and `imageCache.clearLiveImages()`).
+- **Organization Portal Link**:
+  - Direct route entry to `/organization` for host and community admins.
+- **Real Backend Profile Persistence (`EditProfileScreen`)**:
+  - Avatar image picker uploading bytes directly through `MediaServiceGateway.uploadImageBytes` (web & mobile compatible).
+  - Live editing of `name`, `@username`, and `bio` (with remaining character counter).
+  - Syncs directly to Supabase `profiles` table: `{ name, username, bio, avatarUrl, avatar_url }`.
+  - Replaces all mock placeholder data with active Supabase user profile info.
 
 ## Gamification System
 
@@ -52,3 +134,4 @@ XP and leveling logic lives entirely in `UserNotifier`:
 - Daily quests can be toggled on/off (XP is reverted on un-toggle)
 - Streak is tracked as consecutive days with at least one quest completed
 - Level-up triggers a dialog via `LevelUpDialog` widget (`lib/features/home/presentation/widgets/level_up_dialog.dart`)
+

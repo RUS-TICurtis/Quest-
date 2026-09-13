@@ -105,7 +105,10 @@ app.*.map.json
 Quest-*.apk
 Quest.apk
 
+
+
 # Temporary files
 *.bak
 analyze_output.txt
 files_to_revert.txt
+.agent/*

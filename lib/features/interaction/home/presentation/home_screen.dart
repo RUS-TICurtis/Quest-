@@ -148,7 +148,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  SizedBox(height: 32),
 
                   // AI Coach Card
                   Padding(
@@ -177,7 +177,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.auto_awesome, color: context.colors.skyBlue, size: 16),
+                                  Icon(Icons.lightbulb_outline, color: context.colors.skyBlue, size: 16),
                                   SizedBox(width: 8),
                                   Text(
                                     'AI COACH SUGGESTION',
@@ -247,7 +247,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 28),
+                  SizedBox(height: 32),
 
                   // Daily Quests (Horizontal Carousel)
                   Padding(
@@ -285,7 +285,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       },
                     ),
                   ),
-                  SizedBox(height: 28),
+                  SizedBox(height: 32),
 
                   // Upcoming Events (Horizontal Carousel)
                   Padding(
@@ -366,7 +366,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         },
                       ),
                     ),
-                  SizedBox(height: 80),
+                  SizedBox(height: 48),
                 ],
               ),
             ),
@@ -677,7 +677,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    Icons.auto_awesome,
+                    Icons.lightbulb_outline,
                     color: context.colors.skyBlue,
                   ),
                 ),

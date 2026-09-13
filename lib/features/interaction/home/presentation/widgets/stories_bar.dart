@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/features/interaction/home/data/stories_provider.dart';
 import 'story_viewer_modal.dart';
+import 'my_status_modal.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 
 class StoriesBar extends ConsumerWidget {
@@ -12,22 +13,34 @@ class StoriesBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final storiesAsync = ref.watch(storiesProvider);
-    final stories = storiesAsync.value ?? [];
+    final allStories = storiesAsync.value ?? [];
+
+    final myStories = allStories.where((s) =>
+        s.isMe ||
+        s.communityName == 'My Story' ||
+        s.authorName == 'You'
+    ).toList();
+    final otherStories = allStories.where((s) => !myStories.contains(s)).toList();
+    final hasMyStories = myStories.isNotEmpty;
 
     return SizedBox(
       height: 116,
       child: ListView.separated(
-        padding: EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
-        itemCount: stories.length + 1,
-        separatorBuilder: (_, _) => SizedBox(width: 14),
+        itemCount: otherStories.length + 1,
+        separatorBuilder: (_, _) => const SizedBox(width: 14),
         itemBuilder: (context, index) {
           if (index == 0) {
-            // "My Story" button
+            // "My Story" button with WhatsApp-style status flow
             return GestureDetector(
               onTap: () {
                 HapticFeedback.lightImpact();
-                context.push('/create'); 
+                if (hasMyStories) {
+                  MyStatusModal.show(context, myStories: myStories);
+                } else {
+                  context.push('/create');
+                }
               },
               child: Column(
                 children: [
@@ -36,22 +49,37 @@ class StoriesBar extends ConsumerWidget {
                       Container(
                         width: 72,
                         height: 72,
-                        padding: EdgeInsets.all(2.5),
+                        padding: const EdgeInsets.all(2.5),
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: context.colors.border, width: 2),
+                          border: Border.all(
+                            color: hasMyStories ? context.colors.questBlue : context.colors.border,
+                            width: hasMyStories ? 2.5 : 2.0,
+                          ),
+                          boxShadow: hasMyStories
+                              ? [
+                                  BoxShadow(
+                                    color: context.colors.questBlue.withValues(alpha: 0.35),
+                                    blurRadius: 8,
+                                    spreadRadius: 1,
+                                  )
+                                ]
+                              : null,
                         ),
                         child: Container(
                           decoration: BoxDecoration(
                             color: context.colors.surface,
                             shape: BoxShape.circle,
                           ),
+                          clipBehavior: Clip.antiAlias,
                           child: Center(
-                            child: Icon(
-                              Icons.person,
-                              color: context.colors.textMuted,
-                              size: 36,
-                            ),
+                            child: hasMyStories
+                                ? _buildMyStoryAvatar(myStories.first, context)
+                                : Icon(
+                                    Icons.person,
+                                    color: context.colors.textMuted,
+                                    size: 36,
+                                  ),
                           ),
                         ),
                       ),
@@ -59,28 +87,28 @@ class StoriesBar extends ConsumerWidget {
                         bottom: 0,
                         right: 0,
                         child: Container(
-                          padding: EdgeInsets.all(2),
+                          padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
                             color: context.colors.questBlue,
                             shape: BoxShape.circle,
                             border: Border.all(color: context.colors.background, width: 2),
                           ),
                           child: Icon(
-                            Icons.add,
+                            hasMyStories ? Icons.camera_alt : Icons.add,
                             color: Colors.white,
-                            size: 16,
+                            size: hasMyStories ? 13 : 16,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 6),
+                  const SizedBox(height: 6),
                   Text(
                     'My Story',
                     style: TextStyle(
-                      color: context.colors.textSecondary,
+                      color: hasMyStories ? context.colors.questBlue : context.colors.textSecondary,
                       fontSize: 11,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: hasMyStories ? FontWeight.w700 : FontWeight.w600,
                     ),
                   ),
                 ],
@@ -88,18 +116,18 @@ class StoriesBar extends ConsumerWidget {
             );
           }
 
-          final story = stories[index - 1];
+          final story = otherStories[index - 1];
           final hasSeen = story.isSeen;
 
           return GestureDetector(
             onTap: () =>
-                StoryViewerModal.show(context, initialIndex: index - 1),
+                StoryViewerModal.show(context, customStories: otherStories, initialIndex: index - 1),
             child: Column(
               children: [
                 Container(
                   width: 72,
                   height: 72,
-                  padding: EdgeInsets.all(2.5),
+                  padding: const EdgeInsets.all(2.5),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: hasSeen
@@ -133,7 +161,7 @@ class StoriesBar extends ConsumerWidget {
                         : _buildFallbackIcon(story, context),
                   ),
                 ),
-                SizedBox(height: 6),
+                const SizedBox(height: 6),
                 SizedBox(
                   width: 74,
                   child: Text(
@@ -171,5 +199,34 @@ class StoriesBar extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildMyStoryAvatar(StoryItem story, BuildContext context) {
+    if (story.muxPlaybackId != null && story.muxPlaybackId!.isNotEmpty) {
+      return Image.network(
+        'https://image.mux.com/${story.muxPlaybackId}/thumbnail.jpg',
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, _, _) => _buildFallbackIcon(story, context),
+      );
+    } else if (story.content != null && story.content!.startsWith('http')) {
+      return Image.network(
+        story.content!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, _, _) => _buildFallbackIcon(story, context),
+      );
+    } else if (story.authorAvatar != null && story.authorAvatar!.isNotEmpty) {
+      return Image.network(
+        story.authorAvatar!,
+        fit: BoxFit.cover,
+        width: double.infinity,
+        height: double.infinity,
+        errorBuilder: (_, _, _) => _buildFallbackIcon(story, context),
+      );
+    }
+    return _buildFallbackIcon(story, context);
   }
 }

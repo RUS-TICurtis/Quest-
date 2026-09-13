@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-26_
+_Last Modified: 2026-09-13_
 
 # 5. Navigation & Routing
 
@@ -18,8 +18,10 @@ GoRouter is initialized via `appRouterProvider` in `lib/core/router/app_router.d
 |---|---|---|---|
 | `/` | `splash` | `SplashScreen` | No |
 | `/landing` | `landing` | `LandingScreen` | No |
+| `/login` | `login` | `LoginScreen` | No |
 | `/onboarding` | `onboarding` | `OnboardingScreen` | No |
 | `/home` | `home` | `HomeScreen` | Yes (Shell) |
+| `/feed` | `feed` | `FeedScreen` | Yes (Shell) |
 | `/communities` | `communities` | `CommunitiesScreen` | Yes (Shell) |
 | `/communities/:id` | `community_detail` | `CommunityDetailScreen` | Yes (Shell) |
 | `/events` | `events` | `EventsScreen` | Yes (Shell) |
@@ -28,6 +30,8 @@ GoRouter is initialized via `appRouterProvider` in `lib/core/router/app_router.d
 | `/messages/:id` | `chat` | `ChatScreen` | Yes (Shell) |
 | `/profile` | `profile` | `ProfileScreen` | Yes (Shell) |
 | `/profile/:id` | `member_profile` | `MemberProfileScreen` | Yes (Shell) |
+| `/profile/edit` | `edit_profile` | `EditProfileScreen` | Yes (no Shell) |
+| `/oauth/consent` | `oauth_consent` | `OAuthConsentScreen` | Yes (no Shell, forwards to /login?redirect=...) |
 | `/settings` | `settings` | `SettingsScreen` | Yes (no Shell) |
 | `/organization` | `organization` | `OrganizationDashboardScreen` | Yes (no Shell) |
 | `/stage/:id` | `stage` | `StageScreen(stageId)` | Yes (no Shell) |
@@ -39,8 +43,9 @@ GoRouter is initialized via `appRouterProvider` in `lib/core/router/app_router.d
 ## Auth Redirect Logic
 
 ```
+if (!isAuth && isConsent) → /login?redirect=<target>
 if (!isAuth && !isAuthRoute) → /landing
-if (isAuth && (isLanding || isOnboarding)) → /home
+if (isAuth && (isLanding || isLogin)) → redirectTarget ?? /home
 else → null (no redirect)
 ```
 
@@ -50,4 +55,5 @@ else → null (no redirect)
 - `BottomNavigationBar` when `MediaQuery.width < 600` (mobile)
 - `NavigationRail` when `MediaQuery.width >= 600` (tablet/desktop)
 
-Navigation destinations: Home, Communities, Events, Messages, Profile
+Navigation destinations: Home, Explore, Create, Connect, Profile.
+The global `AppBar` handles dynamic actions (e.g., rendering Leaderboard and Settings buttons when the user navigates to the Profile tab).

@@ -29,6 +29,8 @@ hidable: ^1.0.6 - hides floating widgets on scroll
         #Future for chat screen
 secure_application: ^4.1.0 - blurs/ prevent screensots
 
+appinio_social_share: ^0.3.3 - for sharing in social media
+
 ##features
 
 -Stories

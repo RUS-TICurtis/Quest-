@@ -8,12 +8,8 @@ import '../media_upload_result.dart';
 class MuxService {
   final Dio _dio = Dio();
 
-  /// Uploads a video to Mux. 
-  /// In a production environment, you should NOT make the API call to api.mux.com 
-  /// from the client to generate the direct upload URL, because that exposes your secret.
-  /// You should request the direct upload URL from your Supabase backend.
-  /// For rapid prototyping, we simulate or execute the direct upload if we have a pre-signed URL.
-  Future<MediaUploadResult?> uploadVideo(File file) async {
+  /// Uploads video bytes to Mux direct upload URL.
+  Future<MediaUploadResult?> uploadVideoBytes(Uint8List bytes) async {
     try {
       final tokenId = dotenv.env['MUX_TOKEN_ID'];
       final tokenSecret = dotenv.env['MUX_TOKEN_SECRET'];
@@ -45,13 +41,13 @@ class MuxService {
       final uploadUrl = response.data['data']['url'];
       final assetId = response.data['data']['asset_id'];
 
-      // 2. Upload the file to the direct upload URL
+      // 2. Upload the file/bytes to the direct upload URL
       await _dio.put(
         uploadUrl,
-        data: file.openRead(),
+        data: bytes,
         options: Options(
           headers: {
-            Headers.contentLengthHeader: await file.length(),
+            Headers.contentLengthHeader: bytes.length,
             'Content-Type': 'video/mp4',
           },
         ),
@@ -60,7 +56,7 @@ class MuxService {
         },
       );
 
-      // 3. Poll for the playback ID (for prototyping only - should use webhooks in production)
+      // 3. Poll for the playback ID
       debugPrint('Polling for Mux Playback ID...');
       for (int i = 0; i < 15; i++) {
         await Future.delayed(const Duration(seconds: 2));
@@ -82,9 +78,20 @@ class MuxService {
       }
 
       debugPrint('Mux processing timed out, using fallback');
-      return MediaUploadResult(url: 'qxb01i6T202018G65yG9JeaB2b01O00021qGz8Rk02n86J8tI', assetId: assetId); // Fallback if it takes too long
+      return MediaUploadResult(url: 'qxb01i6T202018G65yG9JeaB2b01O00021qGz8Rk02n86J8tI', assetId: assetId);
     } catch (e) {
       debugPrint('Mux Upload Error: $e');
+      return null;
+    }
+  }
+
+  /// Uploads a video to Mux. 
+  Future<MediaUploadResult?> uploadVideo(File file) async {
+    try {
+      final bytes = await file.readAsBytes();
+      return await uploadVideoBytes(bytes);
+    } catch (e) {
+      debugPrint('Mux Upload Video File Error: $e');
       return null;
     }
   }

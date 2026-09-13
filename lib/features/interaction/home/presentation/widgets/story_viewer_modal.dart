@@ -8,10 +8,11 @@ import 'package:video_player/video_player.dart';
 
 class StoryViewerModal extends ConsumerStatefulWidget {
   final int initialIndex;
+  final List<StoryItem>? customStories;
 
-  const StoryViewerModal({super.key, this.initialIndex = 0});
+  const StoryViewerModal({super.key, this.initialIndex = 0, this.customStories});
 
-  static void show(BuildContext context, {int initialIndex = 0}) {
+  static void show(BuildContext context, {int initialIndex = 0, List<StoryItem>? customStories}) {
     HapticFeedback.lightImpact();
     showGeneralDialog(
       context: context,
@@ -19,7 +20,7 @@ class StoryViewerModal extends ConsumerStatefulWidget {
       barrierLabel: 'Story Viewer',
       barrierColor: Colors.black.withValues(alpha: 0.92),
       pageBuilder: (context, anim1, anim2) {
-        return StoryViewerModal(initialIndex: initialIndex);
+        return StoryViewerModal(initialIndex: initialIndex, customStories: customStories);
       },
     );
   }
@@ -33,16 +34,32 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
   late int _currentIndex;
   late AnimationController _progressController;
   VideoPlayerController? _currentVideoController;
+  DateTime? _tapDownTime;
+  bool _isChangingStory = false;
+
+  List<StoryItem> _getStories() {
+    return widget.customStories ?? ref.read(storiesProvider).value ?? [];
+  }
+
+  bool get _currentStoryHasVideo {
+    final stories = _getStories();
+    if (_currentIndex >= stories.length) return false;
+    final story = stories[_currentIndex];
+    return (story.muxPlaybackId != null && story.muxPlaybackId!.isNotEmpty) ||
+        (story.videoUrl != null && story.videoUrl!.isNotEmpty);
+  }
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _progressController =
-        AnimationController(vsync: this, duration: Duration(seconds: 5))
+        AnimationController(vsync: this, duration: const Duration(seconds: 8))
           ..addStatusListener((status) {
             if (status == AnimationStatus.completed) {
-              _nextStory();
+              if (!_currentStoryHasVideo) {
+                _nextStory();
+              }
             }
           });
 
@@ -54,7 +71,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
   }
 
   void _initPool() {
-    final stories = ref.read(storiesProvider).value ?? [];
+    final stories = _getStories();
     final pool = ref.read(storiesVideoPoolProvider.notifier);
     final urls = stories.map((s) {
       if (s.muxPlaybackId != null && s.muxPlaybackId!.isNotEmpty) {
@@ -62,33 +79,49 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
       }
       return s.videoUrl ?? '';
     }).toList();
-    
-    // Temporarily overwrite current index logic of pool to match story's index
-    // Note: Pool handles its own internal _currentIndex when onPageChanged is called.
+
     pool.setVideos(urls);
     for (int i = 0; i < _currentIndex; i++) {
-      pool.onPageChanged(i); // fast-forward pool index
+      pool.onPageChanged(i);
     }
     pool.onPageChanged(_currentIndex);
   }
 
   void _checkVideoAndPlay() {
     _currentVideoController?.removeListener(_videoListener);
-    final pool = ref.read(storiesVideoPoolProvider.notifier);
-    _currentVideoController = pool.getController(_currentIndex);
+    _currentVideoController = null;
 
-    if (_currentVideoController != null && pool.isInitialized(_currentIndex)) {
+    final stories = _getStories();
+    if (_currentIndex >= stories.length) return;
+    final story = stories[_currentIndex];
+    final hasVideo = _currentStoryHasVideo;
+
+    if (hasVideo) {
+      // Video story: stop the timer-based progress controller
       _progressController.stop();
-      _currentVideoController!.addListener(_videoListener);
-      _currentVideoController!.play();
-    } else if (_currentVideoController != null) {
-      // Waiting for init
-      _progressController.stop();
-      Future.delayed(Duration(milliseconds: 100), () {
-        if (mounted) _checkVideoAndPlay();
-      });
+      _progressController.value = 0.0;
+
+      final pool = ref.read(storiesVideoPoolProvider.notifier);
+      final controller = pool.getController(_currentIndex);
+
+      if (controller != null && pool.isInitialized(_currentIndex)) {
+        _currentVideoController = controller;
+        controller.setLooping(false);
+        controller.addListener(_videoListener);
+        controller.play();
+      } else {
+        // Pool is initializing the video asynchronously; poll until ready
+        Future.delayed(const Duration(milliseconds: 80), () {
+          if (mounted &&
+              _currentIndex < stories.length &&
+              stories[_currentIndex].id == story.id) {
+            _checkVideoAndPlay();
+          }
+        });
+      }
     } else {
-      // No video
+      // Image / text story: 8-second viewing duration
+      _progressController.duration = const Duration(seconds: 8);
       _progressController.reset();
       _progressController.forward();
     }
@@ -96,14 +129,18 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
 
   void _videoListener() {
     if (_currentVideoController == null) return;
-    if (_currentVideoController!.value.isInitialized) {
-      final pos = _currentVideoController!.value.position.inMilliseconds;
-      final dur = _currentVideoController!.value.duration.inMilliseconds;
+    final val = _currentVideoController!.value;
+    if (val.isInitialized) {
+      final pos = val.position.inMilliseconds;
+      final dur = val.duration.inMilliseconds;
       if (dur > 0) {
-        setState(() {
-          _progressController.value = pos / dur;
-        });
-        if (pos >= dur && !_currentVideoController!.value.isPlaying) {
+        final progress = (pos / dur).clamp(0.0, 1.0);
+        if (mounted) {
+          setState(() {
+            _progressController.value = progress;
+          });
+        }
+        if (pos >= dur - 200 || (!val.isPlaying && pos >= dur - 500 && pos > 0)) {
           _nextStory();
         }
       }
@@ -111,7 +148,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
   }
 
   void _markCurrentSeen() {
-    final stories = ref.read(storiesProvider).value ?? [];
+    final stories = _getStories();
     if (_currentIndex < stories.length) {
       ref
           .read(storiesProvider.notifier)
@@ -120,43 +157,63 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
   }
 
   void _nextStory() {
-    final stories = ref.read(storiesProvider).value ?? [];
+    if (_isChangingStory) return;
+    _isChangingStory = true;
+
+    final stories = _getStories();
     if (_currentIndex < stories.length - 1) {
       HapticFeedback.selectionClick();
-      
+
       _currentVideoController?.removeListener(_videoListener);
       _currentVideoController?.pause();
+      _currentVideoController = null;
 
       setState(() {
         _currentIndex++;
       });
-      
+
       ref.read(storiesVideoPoolProvider.notifier).onPageChanged(_currentIndex);
-      
+
       _markCurrentSeen();
       _checkVideoAndPlay();
     } else {
       HapticFeedback.lightImpact();
       Navigator.of(context).pop();
     }
+
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (mounted) {
+        _isChangingStory = false;
+      }
+    });
   }
 
   void _previousStory() {
+    if (_isChangingStory) return;
+    _isChangingStory = true;
+
     if (_currentIndex > 0) {
       HapticFeedback.selectionClick();
-      
+
       _currentVideoController?.removeListener(_videoListener);
       _currentVideoController?.pause();
+      _currentVideoController = null;
 
       setState(() {
         _currentIndex--;
       });
-      
+
       ref.read(storiesVideoPoolProvider.notifier).onPageChanged(_currentIndex);
 
       _markCurrentSeen();
       _checkVideoAndPlay();
     }
+
+    Future.delayed(const Duration(milliseconds: 250), () {
+      if (mounted) {
+        _isChangingStory = false;
+      }
+    });
   }
 
   @override
@@ -168,17 +225,17 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
 
   @override
   Widget build(BuildContext context) {
-    final stories = ref.watch(storiesProvider).value ?? [];
-    // We watch the pool to rebuild when video initializes
+    final stories = _getStories();
     final pool = ref.watch(storiesVideoPoolProvider.notifier);
 
     if (stories.isEmpty || _currentIndex >= stories.length) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     final story = stories[_currentIndex];
-    final hasVideoUrl = (story.muxPlaybackId != null && story.muxPlaybackId!.isNotEmpty) || (story.videoUrl != null && story.videoUrl!.isNotEmpty);
-    
-    // In build, we can fetch controller directly to render it
+    final hasVideoUrl = (story.muxPlaybackId != null && story.muxPlaybackId!.isNotEmpty) ||
+        (story.videoUrl != null && story.videoUrl!.isNotEmpty);
+    final hasImageUrl = story.content != null && story.content!.startsWith('http');
+
     final controller = pool.getController(_currentIndex);
     final isInitialized = pool.isInitialized(_currentIndex);
 
@@ -194,10 +251,23 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
             }
           },
           onTapDown: (_) {
+            _tapDownTime = DateTime.now();
             _progressController.stop();
+            _currentVideoController?.pause();
             controller?.pause();
           },
           onTapUp: (details) {
+            final elapsed = DateTime.now().difference(_tapDownTime ?? DateTime.now());
+            if (elapsed.inMilliseconds > 300) {
+              // Long press hold released -> resume playback
+              if (_currentStoryHasVideo && controller != null && isInitialized) {
+                controller.play();
+              } else if (!_currentStoryHasVideo) {
+                _progressController.forward();
+              }
+              return;
+            }
+
             final screenWidth = MediaQuery.of(context).size.width;
             if (details.globalPosition.dx < screenWidth / 3) {
               _previousStory();
@@ -206,9 +276,9 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
             }
           },
           onTapCancel: () {
-            if (controller != null && isInitialized) {
+            if (_currentStoryHasVideo && controller != null && isInitialized) {
               controller.play();
-            } else {
+            } else if (!_currentStoryHasVideo) {
               _progressController.forward();
             }
           },
@@ -228,90 +298,19 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                   )
                 else
                   Center(child: CircularProgressIndicator(color: story.ringColor))
+              else if (hasImageUrl)
+                Image.network(
+                  story.content!,
+                  fit: BoxFit.contain,
+                  width: double.infinity,
+                  height: double.infinity,
+                  loadingBuilder: (_, child, progress) => progress == null
+                      ? child
+                      : Center(child: CircularProgressIndicator(color: story.ringColor)),
+                  errorBuilder: (_, _, _) => _buildGradientFallback(story, context),
+                )
               else
-                // Fallback Vibrant backdrop gradient
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: Alignment.center,
-                      radius: 1.2,
-                      colors: [
-                        story.ringColor.withValues(alpha: 0.35),
-                        context.colors.background,
-                      ],
-                    ),
-                  ),
-                  child: Center(
-                    child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: story.ringColor.withValues(alpha: 0.2),
-                              border: Border.all(
-                                color: story.ringColor,
-                                width: 3,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: story.ringColor.withValues(alpha: 0.5),
-                                  blurRadius: 30,
-                                  spreadRadius: 5,
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              story.icon,
-                              size: 48,
-                              color: Colors.white,
-                            ),
-                          ),
-                          SizedBox(height: 32),
-                          Container(
-                            padding: EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: context.colors.surface.withValues(alpha: 0.85),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color: story.ringColor.withValues(alpha: 0.4),
-                                width: 1.5,
-                              ),
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  story.communityName.toUpperCase(),
-                                  style: TextStyle(
-                                    color: story.ringColor,
-                                    fontWeight: FontWeight.w800,
-                                    fontSize: 12,
-                                    letterSpacing: 1.5,
-                                  ),
-                                ),
-                                SizedBox(height: 12),
-                                Text(
-                                  '"${story.caption}"',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.4,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                _buildGradientFallback(story, context),
 
               // Overlay: Video caption
               if (hasVideoUrl && story.caption.isNotEmpty)
@@ -453,7 +452,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                             shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
                           ),
                           onPressed: () {
-                            // Show options menu
+                            _showStoryOptionsMenu(story);
                           },
                         ),
                       ],
@@ -467,46 +466,198 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                 bottom: 16,
                 left: 16,
                 right: 16,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        height: 48,
-                        padding: EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.4),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            'Reply privately...',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
+                child: story.isMe
+                    ? Center(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.3),
+                              width: 1,
                             ),
                           ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.visibility, color: Colors.white, size: 18),
+                              const SizedBox(width: 8),
+                              Text(
+                                '${story.viewsCount} views',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              height: 48,
+                              padding: EdgeInsets.symmetric(horizontal: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'Reply privately...',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(width: 16),
+                          Icon(
+                            Icons.shortcut,
+                            color: Colors.white,
+                            size: 28,
+                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                          ),
+                          SizedBox(width: 16),
+                          Icon(
+                            Icons.favorite_border,
+                            color: Colors.white,
+                            size: 28,
+                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                          ),
+                        ],
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showStoryOptionsMenu(StoryItem story) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.colors.card,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Wrap(
+          children: [
+            if (story.isMe) ...[
+              ListTile(
+                leading: Icon(Icons.delete_outline, color: context.colors.crimson),
+                title: Text('Delete Update', style: TextStyle(color: context.colors.crimson, fontWeight: FontWeight.bold)),
+                onTap: () {
+                  Navigator.of(ctx).pop();
+                  ref.read(storiesProvider.notifier).deleteStory(story.id);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ] else ...[
+              ListTile(
+                leading: Icon(Icons.volume_mute, color: context.colors.textPrimary),
+                title: Text('Mute ${story.authorName}', style: TextStyle(color: context.colors.textPrimary)),
+                onTap: () => Navigator.of(ctx).pop(),
+              ),
+              ListTile(
+                leading: Icon(Icons.flag_outlined, color: context.colors.crimson),
+                title: Text('Report Story', style: TextStyle(color: context.colors.crimson)),
+                onTap: () => Navigator.of(ctx).pop(),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradientFallback(StoryItem story, BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          center: Alignment.center,
+          radius: 1.2,
+          colors: [
+            story.ringColor.withValues(alpha: 0.35),
+            context.colors.background,
+          ],
+        ),
+      ),
+      child: Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: story.ringColor.withValues(alpha: 0.2),
+                  border: Border.all(
+                    color: story.ringColor,
+                    width: 3,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: story.ringColor.withValues(alpha: 0.5),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  story.icon,
+                  size: 48,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(height: 32),
+              Container(
+                padding: EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: context.colors.surface.withValues(alpha: 0.85),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: story.ringColor.withValues(alpha: 0.4),
+                    width: 1.5,
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Text(
+                      story.communityName.toUpperCase(),
+                      style: TextStyle(
+                        color: story.ringColor,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 12,
+                        letterSpacing: 1.5,
                       ),
                     ),
-                    SizedBox(width: 16),
-                    Icon(
-                      Icons.shortcut,
-                      color: Colors.white,
-                      size: 28,
-                      shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
-                    ),
-                    SizedBox(width: 16),
-                    Icon(
-                      Icons.favorite_border,
-                      color: Colors.white,
-                      size: 28,
-                      shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                    SizedBox(height: 12),
+                    Text(
+                      '"${story.caption}"',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                      ),
                     ),
                   ],
                 ),

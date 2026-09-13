@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-05_
+_Last Modified: 2026-09-13_
 
 ## 3. Directory & File Inventory (Exhaustive)
 
@@ -27,9 +27,14 @@ Quest/
 │   │       └── quest_button.dart                   # Standardized interactive button component
 │   └── features/
 │       ├── auth/
+│       │   ├── data/
+│       │   │   ├── auth_provider.dart              # Supabase session, user state & auth notifier
+│       │   │   └── oauth_server_service.dart       # OAuth 2.1 authorization details & consent grant
 │       │   └── presentation/
 │       │       ├── splash_screen.dart              # Launch animation & auth check
 │       │       ├── landing_screen.dart             # Welcome screen with value proposition
+│       │       ├── login_screen.dart               # Segmented Sign In / Create Account with Supabase Auth
+│       │       ├── oauth_consent_screen.dart       # OAuth 2.1 client authorization & scope consent UI
 │       │       └── onboarding_screen.dart          # Multi-step archetype & interest selection
 │       ├── home/
 │       │   ├── data/
@@ -41,6 +46,7 @@ Quest/
 │       │       └── widgets/
 │       │           ├── stories_bar.dart            # Horizontal story avatars with live ring indicators
 │       │           ├── story_viewer_modal.dart     # Fullscreen story carousel with drag-to-dismiss
+│       │           ├── my_status_modal.dart        # WhatsApp-style status management & user story list
 │       │           └── level_up_dialog.dart        # Celebration modal with confetti & haptics
 │       ├── communities/
 │       │   ├── data/
@@ -66,11 +72,13 @@ Quest/
 │       │       └── stage_screen.dart               # Audio room with sinusoidal equalizer & physics emojis
 │       ├── messaging/
 │       │   ├── data/
-│       │   │   └── chat_provider.dart              # Conversation threads & message dispatches
+│       │   │   ├── chat_provider.dart              # Conversation threads & message dispatches
+│       │   │   └── chat_repository.dart            # Supabase realtime stream & offline outbox
 │       │   └── presentation/
-│       │       ├── messages_screen.dart            # Conversations list & search
-│       │       ├── chat_screen.dart                # Real-time chat, read receipts & voice controls
+│       │       ├── messages_screen.dart            # 1:1 Telegram chat list with category tabs & status ticks
+│       │       ├── chat_screen.dart                # 1:1 Telegram replica chat screen with v_chat_bubbles
 │       │       └── widgets/
+│       │           ├── telegram_wallpaper.dart     # Authentic Telegram textured doodle canvas painter
 │       │           ├── voice_note_bubble.dart      # Tap-to-seek waveform scrubber with synced playback
 │       │           └── link_preview_bubble.dart    # Rich OpenGraph-style preview card
 │       ├── leaderboard/
@@ -90,6 +98,7 @@ Quest/
 │           └── presentation/
 │               ├── profile_screen.dart             # User stats, archetype tags, badges & portal link
 │               ├── member_profile_screen.dart      # Public peer profiles with connect action
+│               ├── edit_profile_screen.dart        # Supabase profile editor with avatar upload & bio
 │               └── settings_screen.dart            # App preferences, notifications, theme toggles
 ├── CODEBASE_DOCUMENTATION.md                       # Master technical architecture & living manual
 ├── DESIGN.md                                       # Core product design principles & specifications

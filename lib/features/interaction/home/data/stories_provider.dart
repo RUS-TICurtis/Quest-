@@ -2,6 +2,7 @@ import 'package:quest/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quest/core/utils/time_utils.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'stories_repository.dart';
 
 class StoryItem {
@@ -20,6 +21,8 @@ class StoryItem {
   final bool isSpoiler;
   final String? muxPlaybackId;
   final String? videoUrl;
+  final bool isMe;
+  final int viewsCount;
 
   StoryItem({
     required this.id,
@@ -37,6 +40,8 @@ class StoryItem {
     this.isSpoiler = false,
     this.muxPlaybackId,
     this.videoUrl,
+    this.isMe = false,
+    this.viewsCount = 0,
   });
 
   StoryItem copyWith({
@@ -55,6 +60,8 @@ class StoryItem {
     bool? isSpoiler,
     String? muxPlaybackId,
     String? videoUrl,
+    bool? isMe,
+    int? viewsCount,
   }) {
     return StoryItem(
       id: id ?? this.id,
@@ -72,30 +79,48 @@ class StoryItem {
       isSpoiler: isSpoiler ?? this.isSpoiler,
       muxPlaybackId: muxPlaybackId ?? this.muxPlaybackId,
       videoUrl: videoUrl ?? this.videoUrl,
+      isMe: isMe ?? this.isMe,
+      viewsCount: viewsCount ?? this.viewsCount,
     );
   }
 
   factory StoryItem.fromJson(Map<String, dynamic> json) {
+    final rawCreatedAt = json['createdAt'] ?? json['created_at'];
+    final rawPlaybackId = json['muxPlaybackId'] ?? json['mux_playback_id'];
+    final rawAuthorName = json['authorName'] ?? json['author_name'] ?? 'Anonymous';
+    final rawCommunity = json['communityName'] ?? json['community_name'] ?? 'Community';
+    final rawAuthorAvatar = json['authorAvatar'] ?? json['author_avatar'] ?? json['avatar_url'];
+    final rawContent = json['content'] ?? json['media_url'];
+    final rawVideoUrl = json['videoUrl'] ?? json['video_url'];
+
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final storyUserId = json['user_id']?.toString();
+    final bool isUserOwner = json['isMe'] as bool? ?? 
+        json['is_me'] as bool? ?? 
+        (storyUserId != null && currentUserId != null && storyUserId == currentUserId);
+
     return StoryItem(
-      id: json['id'] as String,
-      authorName: json['authorName'] as String,
-      communityName: json['communityName'] as String? ?? 'Community',
-      caption: json['caption'] as String? ?? '',
+      id: (json['id'] ?? 's_${DateTime.now().millisecondsSinceEpoch}').toString(),
+      authorName: rawAuthorName.toString(),
+      communityName: rawCommunity.toString(),
+      caption: (json['caption'] ?? '').toString(),
       ringColor: Color(
         json['ringColor'] as int? ?? AppColors.questBlue.toARGB32(),
       ),
       icon: _getStoryIcon(json['icon'] as int?),
-      isSeen: json['isSeen'] as bool? ?? false,
-      createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt']) : null,
-      authorAvatar: json['authorAvatar'] as String?,
+      isSeen: json['isSeen'] as bool? ?? json['is_seen'] as bool? ?? false,
+      createdAt: rawCreatedAt != null ? DateTime.tryParse(rawCreatedAt.toString()) : null,
+      authorAvatar: rawAuthorAvatar?.toString(),
       title: json['title'] as String?,
-      content: json['content'] as String?,
+      content: rawContent?.toString(),
       gradient: (json['gradient'] as List<dynamic>?)
           ?.map((e) => Color(e as int))
           .toList(),
       isSpoiler: json['isSpoiler'] as bool? ?? false,
-      muxPlaybackId: json['muxPlaybackId'] as String?,
-      videoUrl: json['videoUrl'] as String?,
+      muxPlaybackId: rawPlaybackId?.toString(),
+      videoUrl: rawVideoUrl?.toString(),
+      isMe: isUserOwner,
+      viewsCount: (json['viewsCount'] ?? json['views_count'] as int?) ?? 0,
     );
   }
 
@@ -124,6 +149,21 @@ class StoryItem {
       'isSpoiler': isSpoiler,
       'muxPlaybackId': muxPlaybackId,
       'videoUrl': videoUrl,
+      'isMe': isMe,
+      'viewsCount': viewsCount,
+    };
+  }
+
+  Map<String, dynamic> toSupabase() {
+    return {
+      if (content != null || videoUrl != null) 'media_url': content ?? videoUrl,
+      if (muxPlaybackId != null && muxPlaybackId!.isNotEmpty) 'mux_playback_id': muxPlaybackId,
+      'caption': caption,
+      'authorName': authorName,
+      'timeAgo': formattedTimeAgo,
+      'isSeen': isSeen,
+      if (authorAvatar != null && authorAvatar!.isNotEmpty) 'authorAvatar': authorAvatar,
+      if (communityName.isNotEmpty) 'communityName': communityName,
     };
   }
 
@@ -140,16 +180,30 @@ class StoriesNotifier extends AsyncNotifier<List<StoryItem>> {
   }
 
   Future<void> addStory(StoryItem newStory) async {
-    if (state.value == null) return;
+    final currentList = state.value ?? [];
+    // Optimistically update Riverpod state immediately
+    state = AsyncData([newStory, ...currentList.where((s) => s.id != newStory.id)]);
 
-    final addedStory = await _repository.addStory(newStory);
-    state = AsyncData([addedStory, ...state.value!]);
+    try {
+      await _repository.addStory(newStory);
+    } catch (err) {
+      debugPrint('[StoriesNotifier] addStory persistence notice: $err');
+    }
+  }
+
+  Future<void> deleteStory(String storyId) async {
+    final currentList = state.value ?? [];
+    state = AsyncData(currentList.where((s) => s.id != storyId).toList());
+
+    try {
+      await _repository.deleteStory(storyId);
+    } catch (err) {
+      debugPrint('[StoriesNotifier] deleteStory notice: $err');
+    }
   }
 
   Future<void> markAsSeen(String storyId) async {
     if (state.value == null) return;
-
-    await _repository.markAsSeen(storyId);
 
     state = AsyncData(
       state.value!.map((s) {
@@ -159,6 +213,10 @@ class StoriesNotifier extends AsyncNotifier<List<StoryItem>> {
         return s;
       }).toList(),
     );
+
+    try {
+      await _repository.markAsSeen(storyId);
+    } catch (_) {}
   }
 }
 

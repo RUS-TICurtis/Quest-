@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+import 'package:quest/features/identity/auth/data/auth_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -22,29 +23,34 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1500),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Interval(0.0, 0.6, curve: Curves.easeIn),
+        curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
       ),
     );
 
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: Interval(0.0, 0.6, curve: Curves.easeOutBack),
+        curve: const Interval(0.0, 0.6, curve: Curves.easeOutBack),
       ),
     );
 
     _controller.forward();
 
-    // Navigate to landing or home after a delay based on auth state
-    Future.delayed(Duration(milliseconds: 2500), () {
+    // Navigate to landing or home based on real auth state
+    Future.delayed(const Duration(milliseconds: 2200), () {
       if (mounted) {
-        context.go('/home');
+        final isAuth = ref.read(authProvider).isAuthenticated;
+        if (isAuth) {
+          context.go('/home');
+        } else {
+          context.go('/landing');
+        }
       }
     });
   }

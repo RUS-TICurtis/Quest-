@@ -132,12 +132,16 @@ class UserState {
   }
 
   factory UserState.fromJson(Map<String, dynamic> json) {
+    final rawAvatar = (json['avatarUrl'] ?? json['avatar_url']) as String?;
+    final rawName = (json['name'] ?? json['full_name'] ?? 'Explorer').toString();
+    final rawInitials = json['initials'] as String? ?? (rawName.isNotEmpty ? rawName[0].toUpperCase() : 'Q');
+
     return UserState(
-      name: json['name'] as String? ?? '',
+      name: rawName,
       username: json['username'] as String?,
-      avatarUrl: json['avatarUrl'] as String?,
+      avatarUrl: rawAvatar,
       bio: json['bio'] as String?,
-      initials: json['initials'] as String? ?? '',
+      initials: rawInitials,
       level: json['level'] as int? ?? 1,
       currentXp: json['currentXp'] as int? ?? 0,
       xpToNextLevel: json['xpToNextLevel'] as int? ?? 100,
@@ -233,7 +237,7 @@ class UserNotifier extends AsyncNotifier<UserState> {
     final localStorage = ref.read(localStorageServiceProvider);
     await localStorage.saveProfile(
       name: newState.name,
-      avatarUrl: '', // Avatar not in state yet, just pass empty
+      avatarUrl: newState.avatarUrl ?? '',
       xp: newState.currentXp,
       level: newState.level,
     );

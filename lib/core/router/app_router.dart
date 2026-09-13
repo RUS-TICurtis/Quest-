@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/features/identity/auth/data/auth_provider.dart';
 import 'package:quest/features/identity/auth/presentation/landing_screen.dart';
+import 'package:quest/features/identity/auth/presentation/login_screen.dart';
+import 'package:quest/features/identity/auth/presentation/oauth_consent_screen.dart';
 import 'package:quest/features/identity/auth/presentation/onboarding_screen.dart';
 import 'package:quest/features/identity/auth/presentation/splash_screen.dart';
 import 'package:quest/features/interaction/home/presentation/home_screen.dart';
@@ -53,23 +55,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       if (authState.isLoading) return null;
 
-      // final isAuth = authState.isAuthenticated;
-      // final isSplash = state.matchedLocation == '/';
-      // final isLanding = state.matchedLocation == '/landing';
-      // final isOnboarding = state.matchedLocation == '/onboarding';
-      // final isAuthRoute = isSplash || isLanding || isOnboarding;
+      final isAuth = authState.isAuthenticated;
+      final loc = state.matchedLocation;
+      final isSplash = loc == '/';
+      final isLanding = loc == '/landing';
+      final isLogin = loc == '/login';
+      final isOnboarding = loc == '/onboarding';
+      final isConsent = loc == '/oauth/consent';
+      final isAuthRoute = isSplash || isLanding || isLogin || isOnboarding;
 
-      // TODO(production): Re-enable auth guard before release.
-      // Temporarily disabled for offline/dev mode testing.
-      // Uncomment the block below and remove this comment to restore auth.
-      // if (!isAuth && !isAuthRoute) {
-      //   return '/landing';
-      // }
+      // If user is not authenticated and attempts to access consent screen,
+      // redirect to /login with target return parameter
+      if (!isAuth && isConsent) {
+        final target = Uri.encodeComponent(state.uri.toString());
+        return '/login?redirect=$target';
+      }
 
-      // Prevent authenticated users from going back to landing/onboarding
-      // if (isAuth && (isLanding || isOnboarding)) {
-      //   return '/home';
-      // }
+      // If user is not authenticated and attempts to access protected routes, redirect to /landing
+      if (!isAuth && !isAuthRoute) {
+        return '/landing';
+      }
+
+      // If authenticated and on landing or login, redirect to home or preserved redirect target
+      if (isAuth && (isLanding || isLogin)) {
+        final redirectTarget = state.uri.queryParameters['redirect'];
+        if (redirectTarget != null && redirectTarget.isNotEmpty) {
+          return redirectTarget;
+        }
+        return '/home';
+      }
 
       return null;
     },
@@ -84,6 +98,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/landing',
         name: 'landing',
         builder: (context, state) => LandingScreen(),
+      ),
+      GoRoute(
+        path: '/login',
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/oauth/consent',
+        name: 'oauth_consent',
+        builder: (context, state) => OAuthConsentScreen(
+          authorizationId: state.uri.queryParameters['authorization_id'] ?? '',
+        ),
       ),
       GoRoute(
         path: '/onboarding',

@@ -160,6 +160,24 @@ class MainShell extends StatelessWidget {
                 _getTitle(idx),
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: context.colors.textPrimary),
               ),
+              actions: idx == 4
+                  ? [
+                      IconButton(
+                        icon: Icon(Icons.leaderboard, color: context.colors.gold),
+                        tooltip: 'Season Leaderboard',
+                        onPressed: () {
+                          context.push('/leaderboard');
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.settings_outlined, color: context.colors.textPrimary),
+                        tooltip: 'Settings',
+                        onPressed: () {
+                          context.push('/settings');
+                        },
+                      ),
+                    ]
+                  : null,
             ),
           ),
         ),

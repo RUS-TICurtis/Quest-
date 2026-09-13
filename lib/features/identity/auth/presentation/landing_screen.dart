@@ -110,47 +110,27 @@ class LandingScreen extends ConsumerWidget {
 
                   // Action Buttons
                   QuestButton(
-                    label: 'Begin Your Quest',
+                    label: 'Create Account',
                     isFullWidth: true,
                     icon: Icons.rocket_launch_outlined,
                     onPressed: () {
                       HapticFeedback.lightImpact();
-                      context.go('/onboarding');
+                      context.push('/login');
                     },
                   ),
                   SizedBox(height: 12),
 
-                  // Divider
-                  Row(
-                    children: [
-                      Expanded(child: Divider(color: AppColors.border)),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(
-                          'or',
-                          style: TextStyle(
-                            color: AppColors.textMuted,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                      Expanded(child: Divider(color: AppColors.border)),
-                    ],
-                  ),
-
-                  SizedBox(height: 12),
                   QuestButton(
-                    label: 'Continue with Google',
+                    label: 'Sign In to Existing Account',
                     isFullWidth: true,
                     variant: QuestButtonVariant.secondary,
-                    icon: Icons.g_mobiledata_rounded,
+                    icon: Icons.login_rounded,
                     onPressed: () {
                       HapticFeedback.lightImpact();
-                      context.go('/home');
+                      context.push('/login');
                     },
                   ),
-
-                  SizedBox(height: 24),
+                  SizedBox(height: 16),
 
                   // Feature rows
                   Row(

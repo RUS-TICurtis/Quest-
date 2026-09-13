@@ -24,9 +24,11 @@ class SupabaseUserRepository implements UserRepository {
 
     if (response == null) {
       // Create profile if it doesn't exist
+      final userMetadata = _supabase.auth.currentUser?.userMetadata;
+      final defaultName = userMetadata?['full_name'] as String? ?? 'Explorer';
       final defaultProfile = UserState.initial().copyWith(
-        name: 'New Player',
-        initials: 'NP',
+        name: defaultName,
+        initials: defaultName.isNotEmpty ? defaultName[0].toUpperCase() : 'Q',
       );
       await updateUser(defaultProfile);
       return defaultProfile;
@@ -54,6 +56,10 @@ class SupabaseUserRepository implements UserRepository {
     final profileData = user.toJson();
     profileData.remove('dailyQuests');
     profileData['id'] = userId;
+    if (user.avatarUrl != null) {
+      profileData['avatarUrl'] = user.avatarUrl;
+      profileData['avatar_url'] = user.avatarUrl;
+    }
 
     await _supabase.from('profiles').upsert(profileData);
 

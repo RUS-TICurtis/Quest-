@@ -21,27 +21,6 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text('Profile'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.leaderboard, color: AppColors.gold),
-            tooltip: 'Season Leaderboard',
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              HapticFeedback.lightImpact();
-              context.push('/leaderboard');
-            },
-          ),
-          IconButton(
-            icon: Icon(Icons.settings_outlined),
-            tooltip: 'Settings',
-            onPressed: () {
-              context.push('/profile/edit');
-            },
-          ),
-        ],
-      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(

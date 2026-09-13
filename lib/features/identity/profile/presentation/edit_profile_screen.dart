@@ -2,13 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:quest/core/media/media_purpose.dart';
-import 'package:quest/core/theme/app_colors.dart';
-import 'package:quest/features/identity/profile/data/user_provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:image_cropper/image_cropper.dart';
-import 'dart:io';
+import 'package:quest/core/media/media_purpose.dart';
 import 'package:quest/core/media/media_service_gateway.dart';
+import 'package:quest/core/theme/app_colors_extension.dart';
+import 'package:quest/features/identity/profile/data/user_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -22,10 +21,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _usernameController;
   late TextEditingController _bioController;
-  late TextEditingController _ageController;
   
   bool _isLoading = false;
-  File? _selectedImage;
+  Uint8List? _selectedImageBytes;
 
   @override
   void initState() {
@@ -34,7 +32,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _nameController = TextEditingController(text: user.name);
     _usernameController = TextEditingController(text: user.username ?? '');
     _bioController = TextEditingController(text: user.bio ?? '');
-    _ageController = TextEditingController(text: 'Hidden'); // Read-only age
   }
 
   @override
@@ -42,39 +39,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     _nameController.dispose();
     _usernameController.dispose();
     _bioController.dispose();
-    _ageController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImage() async {
     HapticFeedback.lightImpact();
     final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 800,
+      maxHeight: 800,
+      imageQuality: 85,
+    );
     if (pickedFile != null) {
-      final croppedFile = await ImageCropper().cropImage(
-        sourcePath: pickedFile.path,
-        aspectRatio: const CropAspectRatio(ratioX: 1, ratioY: 1),
-        uiSettings: [
-          AndroidUiSettings(
-            toolbarTitle: 'Crop Avatar',
-            toolbarColor: AppColors.background,
-            toolbarWidgetColor: AppColors.textPrimary,
-            initAspectRatio: CropAspectRatioPreset.square,
-            lockAspectRatio: true,
-          ),
-          IOSUiSettings(
-            title: 'Crop Avatar',
-            aspectRatioLockEnabled: true,
-            resetButtonHidden: true,
-          ),
-        ],
-      );
-
-      if (croppedFile != null) {
-        setState(() {
-          _selectedImage = File(croppedFile.path);
-        });
-      }
+      final bytes = await pickedFile.readAsBytes();
+      setState(() {
+        _selectedImageBytes = bytes;
+      });
     }
   }
 
@@ -89,39 +70,40 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       HapticFeedback.mediumImpact();
       String? newAvatarUrl;
 
-      if (_selectedImage != null) {
-        final result = await MediaServiceGateway.uploadImage(_selectedImage!, MediaPurpose.profile);
-        newAvatarUrl = result;
+      if (_selectedImageBytes != null) {
+        newAvatarUrl = await MediaServiceGateway.uploadImageBytes(
+          _selectedImageBytes!,
+          MediaPurpose.profile,
+        );
       }
 
       final userNotifier = ref.read(userProvider.notifier);
       final currentUser = ref.read(userProvider).value ?? UserState.initial();
       
-      // Update local state (in a real app, this would make an API call to Supabase)
-      userNotifier.updateProfile(
-        currentUser.copyWith(
-          name: _nameController.text.trim(),
-          username: _usernameController.text.trim(),
-          bio: _bioController.text.trim(),
-          avatarUrl: newAvatarUrl ?? currentUser.avatarUrl,
-        ),
+      final updatedUser = currentUser.copyWith(
+        name: _nameController.text.trim(),
+        username: _usernameController.text.trim().replaceAll('@', ''),
+        bio: _bioController.text.trim(),
+        avatarUrl: newAvatarUrl ?? currentUser.avatarUrl,
       );
 
+      await userNotifier.updateProfile(updatedUser);
+
       if (mounted) {
-        context.pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Profile updated successfully'),
-            backgroundColor: AppColors.emerald,
+            content: const Text('Profile updated successfully!'),
+            backgroundColor: context.colors.emerald,
           ),
         );
+        context.pop();
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to update profile: $e'),
-            backgroundColor: AppColors.crimson,
+            backgroundColor: context.colors.crimson,
           ),
         );
       }
@@ -134,57 +116,23 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     }
   }
 
-  Widget _buildTextField({
-    required TextEditingController controller,
-    required String label,
-    int maxLines = 1,
-    bool readOnly = false,
-    String? Function(String?)? validator,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: TextFormField(
-        controller: controller,
-        maxLines: maxLines,
-        readOnly: readOnly,
-        validator: validator,
-        style: TextStyle(
-          color: readOnly ? AppColors.textSecondary : AppColors.textPrimary,
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(color: AppColors.textSecondary),
-          filled: true,
-          fillColor: AppColors.card,
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.border),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.questBlue),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.crimson),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide(color: AppColors.crimson),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final userState = ref.watch(userProvider).value ?? UserState.initial();
+    final authUser = Supabase.instance.client.auth.currentUser;
+    final email = authUser?.email ?? 'Not connected';
+
+    ImageProvider? avatarImage;
+    if (_selectedImageBytes != null) {
+      avatarImage = MemoryImage(_selectedImageBytes!);
+    } else if (userState.avatarUrl != null && userState.avatarUrl!.isNotEmpty) {
+      avatarImage = NetworkImage(userState.avatarUrl!);
+    }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: Text('Edit Profile'),
+        title: const Text('Edit Profile'),
         actions: [
           if (_isLoading)
             Padding(
@@ -195,7 +143,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   height: 20,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.questBlue,
+                    color: context.colors.questBlue,
                   ),
                 ),
               ),
@@ -206,7 +154,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               child: Text(
                 'Save',
                 style: TextStyle(
-                  color: AppColors.questBlue,
+                  color: context.colors.questBlue,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -221,25 +169,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              // Avatar Picker
               GestureDetector(
                 onTap: _pickImage,
                 child: Stack(
                   children: [
                     CircleAvatar(
-                      radius: 60,
-                      backgroundColor: AppColors.border,
-                      backgroundImage: _selectedImage != null
-                          ? FileImage(_selectedImage!)
-                          : (userState.avatarUrl != null
-                              ? NetworkImage(userState.avatarUrl!)
-                              : null) as ImageProvider?,
-                      child: (_selectedImage == null && userState.avatarUrl == null)
+                      radius: 56,
+                      backgroundColor: context.colors.card,
+                      backgroundImage: avatarImage,
+                      child: avatarImage == null
                           ? Text(
-                              userState.initials,
+                              userState.initials.isNotEmpty ? userState.initials : 'Q',
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: context.colors.textPrimary,
                               ),
                             )
                           : null,
@@ -248,18 +193,24 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       bottom: 0,
                       right: 0,
                       child: Container(
-                        padding: EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: AppColors.questBlue,
+                          color: context.colors.questBlue,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: AppColors.background,
+                            color: context.colors.background,
                             width: 3,
                           ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: context.colors.questBlue.withValues(alpha: 0.4),
+                              blurRadius: 8,
+                            ),
+                          ],
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.camera_alt,
-                          size: 20,
+                          size: 18,
                           color: Colors.white,
                         ),
                       ),
@@ -267,30 +218,132 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ],
                 ),
               ),
-              SizedBox(height: 32),
-              _buildTextField(
-                controller: _nameController,
-                label: 'Name',
-                validator: (val) => val == null || val.isEmpty ? 'Name cannot be empty' : null,
+              const SizedBox(height: 10),
+              Text(
+                'Change Profile Photo',
+                style: TextStyle(
+                  color: context.colors.questBlue,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-              _buildTextField(
+              const SizedBox(height: 32),
+
+              // Full Name Field
+              TextFormField(
+                controller: _nameController,
+                style: TextStyle(color: context.colors.textPrimary),
+                textCapitalization: TextCapitalization.words,
+                decoration: InputDecoration(
+                  labelText: 'Full Name',
+                  labelStyle: TextStyle(color: context.colors.textMuted),
+                  prefixIcon: Icon(Icons.person_outline, color: context.colors.questBlue),
+                  filled: true,
+                  fillColor: context.colors.card,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                  ),
+                ),
+                validator: (val) => val == null || val.trim().isEmpty ? 'Name cannot be empty' : null,
+              ),
+              const SizedBox(height: 18),
+
+              // Username Field
+              TextFormField(
                 controller: _usernameController,
-                label: 'Username',
+                style: TextStyle(color: context.colors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Username',
+                  labelStyle: TextStyle(color: context.colors.textMuted),
+                  prefixText: '@',
+                  prefixStyle: TextStyle(color: context.colors.questBlue, fontWeight: FontWeight.bold),
+                  prefixIcon: Icon(Icons.alternate_email, color: context.colors.questBlue),
+                  filled: true,
+                  fillColor: context.colors.card,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                  ),
+                ),
                 validator: (val) {
-                  if (val == null || val.isEmpty) return 'Username cannot be empty';
-                  if (val.contains(' ')) return 'Username cannot contain spaces';
+                  if (val == null || val.trim().isEmpty) return 'Username cannot be empty';
+                  if (val.trim().contains(' ')) return 'Username cannot contain spaces';
                   return null;
                 },
               ),
-              _buildTextField(
+              const SizedBox(height: 18),
+
+              // Bio Field
+              TextFormField(
                 controller: _bioController,
-                label: 'Bio',
-                maxLines: 3,
+                maxLines: 4,
+                maxLength: 150,
+                style: TextStyle(color: context.colors.textPrimary),
+                decoration: InputDecoration(
+                  labelText: 'Bio',
+                  alignLabelWithHint: true,
+                  labelStyle: TextStyle(color: context.colors.textMuted),
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(bottom: 50),
+                    child: Icon(Icons.notes, color: context.colors.questBlue),
+                  ),
+                  filled: true,
+                  fillColor: context.colors.card,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                  ),
+                  counterStyle: TextStyle(color: context.colors.textMuted, fontSize: 12),
+                ),
               ),
-              _buildTextField(
-                controller: _ageController,
-                label: 'Age',
+              const SizedBox(height: 18),
+
+              // Account Email (Read-Only)
+              TextFormField(
+                initialValue: email,
                 readOnly: true,
+                style: TextStyle(color: context.colors.textMuted),
+                decoration: InputDecoration(
+                  labelText: 'Account Email',
+                  labelStyle: TextStyle(color: context.colors.textMuted),
+                  prefixIcon: Icon(Icons.email_outlined, color: context.colors.textMuted),
+                  suffixIcon: Icon(Icons.lock_outline, color: context.colors.textMuted, size: 18),
+                  filled: true,
+                  fillColor: context.colors.card.withValues(alpha: 0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: context.colors.border),
+                  ),
+                ),
               ),
             ],
           ),

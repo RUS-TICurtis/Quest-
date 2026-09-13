@@ -9,6 +9,7 @@ class MediaCompressor {
 
   /// Compresses an image based on its purpose
   static Future<File?> compressImage(File file, MediaPurpose purpose) async {
+    if (kIsWeb) return file;
     final targetPath = '${file.parent.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
     
     int quality;
@@ -46,6 +47,7 @@ class MediaCompressor {
 
   /// Compresses a video based on its intended purpose.
   static Future<File?> compressVideo(File file, MediaPurpose purpose) async {
+    if (kIsWeb) return file;
     try {
       VVideoCompressionConfig config;
       switch (purpose) {
