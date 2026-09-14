@@ -55,8 +55,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: CustomScrollView(
         slivers: [
-
-          
           SliverToBoxAdapter(
             child: Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
@@ -65,7 +63,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 children: [
                   StoriesBar(),
                   SizedBox(height: 16),
-                  
+
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20),
                     child: ElevatedButton.icon(
@@ -89,12 +87,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           borderRadius: BorderRadius.circular(16),
                         ),
                         elevation: 2,
-                        shadowColor: context.colors.questBlue.withValues(alpha: 0.5),
+                        shadowColor: context.colors.questBlue.withValues(
+                          alpha: 0.5,
+                        ),
                       ),
                     ),
                   ),
                   SizedBox(height: 16),
-                  
+
                   // XP Bar card
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20),
@@ -141,7 +141,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               value: progress,
                               minHeight: 8,
                               backgroundColor: context.colors.surface,
-                              valueColor: AlwaysStoppedAnimation<Color>(context.colors.gold),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                context.colors.gold,
+                              ),
                             ),
                           ),
                         ],
@@ -177,7 +179,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.lightbulb_outline, color: context.colors.skyBlue, size: 16),
+                                  Icon(
+                                    Icons.lightbulb_outline,
+                                    color: context.colors.skyBlue,
+                                    size: 16,
+                                  ),
                                   SizedBox(width: 8),
                                   Text(
                                     'AI COACH SUGGESTION',
@@ -229,7 +235,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             style: ElevatedButton.styleFrom(
                               backgroundColor: context.colors.skyBlue,
                               foregroundColor: context.colors.background,
-                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 10,
+                              ),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(10),
                               ),
@@ -240,7 +249,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             },
                             child: Text(
                               'View Event',
-                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                              style: TextStyle(
+                                fontWeight: FontWeight.w700,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
                         ],
@@ -281,7 +293,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       padding: EdgeInsets.symmetric(horizontal: 16),
                       itemCount: userState.dailyQuests.length,
                       itemBuilder: (context, index) {
-                        return _questTile(context, userState.dailyQuests[index]);
+                        return _questTile(
+                          context,
+                          userState.dailyQuests[index],
+                        );
                       },
                     ),
                   ),
@@ -332,7 +347,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         ),
                         child: Column(
                           children: [
-                            Icon(Icons.event_busy, color: context.colors.textMuted, size: 40),
+                            Icon(
+                              Icons.event_busy,
+                              color: context.colors.textMuted,
+                              size: 40,
+                            ),
                             SizedBox(height: 12),
                             Text(
                               'No upcoming events',
@@ -390,7 +409,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               children: [
                 Icon(
                   quest.isDone ? Icons.undo : Icons.celebration,
-                  color: quest.isDone ? context.colors.textMuted : context.colors.gold,
+                  color: quest.isDone
+                      ? context.colors.textMuted
+                      : context.colors.gold,
                   size: 20,
                 ),
                 SizedBox(width: 10),
@@ -429,8 +450,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Icon(
-                  quest.isDone ? Icons.check_circle : Icons.radio_button_unchecked,
-                  color: quest.isDone ? context.colors.emerald : context.colors.border,
+                  quest.isDone
+                      ? Icons.check_circle
+                      : Icons.radio_button_unchecked,
+                  color: quest.isDone
+                      ? context.colors.emerald
+                      : context.colors.border,
                   size: 20,
                 ),
                 Container(

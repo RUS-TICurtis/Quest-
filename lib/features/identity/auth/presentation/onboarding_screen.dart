@@ -88,10 +88,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
             Expanded(
               child: Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 28,
-                  vertical: 24,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 28, vertical: 24),
                 child: AnimatedSwitcher(
                   duration: Duration(milliseconds: 300),
                   transitionBuilder: (child, anim) => SlideTransition(

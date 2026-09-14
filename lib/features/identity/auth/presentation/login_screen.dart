@@ -27,7 +27,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   @override
   void initState() {
@@ -59,7 +60,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     try {
       if (_isSignUp) {
-        final res = await ref.read(authProvider.notifier).signUpWithEmail(email, password, name);
+        final res = await ref
+            .read(authProvider.notifier)
+            .signUpWithEmail(email, password, name);
         if (!mounted) return;
 
         if (res.session == null) {
@@ -68,19 +71,33 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             context: context,
             builder: (ctx) => AlertDialog(
               backgroundColor: colors.surface,
-              title: Text('Verify Your Email', style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.bold)),
+              title: Text(
+                'Verify Your Email',
+                style: TextStyle(
+                  color: colors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               content: Text(
                 'Your account was created! We sent a confirmation link to $email.\n\nPlease verify your email address, then Sign In.',
                 style: TextStyle(color: colors.textSecondary, height: 1.4),
               ),
               actions: [
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: colors.questBlue),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: colors.questBlue,
+                  ),
                   onPressed: () {
                     Navigator.pop(ctx);
                     setState(() => _isSignUp = false);
                   },
-                  child: const Text('Go to Sign In', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  child: const Text(
+                    'Go to Sign In',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -94,7 +111,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             backgroundColor: colors.emerald,
           ),
         );
-        final redirectParam = GoRouterState.of(context).uri.queryParameters['redirect'];
+        final redirectParam = GoRouterState.of(
+          context,
+        ).uri.queryParameters['redirect'];
         if (redirectParam != null && redirectParam.isNotEmpty) {
           router.go(redirectParam);
         } else {
@@ -109,7 +128,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             backgroundColor: colors.emerald,
           ),
         );
-        final redirectParam = GoRouterState.of(context).uri.queryParameters['redirect'];
+        final redirectParam = GoRouterState.of(
+          context,
+        ).uri.queryParameters['redirect'];
         if (redirectParam != null && redirectParam.isNotEmpty) {
           router.go(redirectParam);
         } else {
@@ -119,10 +140,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     } on AuthException catch (e) {
       if (!mounted) return;
       messenger.showSnackBar(
-        SnackBar(
-          content: Text(e.message),
-          backgroundColor: colors.crimson,
-        ),
+        SnackBar(content: Text(e.message), backgroundColor: colors.crimson),
       );
     } catch (e) {
       if (!mounted) return;
@@ -149,7 +167,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         backgroundColor: colors.surface,
         title: Text(
           'Reset Password',
-          style: TextStyle(color: colors.textPrimary, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: colors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -182,7 +203,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               if (resetEmail.isEmpty) return;
               Navigator.pop(ctx);
               try {
-                await Supabase.instance.client.auth.resetPasswordForEmail(resetEmail);
+                await Supabase.instance.client.auth.resetPasswordForEmail(
+                  resetEmail,
+                );
                 if (!mounted) return;
                 messenger.showSnackBar(
                   SnackBar(
@@ -200,7 +223,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 );
               }
             },
-            child: const Text('Send Reset Link', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Send Reset Link',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),
@@ -242,7 +271,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
                 child: Form(
                   key: _formKey,
                   child: Column(
@@ -261,7 +293,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 borderRadius: BorderRadius.circular(16),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: context.colors.questBlue.withValues(alpha: 0.4),
+                                    color: context.colors.questBlue.withValues(
+                                      alpha: 0.4,
+                                    ),
                                     blurRadius: 18,
                                     spreadRadius: 2,
                                   ),
@@ -318,16 +352,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: !_isSignUp ? context.colors.questBlue : Colors.transparent,
+                                    color: !_isSignUp
+                                        ? context.colors.questBlue
+                                        : Colors.transparent,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Center(
                                     child: Text(
                                       'Sign In',
                                       style: TextStyle(
-                                        color: !_isSignUp ? Colors.white : context.colors.textMuted,
+                                        color: !_isSignUp
+                                            ? Colors.white
+                                            : context.colors.textMuted,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),
@@ -346,16 +386,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 },
                                 child: AnimatedContainer(
                                   duration: const Duration(milliseconds: 200),
-                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: _isSignUp ? context.colors.questBlue : Colors.transparent,
+                                    color: _isSignUp
+                                        ? context.colors.questBlue
+                                        : Colors.transparent,
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Center(
                                     child: Text(
                                       'Create Account',
                                       style: TextStyle(
-                                        color: _isSignUp ? Colors.white : context.colors.textMuted,
+                                        color: _isSignUp
+                                            ? Colors.white
+                                            : context.colors.textMuted,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 14,
                                       ),
@@ -391,29 +437,44 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             if (_isSignUp) ...[
                               TextFormField(
                                 controller: _nameController,
-                                style: TextStyle(color: context.colors.textPrimary),
+                                style: TextStyle(
+                                  color: context.colors.textPrimary,
+                                ),
                                 textCapitalization: TextCapitalization.words,
                                 decoration: InputDecoration(
                                   labelText: 'Full Name',
-                                  labelStyle: TextStyle(color: context.colors.textMuted),
-                                  prefixIcon: Icon(Icons.person_outline, color: context.colors.questBlue),
+                                  labelStyle: TextStyle(
+                                    color: context.colors.textMuted,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.person_outline,
+                                    color: context.colors.questBlue,
+                                  ),
                                   filled: true,
                                   fillColor: context.colors.surface,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: context.colors.border),
+                                    borderSide: BorderSide(
+                                      color: context.colors.border,
+                                    ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: context.colors.border),
+                                    borderSide: BorderSide(
+                                      color: context.colors.border,
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                                    borderSide: BorderSide(
+                                      color: context.colors.questBlue,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
                                 validator: (value) {
-                                  if (_isSignUp && (value == null || value.trim().isEmpty)) {
+                                  if (_isSignUp &&
+                                      (value == null || value.trim().isEmpty)) {
                                     return 'Please enter your name';
                                   }
                                   return null;
@@ -426,31 +487,47 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             TextFormField(
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
-                              style: TextStyle(color: context.colors.textPrimary),
+                              style: TextStyle(
+                                color: context.colors.textPrimary,
+                              ),
                               decoration: InputDecoration(
                                 labelText: 'Email Address',
-                                labelStyle: TextStyle(color: context.colors.textMuted),
-                                prefixIcon: Icon(Icons.email_outlined, color: context.colors.questBlue),
+                                labelStyle: TextStyle(
+                                  color: context.colors.textMuted,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.email_outlined,
+                                  color: context.colors.questBlue,
+                                ),
                                 filled: true,
                                 fillColor: context.colors.surface,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: context.colors.border),
+                                  borderSide: BorderSide(
+                                    color: context.colors.border,
+                                  ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: context.colors.border),
+                                  borderSide: BorderSide(
+                                    color: context.colors.border,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                                  borderSide: BorderSide(
+                                    color: context.colors.questBlue,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
                               validator: (value) {
                                 if (value == null || value.trim().isEmpty) {
                                   return 'Please enter your email';
                                 }
-                                if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value.trim())) {
+                                if (!RegExp(
+                                  r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                ).hasMatch(value.trim())) {
                                   return 'Please enter a valid email';
                                 }
                                 return null;
@@ -462,31 +539,49 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             TextFormField(
                               controller: _passwordController,
                               obscureText: _obscurePassword,
-                              style: TextStyle(color: context.colors.textPrimary),
+                              style: TextStyle(
+                                color: context.colors.textPrimary,
+                              ),
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                labelStyle: TextStyle(color: context.colors.textMuted),
-                                prefixIcon: Icon(Icons.lock_outline, color: context.colors.questBlue),
+                                labelStyle: TextStyle(
+                                  color: context.colors.textMuted,
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.lock_outline,
+                                  color: context.colors.questBlue,
+                                ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
-                                    _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                    _obscurePassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
                                     color: context.colors.textMuted,
                                   ),
-                                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                  onPressed: () => setState(
+                                    () => _obscurePassword = !_obscurePassword,
+                                  ),
                                 ),
                                 filled: true,
                                 fillColor: context.colors.surface,
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: context.colors.border),
+                                  borderSide: BorderSide(
+                                    color: context.colors.border,
+                                  ),
                                 ),
                                 enabledBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: context.colors.border),
+                                  borderSide: BorderSide(
+                                    color: context.colors.border,
+                                  ),
                                 ),
                                 focusedBorder: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
-                                  borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                                  borderSide: BorderSide(
+                                    color: context.colors.questBlue,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
                               validator: (value) {
@@ -506,35 +601,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               TextFormField(
                                 controller: _confirmPasswordController,
                                 obscureText: _obscureConfirmPassword,
-                                style: TextStyle(color: context.colors.textPrimary),
+                                style: TextStyle(
+                                  color: context.colors.textPrimary,
+                                ),
                                 decoration: InputDecoration(
                                   labelText: 'Confirm Password',
-                                  labelStyle: TextStyle(color: context.colors.textMuted),
-                                  prefixIcon: Icon(Icons.lock_outline, color: context.colors.questBlue),
+                                  labelStyle: TextStyle(
+                                    color: context.colors.textMuted,
+                                  ),
+                                  prefixIcon: Icon(
+                                    Icons.lock_outline,
+                                    color: context.colors.questBlue,
+                                  ),
                                   suffixIcon: IconButton(
                                     icon: Icon(
-                                      _obscureConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                                      _obscureConfirmPassword
+                                          ? Icons.visibility_off
+                                          : Icons.visibility,
                                       color: context.colors.textMuted,
                                     ),
-                                    onPressed: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+                                    onPressed: () => setState(
+                                      () => _obscureConfirmPassword =
+                                          !_obscureConfirmPassword,
+                                    ),
                                   ),
                                   filled: true,
                                   fillColor: context.colors.surface,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: context.colors.border),
+                                    borderSide: BorderSide(
+                                      color: context.colors.border,
+                                    ),
                                   ),
                                   enabledBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: context.colors.border),
+                                    borderSide: BorderSide(
+                                      color: context.colors.border,
+                                    ),
                                   ),
                                   focusedBorder: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                                    borderSide: BorderSide(
+                                      color: context.colors.questBlue,
+                                      width: 2,
+                                    ),
                                   ),
                                 ),
                                 validator: (value) {
-                                  if (_isSignUp && value != _passwordController.text) {
+                                  if (_isSignUp &&
+                                      value != _passwordController.text) {
                                     return 'Passwords do not match';
                                   }
                                   return null;
@@ -568,7 +683,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               label: _isLoading
                                   ? 'Please wait...'
                                   : (_isSignUp ? 'Create Account' : 'Sign In'),
-                              icon: _isSignUp ? Icons.rocket_launch : Icons.login,
+                              icon: _isSignUp
+                                  ? Icons.rocket_launch
+                                  : Icons.login,
                               isFullWidth: true,
                               onPressed: _isLoading ? null : _submit,
                             ),
@@ -581,15 +698,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       // Divider
                       Row(
                         children: [
-                          Expanded(child: Divider(color: context.colors.border)),
+                          Expanded(
+                            child: Divider(color: context.colors.border),
+                          ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 14),
                             child: Text(
                               'or continue with',
-                              style: TextStyle(color: context.colors.textMuted, fontSize: 13),
+                              style: TextStyle(
+                                color: context.colors.textMuted,
+                                fontSize: 13,
+                              ),
                             ),
                           ),
-                          Expanded(child: Divider(color: context.colors.border)),
+                          Expanded(
+                            child: Divider(color: context.colors.border),
+                          ),
                         ],
                       ),
 
@@ -606,25 +730,31 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           final messenger = ScaffoldMessenger.of(context);
                           final router = GoRouter.of(context);
                           final colors = context.colors;
-                          final redirectParam = GoRouterState.of(context).uri.queryParameters['redirect'];
+                          final redirectParam = GoRouterState.of(
+                            context,
+                          ).uri.queryParameters['redirect'];
 
                           try {
                             if (kIsWeb) {
-                              await Supabase.instance.client.auth.signInWithOAuth(
-                                OAuthProvider.google,
-                              );
+                              await Supabase.instance.client.auth
+                                  .signInWithOAuth(OAuthProvider.google);
                             } else {
                               // Mobile (Android / iOS): Strictly in-app native Google Sign-In
-                              final res = await ref.read(authProvider.notifier).signInWithGoogleNative();
+                              final res = await ref
+                                  .read(authProvider.notifier)
+                                  .signInWithGoogleNative();
                               if (res != null) {
                                 if (!mounted) return;
                                 messenger.showSnackBar(
                                   SnackBar(
-                                    content: const Text('Signed in with Google!'),
+                                    content: const Text(
+                                      'Signed in with Google!',
+                                    ),
                                     backgroundColor: colors.emerald,
                                   ),
                                 );
-                                if (redirectParam != null && redirectParam.isNotEmpty) {
+                                if (redirectParam != null &&
+                                    redirectParam.isNotEmpty) {
                                   router.go(redirectParam);
                                 } else {
                                   router.go('/home');
@@ -648,7 +778,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             if (!mounted) return;
                             messenger.showSnackBar(
                               SnackBar(
-                                content: Text('Google Sign-In: ${e.toString()}'),
+                                content: Text(
+                                  'Google Sign-In: ${e.toString()}',
+                                ),
                                 backgroundColor: colors.crimson,
                                 duration: const Duration(seconds: 4),
                               ),
@@ -668,7 +800,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           },
                           child: RichText(
                             text: TextSpan(
-                              style: TextStyle(color: context.colors.textSecondary, fontSize: 14),
+                              style: TextStyle(
+                                color: context.colors.textSecondary,
+                                fontSize: 14,
+                              ),
                               children: [
                                 TextSpan(
                                   text: _isSignUp

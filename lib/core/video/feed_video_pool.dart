@@ -27,17 +27,17 @@ class FeedVideoPool extends Notifier<void> {
 
   void onPageChanged(int index) {
     if (index == _currentIndex) return;
-    
+
     // Pause previous
     _entries[_currentIndex]?.controller.pause();
-    
+
     _currentIndex = index;
-    
+
     // Play new
     if (!_isGloballyPaused) {
       _entries[_currentIndex]?.controller.play();
     }
-    
+
     _activateWindow(_currentIndex);
     _disposeOutsideWindow(_currentIndex);
   }
@@ -55,7 +55,10 @@ class FeedVideoPool extends Notifier<void> {
     for (int i = centerIndex - 1; i <= centerIndex + 1; i++) {
       if (i >= 0 && i < _urls.length) {
         if (!_entries.containsKey(i)) {
-          _initializeEntry(i, autoPlay: i == _currentIndex && !_isGloballyPaused);
+          _initializeEntry(
+            i,
+            autoPlay: i == _currentIndex && !_isGloballyPaused,
+          );
         }
       }
     }
@@ -74,7 +77,7 @@ class FeedVideoPool extends Notifier<void> {
       await controller.initialize();
       controller.setLooping(true);
       entry.isInitialized = true;
-      
+
       if (autoPlay && index == _currentIndex && !_isGloballyPaused) {
         controller.play();
       }
@@ -92,7 +95,7 @@ class FeedVideoPool extends Notifier<void> {
         keysToRemove.add(key);
       }
     }
-    
+
     for (final key in keysToRemove) {
       final entry = _entries.remove(key);
       entry?.controller.dispose();

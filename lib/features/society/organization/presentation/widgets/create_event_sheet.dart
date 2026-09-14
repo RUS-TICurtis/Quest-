@@ -147,7 +147,11 @@ class _CreateEventSheetState extends ConsumerState<CreateEventSheet> {
 
             Row(
               children: [
-                Icon(Icons.event_available, color: context.colors.emerald, size: 24),
+                Icon(
+                  Icons.event_available,
+                  color: context.colors.emerald,
+                  size: 24,
+                ),
                 SizedBox(width: 10),
                 Text(
                   'Host New Event',

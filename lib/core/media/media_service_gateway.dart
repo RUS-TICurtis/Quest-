@@ -16,7 +16,10 @@ class MediaServiceGateway {
   /// Main entry point for uploading video.
   /// Compresses the video locally, then routes to the appropriate provider
   /// based on the MediaPurpose.
-  static Future<MediaUploadResult?> uploadVideo(File file, MediaPurpose purpose) async {
+  static Future<MediaUploadResult?> uploadVideo(
+    File file,
+    MediaPurpose purpose,
+  ) async {
     debugPrint('Starting video upload for purpose: $purpose');
     if (!kIsWeb) {
       debugPrint('Original file size: ${await file.length()} bytes');
@@ -25,9 +28,11 @@ class MediaServiceGateway {
     // 1. Compress Video
     final compressedFile = await MediaCompressor.compressVideo(file, purpose);
     final fileToUpload = compressedFile ?? file;
-    
+
     if (compressedFile != null && !kIsWeb) {
-      debugPrint('Compressed file size: ${await compressedFile.length()} bytes');
+      debugPrint(
+        'Compressed file size: ${await compressedFile.length()} bytes',
+      );
     }
 
     // 2. Route to Provider
@@ -35,25 +40,39 @@ class MediaServiceGateway {
       case MediaPurpose.feed:
         return await _muxService.uploadVideo(fileToUpload);
       case MediaPurpose.chat:
-        final url = await _cloudinaryService.uploadMedia(fileToUpload, isVideo: true);
+        final url = await _cloudinaryService.uploadMedia(
+          fileToUpload,
+          isVideo: true,
+        );
         if (url != null) return MediaUploadResult(url: url);
         return null;
       case MediaPurpose.profile:
-        final url = await _cloudinaryService.uploadMedia(fileToUpload, isVideo: true);
+        final url = await _cloudinaryService.uploadMedia(
+          fileToUpload,
+          isVideo: true,
+        );
         if (url != null) return MediaUploadResult(url: url);
         return null;
     }
   }
 
   /// Uploads video bytes directly (used on Web and byte-based workflows).
-  static Future<MediaUploadResult?> uploadVideoBytes(Uint8List bytes, MediaPurpose purpose) async {
-    debugPrint('Starting video bytes upload for purpose: $purpose (size: ${bytes.length} bytes)');
+  static Future<MediaUploadResult?> uploadVideoBytes(
+    Uint8List bytes,
+    MediaPurpose purpose,
+  ) async {
+    debugPrint(
+      'Starting video bytes upload for purpose: $purpose (size: ${bytes.length} bytes)',
+    );
     switch (purpose) {
       case MediaPurpose.feed:
         return await _muxService.uploadVideoBytes(bytes);
       case MediaPurpose.chat:
       case MediaPurpose.profile:
-        final url = await _cloudinaryService.uploadMediaBytes(bytes, isVideo: true);
+        final url = await _cloudinaryService.uploadMediaBytes(
+          bytes,
+          isVideo: true,
+        );
         if (url != null) return MediaUploadResult(url: url);
         return null;
     }
@@ -73,7 +92,9 @@ class MediaServiceGateway {
     final fileToUpload = compressedFile ?? file;
 
     if (compressedFile != null && !kIsWeb) {
-      debugPrint('Compressed file size: ${await compressedFile.length()} bytes');
+      debugPrint(
+        'Compressed file size: ${await compressedFile.length()} bytes',
+      );
     }
 
     // 2. Route to Provider
@@ -81,15 +102,23 @@ class MediaServiceGateway {
       case MediaPurpose.feed:
         return await _imageKitService.uploadImage(fileToUpload);
       case MediaPurpose.chat:
-        return await _cloudinaryService.uploadMedia(fileToUpload, isVideo: false);
+        return await _cloudinaryService.uploadMedia(
+          fileToUpload,
+          isVideo: false,
+        );
       case MediaPurpose.profile:
         return await _imageKitService.uploadImage(fileToUpload);
     }
   }
 
   /// Uploads image bytes directly (used on Web and byte-based workflows).
-  static Future<String?> uploadImageBytes(Uint8List bytes, MediaPurpose purpose) async {
-    debugPrint('Starting image bytes upload for purpose: $purpose (size: ${bytes.length} bytes)');
+  static Future<String?> uploadImageBytes(
+    Uint8List bytes,
+    MediaPurpose purpose,
+  ) async {
+    debugPrint(
+      'Starting image bytes upload for purpose: $purpose (size: ${bytes.length} bytes)',
+    );
     // Cloudinary natively supports raw byte uploads across all platforms
     return await _cloudinaryService.uploadMediaBytes(bytes, isVideo: false);
   }

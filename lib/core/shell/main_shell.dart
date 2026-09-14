@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+
 class MainShell extends StatelessWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
@@ -17,12 +18,18 @@ class MainShell extends StatelessWidget {
 
   String _getTitle(int index) {
     switch (index) {
-      case 0: return 'Home';
-      case 1: return 'Explore';
-      case 2: return 'Create & Share Experience';
-      case 3: return 'Connect';
-      case 4: return 'Profile';
-      default: return 'Quest';
+      case 0:
+        return 'Home';
+      case 1:
+        return 'Explore';
+      case 2:
+        return 'Create & Share Experience';
+      case 3:
+        return 'Connect';
+      case 4:
+        return 'Profile';
+      default:
+        return 'Quest';
     }
   }
 
@@ -62,9 +69,7 @@ class MainShell extends StatelessWidget {
               selectedIndex: idx,
               onDestinationSelected: (i) => _onTap(context, i),
               labelType: NavigationRailLabelType.all,
-              selectedIconTheme: IconThemeData(
-                color: context.colors.questBlue,
-              ),
+              selectedIconTheme: IconThemeData(color: context.colors.questBlue),
               selectedLabelTextStyle: TextStyle(
                 color: context.colors.questBlue,
                 fontWeight: FontWeight.w600,
@@ -87,7 +92,9 @@ class MainShell extends StatelessWidget {
                         borderRadius: BorderRadius.circular(10),
                         boxShadow: [
                           BoxShadow(
-                            color: context.colors.questBlue.withValues(alpha: 0.4),
+                            color: context.colors.questBlue.withValues(
+                              alpha: 0.4,
+                            ),
                             blurRadius: 12,
                           ),
                         ],
@@ -158,19 +165,29 @@ class MainShell extends StatelessWidget {
               centerTitle: true,
               title: Text(
                 _getTitle(idx),
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: context.colors.textPrimary),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: context.colors.textPrimary,
+                ),
               ),
               actions: idx == 4
                   ? [
                       IconButton(
-                        icon: Icon(Icons.leaderboard, color: context.colors.gold),
+                        icon: Icon(
+                          Icons.leaderboard,
+                          color: context.colors.gold,
+                        ),
                         tooltip: 'Season Leaderboard',
                         onPressed: () {
                           context.push('/leaderboard');
                         },
                       ),
                       IconButton(
-                        icon: Icon(Icons.settings_outlined, color: context.colors.textPrimary),
+                        icon: Icon(
+                          Icons.settings_outlined,
+                          color: context.colors.textPrimary,
+                        ),
                         tooltip: 'Settings',
                         onPressed: () {
                           context.push('/settings');
@@ -185,7 +202,9 @@ class MainShell extends StatelessWidget {
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          border: Border(top: BorderSide(color: context.colors.border, width: 1)),
+          border: Border(
+            top: BorderSide(color: context.colors.border, width: 1),
+          ),
         ),
         child: BottomNavigationBar(
           currentIndex: idx,
@@ -197,34 +216,34 @@ class MainShell extends StatelessWidget {
           unselectedItemColor: context.colors.textMuted,
           showSelectedLabels: false,
           showUnselectedLabels: false,
-              items: [
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.home_outlined),
-                  activeIcon: Icon(Icons.home),
-                  label: 'Home',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.explore_outlined),
-                  activeIcon: Icon(Icons.explore),
-                  label: 'Explore',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.add_circle_outline, size: 32),
-                  activeIcon: Icon(Icons.add_circle, size: 32),
-                  label: 'Create',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.people_alt_outlined),
-                  activeIcon: Icon(Icons.people_alt),
-                  label: 'Connect',
-                ),
-                BottomNavigationBarItem(
-                  icon: Icon(Icons.person_outline),
-                  activeIcon: Icon(Icons.person),
-                  label: 'You',
-                ),
-              ],
+          items: [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
+              label: 'Home',
             ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.explore_outlined),
+              activeIcon: Icon(Icons.explore),
+              label: 'Explore',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.add_circle_outline, size: 32),
+              activeIcon: Icon(Icons.add_circle, size: 32),
+              label: 'Create',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people_alt_outlined),
+              activeIcon: Icon(Icons.people_alt),
+              label: 'Connect',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.person_outline),
+              activeIcon: Icon(Icons.person),
+              label: 'You',
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -21,7 +21,10 @@ class TikTokScrollPhysics extends PageScrollPhysics {
       SpringDescription(mass: 0.3, stiffness: 40.0, damping: 10.4);
 
   @override
-  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+  Simulation? createBallisticSimulation(
+    ScrollMetrics position,
+    double velocity,
+  ) {
     // If we're out of bounds, use the parent's simulation (usually clamping/spring-back)
     if ((velocity <= 0.0 && position.pixels <= position.minScrollExtent) ||
         (velocity >= 0.0 && position.pixels >= position.maxScrollExtent)) {

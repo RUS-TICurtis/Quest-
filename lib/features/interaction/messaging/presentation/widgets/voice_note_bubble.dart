@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+
 class VoiceNoteBubble extends StatefulWidget {
   final int durationSeconds;
   final bool isMe;
@@ -98,7 +99,9 @@ class _VoiceNoteBubbleState extends State<VoiceNoteBubble>
   @override
   Widget build(BuildContext context) {
     final activeColor = widget.isMe ? Colors.white : context.colors.questBlue;
-    final inactiveColor = widget.isMe ? Colors.white38 : context.colors.textMuted;
+    final inactiveColor = widget.isMe
+        ? Colors.white38
+        : context.colors.textMuted;
 
     return Container(
       padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),

@@ -63,17 +63,19 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     if (_replyingMessage != null) {
       replyData = VReplyData(
         originalMessageId: _replyingMessage!.id,
-        senderId: _replyingMessage!.isMe ? 'me' : (_replyingMessage!.senderName ?? 'user'),
-        senderName: _replyingMessage!.isMe ? 'You' : (_replyingMessage!.senderName ?? 'User'),
+        senderId: _replyingMessage!.isMe
+            ? 'me'
+            : (_replyingMessage!.senderName ?? 'user'),
+        senderName: _replyingMessage!.isMe
+            ? 'You'
+            : (_replyingMessage!.senderName ?? 'User'),
         previewText: _replyingMessage!.text,
       );
     }
 
-    ref.read(chatProvider.notifier).sendMessage(
-      threadId: widget.threadId,
-      text: text,
-      replyTo: replyData,
-    );
+    ref
+        .read(chatProvider.notifier)
+        .sendMessage(threadId: widget.threadId, text: text, replyTo: replyData);
 
     _textController.clear();
     setState(() {
@@ -161,7 +163,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       onTap: () {
                         Navigator.pop(ctx);
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Live location sharing active')),
+                          const SnackBar(
+                            content: Text('Live location sharing active'),
+                          ),
                         );
                       },
                     ),
@@ -203,10 +207,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           Container(
             width: 56,
             height: 56,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             child: Icon(icon, color: Colors.white, size: 28),
           ),
           const SizedBox(height: 8),
@@ -224,42 +225,59 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _sendSampleImage() {
-    ref.read(chatProvider.notifier).sendMessage(
-      threadId: widget.threadId,
-      text: 'Shared photo from gallery 📷',
-      type: MessageType.image,
-      mediaUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
-    );
+    ref
+        .read(chatProvider.notifier)
+        .sendMessage(
+          threadId: widget.threadId,
+          text: 'Shared photo from gallery 📷',
+          type: MessageType.image,
+          mediaUrl:
+              'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+        );
     _scrollToBottom();
   }
 
   void _sendSampleFile() {
-    ref.read(chatProvider.notifier).sendMessage(
-      threadId: widget.threadId,
-      text: 'Quest_Release_Notes.pdf',
-      type: MessageType.file,
-      fileName: 'Quest_Release_Notes.pdf',
-      fileSize: 1048576,
-    );
+    ref
+        .read(chatProvider.notifier)
+        .sendMessage(
+          threadId: widget.threadId,
+          text: 'Quest_Release_Notes.pdf',
+          type: MessageType.file,
+          fileName: 'Quest_Release_Notes.pdf',
+          fileSize: 1048576,
+        );
     _scrollToBottom();
   }
 
   void _sendSamplePoll() {
-    ref.read(chatProvider.notifier).sendMessage(
-      threadId: widget.threadId,
-      text: 'Team check-in poll',
-      type: MessageType.poll,
-      pollData: const VPollData(
-        question: 'Ready for today\'s release rollout?',
-        options: [
-          VPollOption(id: 'opt1', text: 'All green, ready! 🚀', voteCount: 12, percentage: 80.0),
-          VPollOption(id: 'opt2', text: 'Finishing tests ⏳', voteCount: 3, percentage: 20.0),
-        ],
-        totalVotes: 15,
-        hasVoted: false,
-        mode: VPollMode.single,
-      ),
-    );
+    ref
+        .read(chatProvider.notifier)
+        .sendMessage(
+          threadId: widget.threadId,
+          text: 'Team check-in poll',
+          type: MessageType.poll,
+          pollData: const VPollData(
+            question: 'Ready for today\'s release rollout?',
+            options: [
+              VPollOption(
+                id: 'opt1',
+                text: 'All green, ready! 🚀',
+                voteCount: 12,
+                percentage: 80.0,
+              ),
+              VPollOption(
+                id: 'opt2',
+                text: 'Finishing tests ⏳',
+                voteCount: 3,
+                percentage: 20.0,
+              ),
+            ],
+            totalVotes: 15,
+            hasVoted: false,
+            mode: VPollMode.single,
+          ),
+        );
     _scrollToBottom();
   }
 
@@ -278,7 +296,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             children: [
               // Emoji Quick Reactions Bar
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 margin: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: const Color(0xFF242F3D),
@@ -286,20 +307,27 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: ['❤️', '👍', '🔥', '😂', '👏', '🚀', '🎉'].map((emoji) {
+                  children: ['❤️', '👍', '🔥', '😂', '👏', '🚀', '🎉'].map((
+                    emoji,
+                  ) {
                     return GestureDetector(
                       onTap: () {
                         HapticFeedback.lightImpact();
                         Navigator.pop(ctx);
-                        ref.read(chatProvider.notifier).toggleReaction(
-                          threadId: widget.threadId,
-                          messageId: msg.id,
-                          emoji: emoji,
-                        );
+                        ref
+                            .read(chatProvider.notifier)
+                            .toggleReaction(
+                              threadId: widget.threadId,
+                              messageId: msg.id,
+                              emoji: emoji,
+                            );
                       },
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(emoji, style: const TextStyle(fontSize: 26)),
+                        child: Text(
+                          emoji,
+                          style: const TextStyle(fontSize: 26),
+                        ),
                       ),
                     );
                   }).toList(),
@@ -307,8 +335,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
 
               ListTile(
-                leading: const Icon(Icons.reply_rounded, color: Color(0xFF2AABEE)),
-                title: const Text('Reply', style: TextStyle(color: Colors.white)),
+                leading: const Icon(
+                  Icons.reply_rounded,
+                  color: Color(0xFF2AABEE),
+                ),
+                title: const Text(
+                  'Reply',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   setState(() {
@@ -318,7 +352,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.copy_rounded, color: Colors.white70),
-                title: const Text('Copy Text', style: TextStyle(color: Colors.white)),
+                title: const Text(
+                  'Copy Text',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   Clipboard.setData(ClipboardData(text: msg.text));
@@ -328,22 +365,33 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.push_pin_outlined, color: Colors.white70),
-                title: const Text('Pin Message', style: TextStyle(color: Colors.white)),
+                leading: const Icon(
+                  Icons.push_pin_outlined,
+                  color: Colors.white70,
+                ),
+                title: const Text(
+                  'Pin Message',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
-                  ref.read(chatProvider.notifier).pinMessage(
-                    threadId: widget.threadId,
-                    messageId: msg.id,
-                  );
+                  ref
+                      .read(chatProvider.notifier)
+                      .pinMessage(threadId: widget.threadId, messageId: msg.id);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Message pinned to header')),
                   );
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.check_circle_outline_rounded, color: Colors.white70),
-                title: const Text('Select', style: TextStyle(color: Colors.white)),
+                leading: const Icon(
+                  Icons.check_circle_outline_rounded,
+                  color: Colors.white70,
+                ),
+                title: const Text(
+                  'Select',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   setState(() {
@@ -353,14 +401,22 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-                title: const Text('Delete', style: TextStyle(color: Colors.redAccent)),
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                ),
+                title: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
-                  ref.read(chatProvider.notifier).deleteMessage(
-                    threadId: widget.threadId,
-                    messageId: msg.id,
-                  );
+                  ref
+                      .read(chatProvider.notifier)
+                      .deleteMessage(
+                        threadId: widget.threadId,
+                        messageId: msg.id,
+                      );
                 },
               ),
             ],
@@ -392,7 +448,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     }
 
-    final thread = chatState.getThreadById(widget.threadId) ??
+    final thread =
+        chatState.getThreadById(widget.threadId) ??
         ChatThread(
           id: widget.threadId,
           title: 'Discussion',
@@ -414,7 +471,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         child: Column(
           children: [
             // Pinned Message Banner (Telegram header pin bar)
-            if (thread.pinnedMessageText != null && thread.pinnedMessageText!.isNotEmpty)
+            if (thread.pinnedMessageText != null &&
+                thread.pinnedMessageText!.isNotEmpty)
               _buildPinnedHeaderBanner(thread.pinnedMessageText!),
 
             // Messages list with Telegram bubble styling & grouping
@@ -422,9 +480,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: VBubbleScope(
                 style: VBubbleStyle.telegram,
                 theme: VBubbleTheme.telegramDark(),
-                config: const VBubbleConfig(
-                  patterns: VPatternConfig.markdown,
-                ),
+                config: const VBubbleConfig(patterns: VPatternConfig.markdown),
                 isSelectionMode: _isSelectionMode,
                 selectedIds: _selectedMessageIds,
                 callbacks: VBubbleCallbacks(
@@ -433,7 +489,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       setState(() {
                         if (_selectedMessageIds.contains(messageId)) {
                           _selectedMessageIds.remove(messageId);
-                          if (_selectedMessageIds.isEmpty) _isSelectionMode = false;
+                          if (_selectedMessageIds.isEmpty)
+                            _isSelectionMode = false;
                         } else {
                           _selectedMessageIds.add(messageId);
                         }
@@ -459,19 +516,23 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   },
                   onReactionTap: (messageId, emoji, position) {
                     HapticFeedback.lightImpact();
-                    ref.read(chatProvider.notifier).toggleReaction(
-                      threadId: widget.threadId,
-                      messageId: messageId,
-                      emoji: emoji,
-                    );
+                    ref
+                        .read(chatProvider.notifier)
+                        .toggleReaction(
+                          threadId: widget.threadId,
+                          messageId: messageId,
+                          emoji: emoji,
+                        );
                   },
                   onPollVote: (messageId, optionId) {
                     HapticFeedback.mediumImpact();
-                    ref.read(chatProvider.notifier).votePoll(
-                      threadId: widget.threadId,
-                      messageId: messageId,
-                      optionId: optionId,
-                    );
+                    ref
+                        .read(chatProvider.notifier)
+                        .votePoll(
+                          threadId: widget.threadId,
+                          messageId: messageId,
+                          optionId: optionId,
+                        );
                   },
                   onPatternTap: (match) async {
                     if (match.patternId == 'url') {
@@ -491,8 +552,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               _buildAiSuggestionsBar(thread.aiSuggestions),
 
             // Active Reply Preview Banner
-            if (_replyingMessage != null)
-              _buildReplyPreviewBanner(),
+            if (_replyingMessage != null) _buildReplyPreviewBanner(),
 
             // Telegram Input Bar
             _buildTelegramInputBar(isAi, telegramBlue),
@@ -502,7 +562,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  PreferredSizeWidget _buildTelegramAppBar(ChatThread thread, bool isAi, Color telegramBlue) {
+  PreferredSizeWidget _buildTelegramAppBar(
+    ChatThread thread,
+    bool isAi,
+    Color telegramBlue,
+  ) {
     if (_isSearching) {
       return AppBar(
         backgroundColor: const Color(0xFF17212B),
@@ -563,25 +627,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         ),
         title: Text(
           '${_selectedMessageIds.length} selected',
-          style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.forward_rounded, color: Colors.white),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Forward ${_selectedMessageIds.length} messages')),
+                SnackBar(
+                  content: Text(
+                    'Forward ${_selectedMessageIds.length} messages',
+                  ),
+                ),
               );
             },
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
+            icon: const Icon(
+              Icons.delete_outline_rounded,
+              color: Colors.redAccent,
+            ),
             onPressed: () {
               for (var id in _selectedMessageIds) {
-                ref.read(chatProvider.notifier).deleteMessage(
-                  threadId: widget.threadId,
-                  messageId: id,
-                );
+                ref
+                    .read(chatProvider.notifier)
+                    .deleteMessage(threadId: widget.threadId, messageId: id);
               }
               setState(() {
                 _isSelectionMode = false;
@@ -593,7 +667,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     }
 
-    final avatarColor = isAi ? const Color(0xFF2AABEE) : const Color(0xFF6C5CE7);
+    final avatarColor = isAi
+        ? const Color(0xFF2AABEE)
+        : const Color(0xFF6C5CE7);
     String statusSubtitle = 'online';
     if (isAi) {
       statusSubtitle = 'bot';
@@ -628,18 +704,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               CircleAvatar(
                 radius: 19,
                 backgroundColor: avatarColor.withValues(alpha: 0.25),
-                backgroundImage: thread.avatarUrl != null ? NetworkImage(thread.avatarUrl!) : null,
+                backgroundImage: thread.avatarUrl != null
+                    ? NetworkImage(thread.avatarUrl!)
+                    : null,
                 child: thread.avatarUrl == null
                     ? (isAi
-                        ? Icon(Icons.auto_awesome, color: avatarColor, size: 20)
-                        : Text(
-                            thread.name.isNotEmpty ? thread.name[0] : 'Q',
-                            style: TextStyle(
+                          ? Icon(
+                              Icons.auto_awesome,
                               color: avatarColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ))
+                              size: 20,
+                            )
+                          : Text(
+                              thread.name.isNotEmpty ? thread.name[0] : 'Q',
+                              style: TextStyle(
+                                color: avatarColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ))
                     : null,
               ),
               if (thread.isOnline || isAi)
@@ -650,9 +732,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     width: 11,
                     height: 11,
                     decoration: BoxDecoration(
-                      color: isAi ? const Color(0xFF2AABEE) : const Color(0xFF00C853),
+                      color: isAi
+                          ? const Color(0xFF2AABEE)
+                          : const Color(0xFF00C853),
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF17212B), width: 2),
+                      border: Border.all(
+                        color: const Color(0xFF17212B),
+                        width: 2,
+                      ),
                     ),
                   ),
                 ),
@@ -680,16 +767,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     ),
                     if (isAi || thread.isChannel) ...[
                       const SizedBox(width: 4),
-                      const Icon(Icons.verified, color: Color(0xFF2AABEE), size: 14),
+                      const Icon(
+                        Icons.verified,
+                        color: Color(0xFF2AABEE),
+                        size: 14,
+                      ),
                     ],
                   ],
                 ),
                 Text(
                   statusSubtitle,
                   style: TextStyle(
-                    color: (thread.isOnline || isAi) ? const Color(0xFF2AABEE) : Colors.white54,
+                    color: (thread.isOnline || isAi)
+                        ? const Color(0xFF2AABEE)
+                        : Colors.white54,
                     fontSize: 12,
-                    fontWeight: (thread.isOnline || isAi) ? FontWeight.w500 : FontWeight.normal,
+                    fontWeight: (thread.isOnline || isAi)
+                        ? FontWeight.w500
+                        : FontWeight.normal,
                   ),
                 ),
               ],
@@ -721,17 +816,37 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.white),
           color: const Color(0xFF17212B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           onSelected: (val) {
             HapticFeedback.lightImpact();
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('$val selected')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text('$val selected')));
           },
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'Mute', child: Text('Mute notifications', style: TextStyle(color: Colors.white))),
-            const PopupMenuItem(value: 'Clear', child: Text('Clear history', style: TextStyle(color: Colors.white))),
-            const PopupMenuItem(value: 'Delete', child: Text('Delete chat', style: TextStyle(color: Colors.redAccent))),
+            const PopupMenuItem(
+              value: 'Mute',
+              child: Text(
+                'Mute notifications',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'Clear',
+              child: Text(
+                'Clear history',
+                style: TextStyle(color: Colors.white),
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'Delete',
+              child: Text(
+                'Delete chat',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
           ],
         ),
       ],
@@ -774,10 +889,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 Text(
                   pinnedText,
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 12,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 12),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -838,8 +950,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     bool isAi,
   ) {
     final isMe = msg.isMe;
-    final senderName = isMe ? null : (msg.senderName ?? (isAi ? 'Quest AI' : null));
-    final senderColor = isAi ? const Color(0xFF2AABEE) : const Color(0xFF6C5CE7);
+    final senderName = isMe
+        ? null
+        : (msg.senderName ?? (isAi ? 'Quest AI' : null));
+    final senderColor = isAi
+        ? const Color(0xFF2AABEE)
+        : const Color(0xFF6C5CE7);
 
     // 1. Image message
     if (msg.type == MessageType.image && msg.mediaUrl != null) {
@@ -847,7 +963,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         messageId: msg.id,
         isMeSender: isMe,
         time: msg.time,
-        status: msg.status ?? (isMe ? VMessageStatus.read : VMessageStatus.sent),
+        status:
+            msg.status ?? (isMe ? VMessageStatus.read : VMessageStatus.sent),
         groupPosition: groupPos,
         senderName: senderName,
         senderColor: senderColor,
@@ -868,14 +985,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         groupPosition: groupPos,
         senderName: senderName,
         senderColor: senderColor,
-        status: msg.status ?? (isMe ? VMessageStatus.read : VMessageStatus.sent),
+        status:
+            msg.status ?? (isMe ? VMessageStatus.read : VMessageStatus.sent),
         replyTo: msg.replyTo,
         reactions: msg.reactions,
         data: CustomPayload(msg),
         builder: (context, data) {
           final m = data.payload as ChatMessage;
           return VoiceNoteBubble(
-            durationSeconds: m.voiceDurationSeconds > 0 ? m.voiceDurationSeconds : 10,
+            durationSeconds: m.voiceDurationSeconds > 0
+                ? m.voiceDurationSeconds
+                : 10,
             isMe: m.isMe,
           );
         },
@@ -888,7 +1008,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         messageId: msg.id,
         isMeSender: isMe,
         time: msg.time,
-        status: msg.status ?? (isMe ? VMessageStatus.read : VMessageStatus.sent),
+        status:
+            msg.status ?? (isMe ? VMessageStatus.read : VMessageStatus.sent),
         groupPosition: groupPos,
         senderName: senderName,
         senderColor: senderColor,
@@ -896,7 +1017,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         reactions: msg.reactions,
         searchQuery: _searchQuery,
         file: VPlatformFile.fromUrl(
-          networkUrl: msg.mediaUrl ?? 'https://quest.app/files/${msg.fileName ?? "file.pdf"}',
+          networkUrl:
+              msg.mediaUrl ??
+              'https://quest.app/files/${msg.fileName ?? "file.pdf"}',
           fileSize: msg.fileSize ?? 1024000,
         ),
       );
@@ -956,10 +1079,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
           return GestureDetector(
             onTap: () {
               HapticFeedback.lightImpact();
-              ref.read(chatProvider.notifier).sendMessage(
-                threadId: widget.threadId,
-                text: prompt,
-              );
+              ref
+                  .read(chatProvider.notifier)
+                  .sendMessage(threadId: widget.threadId, text: prompt);
               _scrollToBottom();
             },
             child: Container(
@@ -967,12 +1089,18 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               decoration: BoxDecoration(
                 color: const Color(0xFF17212B),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0xFF2AABEE).withValues(alpha: 0.4)),
+                border: Border.all(
+                  color: const Color(0xFF2AABEE).withValues(alpha: 0.4),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.auto_awesome, color: Color(0xFF2AABEE), size: 14),
+                  const Icon(
+                    Icons.auto_awesome,
+                    color: Color(0xFF2AABEE),
+                    size: 14,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     prompt,
@@ -1061,7 +1189,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           // Emoji / Sticker Button
           IconButton(
-            icon: const Icon(Icons.sentiment_satisfied_alt_outlined, color: Colors.white60),
+            icon: const Icon(
+              Icons.sentiment_satisfied_alt_outlined,
+              color: Colors.white60,
+            ),
             tooltip: 'Emoji & stickers',
             onPressed: () {
               HapticFeedback.lightImpact();
@@ -1085,7 +1216,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 onChanged: (_) => setState(() {}),
                 decoration: InputDecoration(
                   hintText: isAi ? 'Ask AI Guide...' : 'Message',
-                  hintStyle: const TextStyle(color: Colors.white38, fontSize: 15),
+                  hintStyle: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 15,
+                  ),
                   border: InputBorder.none,
                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -1117,7 +1251,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.arrow_upward_rounded, color: Colors.white, size: 22),
+                    icon: const Icon(
+                      Icons.arrow_upward_rounded,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                     tooltip: 'Send',
                     onPressed: _sendMessage,
                   ),

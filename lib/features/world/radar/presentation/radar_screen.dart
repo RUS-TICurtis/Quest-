@@ -65,10 +65,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: AppColors.textPrimary,
-                    ),
+                    icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       HapticFeedback.lightImpact();
@@ -119,10 +116,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: AppColors.card,
                       borderRadius: BorderRadius.circular(16),
@@ -130,11 +124,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                     ),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.radar,
-                          color: AppColors.questBlue,
-                          size: 16,
-                        ),
+                        Icon(Icons.radar, color: AppColors.questBlue, size: 16),
                         SizedBox(width: 6),
                         Text(
                           '${radarState.nearbyMembers.length} Active',
@@ -469,10 +459,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                     ),
                   ),
                   icon: Icon(Icons.person_outline, size: 16),
-                  label: Text(
-                    'View Matrix',
-                    style: TextStyle(fontSize: 12),
-                  ),
+                  label: Text('View Matrix', style: TextStyle(fontSize: 12)),
                   onPressed: () {
                     HapticFeedback.lightImpact();
                     HapticFeedback.lightImpact();
@@ -509,10 +496,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                 children: [
                   Text(
                     hub.address,
-                    style: TextStyle(
-                      color: AppColors.textMuted,
-                      fontSize: 12,
-                    ),
+                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
                   ),
                   SizedBox(height: 2),
                   Row(
@@ -572,10 +556,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                 isCheckedIn
                     ? 'Leave & Check Out'
                     : 'Check In To Physical Venue',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               onPressed: () {
                 HapticFeedback.lightImpact();
@@ -592,10 +573,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                         backgroundColor: AppColors.card,
                         content: Row(
                           children: [
-                            Icon(
-                              Icons.check_circle,
-                              color: AppColors.emerald,
-                            ),
+                            Icon(Icons.check_circle, color: AppColors.emerald),
                             SizedBox(width: 10),
                             Text(
                               'Checked in at ${hub.name}! +${hub.xpBonus} XP gained.',

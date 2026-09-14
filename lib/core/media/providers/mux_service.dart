@@ -14,10 +14,15 @@ class MuxService {
       final tokenId = dotenv.env['MUX_TOKEN_ID'];
       final tokenSecret = dotenv.env['MUX_TOKEN_SECRET'];
 
-      if (tokenId == null || tokenSecret == null || tokenId.isEmpty || tokenSecret == 'dummy_secret') {
+      if (tokenId == null ||
+          tokenSecret == null ||
+          tokenId.isEmpty ||
+          tokenSecret == 'dummy_secret') {
         debugPrint('Missing MUX credentials in .env. Mocking upload.');
         await Future.delayed(const Duration(seconds: 2));
-        return MediaUploadResult(url: 'qxb01i6T202018G65yG9JeaB2b01O00021qGz8Rk02n86J8tI'); 
+        return MediaUploadResult(
+          url: 'qxb01i6T202018G65yG9JeaB2b01O00021qGz8Rk02n86J8tI',
+        );
       }
 
       final basicAuth = base64Encode(utf8.encode('$tokenId:$tokenSecret'));
@@ -33,8 +38,8 @@ class MuxService {
         ),
         data: {
           'new_asset_settings': {
-            'playback_policy': ['public']
-          }
+            'playback_policy': ['public'],
+          },
         },
       );
 
@@ -52,7 +57,9 @@ class MuxService {
           },
         ),
         onSendProgress: (int sent, int total) {
-          debugPrint('Mux Upload progress: ${(sent / total * 100).toStringAsFixed(0)}%');
+          debugPrint(
+            'Mux Upload progress: ${(sent / total * 100).toStringAsFixed(0)}%',
+          );
         },
       );
 
@@ -62,30 +69,30 @@ class MuxService {
         await Future.delayed(const Duration(seconds: 2));
         final assetResponse = await _dio.get(
           'https://api.mux.com/video/v1/assets/$assetId',
-          options: Options(
-            headers: {
-              'Authorization': 'Basic $basicAuth',
-            },
-          ),
+          options: Options(headers: {'Authorization': 'Basic $basicAuth'}),
         );
-        
+
         final assetData = assetResponse.data['data'];
-        if (assetData['status'] == 'ready' && assetData['playback_ids'] != null) {
+        if (assetData['status'] == 'ready' &&
+            assetData['playback_ids'] != null) {
           final playbackId = assetData['playback_ids'][0]['id'];
           debugPrint('Mux Video ready! Playback ID: $playbackId');
-          return MediaUploadResult(url: playbackId, assetId: assetId); 
+          return MediaUploadResult(url: playbackId, assetId: assetId);
         }
       }
 
       debugPrint('Mux processing timed out, using fallback');
-      return MediaUploadResult(url: 'qxb01i6T202018G65yG9JeaB2b01O00021qGz8Rk02n86J8tI', assetId: assetId);
+      return MediaUploadResult(
+        url: 'qxb01i6T202018G65yG9JeaB2b01O00021qGz8Rk02n86J8tI',
+        assetId: assetId,
+      );
     } catch (e) {
       debugPrint('Mux Upload Error: $e');
       return null;
     }
   }
 
-  /// Uploads a video to Mux. 
+  /// Uploads a video to Mux.
   Future<MediaUploadResult?> uploadVideo(File file) async {
     try {
       final bytes = await file.readAsBytes();

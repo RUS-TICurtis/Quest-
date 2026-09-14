@@ -27,7 +27,7 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
     String modeString = 'system';
     if (mode == ThemeMode.light) modeString = 'light';
     if (mode == ThemeMode.dark) modeString = 'dark';
-    
+
     final storage = ref.read(localStorageServiceProvider);
     storage.setString(_themeKey, modeString);
   }

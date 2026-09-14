@@ -33,11 +33,11 @@ class CommunityPostCard extends StatelessWidget {
               CircleAvatar(
                 radius: 14,
                 backgroundColor: community.accentColor.withValues(alpha: 0.2),
-                backgroundImage: post.authorAvatar != null 
-                    ? NetworkImage(post.authorAvatar!) 
+                backgroundImage: post.authorAvatar != null
+                    ? NetworkImage(post.authorAvatar!)
                     : null,
-                child: post.authorAvatar == null 
-                    ? Icon(Icons.person, size: 14, color: community.accentColor) 
+                child: post.authorAvatar == null
+                    ? Icon(Icons.person, size: 14, color: community.accentColor)
                     : null,
               ),
               SizedBox(width: 8),
@@ -61,7 +61,7 @@ class CommunityPostCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: 8),
-          
+
           // Content
           Text(
             post.content,
@@ -71,9 +71,9 @@ class CommunityPostCard extends StatelessWidget {
               height: 1.4,
             ),
           ),
-          
+
           SizedBox(height: 12),
-          
+
           // Actions
           Row(
             children: [
@@ -89,7 +89,11 @@ class CommunityPostCard extends StatelessWidget {
                 color: context.colors.textMuted,
               ),
               Spacer(),
-              Icon(Icons.share_outlined, size: 16, color: context.colors.textMuted),
+              Icon(
+                Icons.share_outlined,
+                size: 16,
+                color: context.colors.textMuted,
+              ),
             ],
           ),
         ],

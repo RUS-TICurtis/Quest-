@@ -17,7 +17,7 @@ class CreatorVideo {
   final int durationSeconds;
   final String? muxPlaybackId;
   final String? muxStatus;
-  
+
   // Creator Info
   final String? creatorUsername;
   final String? creatorAvatarUrl;
@@ -55,8 +55,8 @@ class CreatorVideo {
       likeCount: json['like_count'] as int? ?? 0,
       commentCount: json['comment_count'] as int? ?? 0,
       shareCount: json['share_count'] as int? ?? 0,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at']) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'])
           : DateTime.now(),
       engagementScore: (json['engagement_score'] as num?)?.toDouble() ?? 0.0,
       isLiked: json['is_liked'] as bool? ?? false,

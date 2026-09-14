@@ -38,8 +38,7 @@ final List<StoryItem> defaultSeedStories = [
     id: 's3',
     authorName: 'Elena V.',
     communityName: 'Design Systems NYC',
-    caption:
-        'Testing the new fluid typography scale and dark contrast modes.',
+    caption: 'Testing the new fluid typography scale and dark contrast modes.',
     ringColor: AppColors.auroraPurple,
     icon: Icons.palette,
     isSeen: false,
@@ -106,7 +105,15 @@ class SupabaseStoriesRepository implements StoriesRepository {
           .order('createdAt', ascending: false);
 
       if (data.isNotEmpty) {
-        final remote = data.map((json) => StoryItem.fromJson(json)).toList();
+        final now = DateTime.now();
+        final remote = data
+            .map((json) => StoryItem.fromJson(json))
+            .where(
+              (story) =>
+                  story.createdAt == null ||
+                  now.difference(story.createdAt!).inHours < 24,
+            )
+            .toList();
         // Clear local seed mock stories and populate with real stories from Supabase
         _localStories.clear();
         _localStories.addAll(remote);
@@ -127,7 +134,11 @@ class SupabaseStoriesRepository implements StoriesRepository {
       if (_client.auth.currentUser != null) {
         payload['user_id'] = _client.auth.currentUser!.id;
       }
-      final res = await _client.from('stories').insert(payload).select().single();
+      final res = await _client
+          .from('stories')
+          .insert(payload)
+          .select()
+          .single();
       final created = StoryItem.fromJson(res);
       final idx = _localStories.indexWhere((s) => s.id == story.id);
       if (idx != -1) {
@@ -147,7 +158,9 @@ class SupabaseStoriesRepository implements StoriesRepository {
       try {
         await _client.from('stories').delete().eq('id', storyId);
       } catch (e) {
-        debugPrint('[SupabaseStoriesRepository] deleteStory fallback notice: $e');
+        debugPrint(
+          '[SupabaseStoriesRepository] deleteStory fallback notice: $e',
+        );
       }
     }
   }
@@ -161,7 +174,10 @@ class SupabaseStoriesRepository implements StoriesRepository {
     // Only update Supabase for real persisted database records
     if (!storyId.startsWith('s_') && !storyId.startsWith('s')) {
       try {
-        await _client.from('stories').update({'isSeen': true}).eq('id', storyId);
+        await _client
+            .from('stories')
+            .update({'isSeen': true})
+            .eq('id', storyId);
       } catch (_) {}
     }
   }

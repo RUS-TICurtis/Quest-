@@ -19,7 +19,7 @@ class TimeUtils {
       // Check if it was yesterday
       final yesterday = DateTime(now.year, now.month, now.day - 1);
       final dateAtMidnight = DateTime(date.year, date.month, date.day);
-      
+
       if (dateAtMidnight == yesterday) {
         final timeFormat = DateFormat('h:mm a');
         return 'Yesterday at ${timeFormat.format(date)}';

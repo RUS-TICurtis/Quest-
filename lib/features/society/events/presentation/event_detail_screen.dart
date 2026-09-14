@@ -49,7 +49,10 @@ class EventDetailScreen extends ConsumerWidget {
             pinned: true,
             backgroundColor: AppColors.background,
             elevation: 0,
-            title: Text('Event Details', style: TextStyle(color: AppColors.textPrimary)),
+            title: Text(
+              'Event Details',
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
           ),
 
           SliverToBoxAdapter(
@@ -384,11 +387,7 @@ class EventDetailScreen extends ConsumerWidget {
           children: [
             Row(
               children: [
-                Icon(
-                  Icons.qr_code_2,
-                  color: AppColors.questBlue,
-                  size: 28,
-                ),
+                Icon(Icons.qr_code_2, color: AppColors.questBlue, size: 28),
                 SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -489,11 +488,7 @@ class EventDetailScreen extends ConsumerWidget {
               ),
               if (isTappable) ...[
                 Spacer(),
-                Icon(
-                  Icons.open_in_new,
-                  size: 14,
-                  color: AppColors.questBlue,
-                ),
+                Icon(Icons.open_in_new, size: 14, color: AppColors.questBlue),
               ],
             ],
           ),

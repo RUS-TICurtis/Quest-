@@ -14,7 +14,13 @@ class MessagesScreen extends ConsumerStatefulWidget {
 class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   String _searchQuery = '';
   int _selectedCategoryIndex = 0;
-  final List<String> _categories = ['All', 'Direct', 'Groups', 'Channels', 'Bots'];
+  final List<String> _categories = [
+    'All',
+    'Direct',
+    'Groups',
+    'Channels',
+    'Bots',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -64,15 +70,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF0E1621),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: const Color(0xFF2AABEE),
-        elevation: 4,
-        child: const Icon(Icons.edit_rounded, color: Colors.white, size: 24),
-        onPressed: () {
-          HapticFeedback.lightImpact();
-          context.push('/connect/ai_coach');
-        },
-      ),
+
       body: Column(
         children: [
           // Telegram Search Bar
@@ -95,7 +93,11 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                 decoration: const InputDecoration(
                   hintText: 'Search chats, channels and messages...',
                   hintStyle: TextStyle(color: Colors.white38, fontSize: 14),
-                  prefixIcon: Icon(Icons.search, color: Colors.white38, size: 20),
+                  prefixIcon: Icon(
+                    Icons.search,
+                    color: Colors.white38,
+                    size: 20,
+                  ),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -121,12 +123,19 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                     });
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
                     decoration: BoxDecoration(
-                      color: isSelected ? const Color(0xFF2AABEE) : const Color(0xFF17212B),
+                      color: isSelected
+                          ? const Color(0xFF2AABEE)
+                          : const Color(0xFF17212B),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isSelected ? const Color(0xFF2AABEE) : Colors.white10,
+                        color: isSelected
+                            ? const Color(0xFF2AABEE)
+                            : Colors.white10,
                       ),
                     ),
                     child: Center(
@@ -135,7 +144,9 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                         style: TextStyle(
                           color: isSelected ? Colors.white : Colors.white60,
                           fontSize: 13,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
                         ),
                       ),
                     ),
@@ -178,7 +189,9 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   Widget _chatTile(BuildContext context, ChatThread thread) {
     final isUnread = thread.unreadCount > 0;
     final isAi = thread.isAiGuide;
-    final avatarColor = isAi ? const Color(0xFF2AABEE) : const Color(0xFF6C5CE7);
+    final avatarColor = isAi
+        ? const Color(0xFF2AABEE)
+        : const Color(0xFF6C5CE7);
 
     // Determine if last message was sent by me
     final lastMsg = thread.messages.isNotEmpty ? thread.messages.last : null;
@@ -203,18 +216,24 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                 CircleAvatar(
                   radius: 25,
                   backgroundColor: avatarColor.withValues(alpha: 0.2),
-                  backgroundImage: thread.avatarUrl != null ? NetworkImage(thread.avatarUrl!) : null,
+                  backgroundImage: thread.avatarUrl != null
+                      ? NetworkImage(thread.avatarUrl!)
+                      : null,
                   child: thread.avatarUrl == null
                       ? (isAi
-                          ? Icon(Icons.auto_awesome, color: avatarColor, size: 24)
-                          : Text(
-                              thread.name.isNotEmpty ? thread.name[0] : 'Q',
-                              style: TextStyle(
+                            ? Icon(
+                                Icons.auto_awesome,
                                 color: avatarColor,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ))
+                                size: 24,
+                              )
+                            : Text(
+                                thread.name.isNotEmpty ? thread.name[0] : 'Q',
+                                style: TextStyle(
+                                  color: avatarColor,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ))
                       : null,
                 ),
                 if (thread.isOnline || isAi)
@@ -225,9 +244,14 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                       width: 13,
                       height: 13,
                       decoration: BoxDecoration(
-                        color: isAi ? const Color(0xFF2AABEE) : const Color(0xFF00C853),
+                        color: isAi
+                            ? const Color(0xFF2AABEE)
+                            : const Color(0xFF00C853),
                         shape: BoxShape.circle,
-                        border: Border.all(color: const Color(0xFF0E1621), width: 2),
+                        border: Border.all(
+                          color: const Color(0xFF0E1621),
+                          width: 2,
+                        ),
                       ),
                     ),
                   ),
@@ -250,7 +274,9 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 15.5,
-                            fontWeight: isUnread ? FontWeight.w700 : FontWeight.w600,
+                            fontWeight: isUnread
+                                ? FontWeight.w700
+                                : FontWeight.w600,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -258,19 +284,31 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                       ),
                       if (isAi || thread.isChannel) ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.verified, color: Color(0xFF2AABEE), size: 14),
+                        const Icon(
+                          Icons.verified,
+                          color: Color(0xFF2AABEE),
+                          size: 14,
+                        ),
                       ],
                       if (thread.isMuted) ...[
                         const SizedBox(width: 4),
-                        const Icon(Icons.volume_off_rounded, color: Colors.white38, size: 14),
+                        const Icon(
+                          Icons.volume_off_rounded,
+                          color: Colors.white38,
+                          size: 14,
+                        ),
                       ],
                       const Spacer(),
                       Text(
                         thread.time,
                         style: TextStyle(
-                          color: isUnread ? const Color(0xFF2AABEE) : Colors.white38,
+                          color: isUnread
+                              ? const Color(0xFF2AABEE)
+                              : Colors.white38,
                           fontSize: 12,
-                          fontWeight: isUnread ? FontWeight.w600 : FontWeight.normal,
+                          fontWeight: isUnread
+                              ? FontWeight.w600
+                              : FontWeight.normal,
                         ),
                       ),
                     ],
@@ -282,7 +320,11 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                   Row(
                     children: [
                       if (isOutgoing) ...[
-                        const Icon(Icons.done_all, color: Color(0xFF2AABEE), size: 16),
+                        const Icon(
+                          Icons.done_all,
+                          color: Color(0xFF2AABEE),
+                          size: 16,
+                        ),
                         const SizedBox(width: 4),
                       ],
                       Expanded(
@@ -293,14 +335,19 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                           style: TextStyle(
                             color: isUnread ? Colors.white : Colors.white54,
                             fontSize: 13.5,
-                            fontWeight: isUnread ? FontWeight.w500 : FontWeight.normal,
+                            fontWeight: isUnread
+                                ? FontWeight.w500
+                                : FontWeight.normal,
                           ),
                         ),
                       ),
                       if (isUnread) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 7,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFF2AABEE),
                             borderRadius: BorderRadius.circular(10),
@@ -316,7 +363,11 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                         ),
                       ] else if (thread.isPinned) ...[
                         const SizedBox(width: 8),
-                        const Icon(Icons.push_pin, color: Colors.white38, size: 16),
+                        const Icon(
+                          Icons.push_pin,
+                          color: Colors.white38,
+                          size: 16,
+                        ),
                       ],
                     ],
                   ),
@@ -342,36 +393,64 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.push_pin_outlined, color: Colors.white70),
-                title: Text(thread.isPinned ? 'Unpin from top' : 'Pin to top', style: const TextStyle(color: Colors.white)),
+                leading: const Icon(
+                  Icons.push_pin_outlined,
+                  color: Colors.white70,
+                ),
+                title: Text(
+                  thread.isPinned ? 'Unpin from top' : 'Pin to top',
+                  style: const TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('${thread.name} pinned status updated')),
+                    SnackBar(
+                      content: Text('${thread.name} pinned status updated'),
+                    ),
                   );
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.volume_off_rounded, color: Colors.white70),
-                title: Text(thread.isMuted ? 'Unmute' : 'Mute notifications', style: const TextStyle(color: Colors.white)),
+                leading: const Icon(
+                  Icons.volume_off_rounded,
+                  color: Colors.white70,
+                ),
+                title: Text(
+                  thread.isMuted ? 'Unmute' : 'Mute notifications',
+                  style: const TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Notifications for ${thread.name} toggled')),
+                    SnackBar(
+                      content: Text('Notifications for ${thread.name} toggled'),
+                    ),
                   );
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.mark_chat_read_outlined, color: Colors.white70),
-                title: const Text('Mark as read', style: TextStyle(color: Colors.white)),
+                leading: const Icon(
+                  Icons.mark_chat_read_outlined,
+                  color: Colors.white70,
+                ),
+                title: const Text(
+                  'Mark as read',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   ref.read(chatProvider.notifier).markThreadRead(thread.id);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-                title: const Text('Delete chat', style: TextStyle(color: Colors.redAccent)),
+                leading: const Icon(
+                  Icons.delete_outline_rounded,
+                  color: Colors.redAccent,
+                ),
+                title: const Text(
+                  'Delete chat',
+                  style: TextStyle(color: Colors.redAccent),
+                ),
                 onTap: () {
                   Navigator.pop(ctx);
                   ScaffoldMessenger.of(context).showSnackBar(

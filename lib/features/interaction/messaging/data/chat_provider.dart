@@ -2,7 +2,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:v_chat_bubbles/v_chat_bubbles.dart';
 import 'package:quest/features/interaction/messaging/data/chat_repository.dart';
 
-enum MessageType { text, voice, voiceNote, linkPreview, image, video, file, poll, system }
+enum MessageType {
+  text,
+  voice,
+  voiceNote,
+  linkPreview,
+  image,
+  video,
+  file,
+  poll,
+  system,
+}
 
 class ChatMessage {
   final String id;
@@ -205,7 +215,7 @@ class ChatThread {
     int? unread,
     bool? isAiCoach,
     List<ChatMessage>? messages,
-    List<String> ? aiSuggestions,
+    List<String>? aiSuggestions,
     bool? isMuted,
     bool? isPinned,
     bool? isChannel,
@@ -321,7 +331,9 @@ class ChatNotifier extends StreamNotifier<ChatState> {
   @override
   Stream<ChatState> build() {
     _repository = ref.watch(chatRepositoryProvider);
-    return _repository.getThreadsStream().map((threads) => ChatState(threads: threads));
+    return _repository.getThreadsStream().map(
+      (threads) => ChatState(threads: threads),
+    );
   }
 
   ChatThread? getThreadById(String id) {
@@ -398,20 +410,14 @@ class ChatNotifier extends StreamNotifier<ChatState> {
     required String threadId,
     required String messageId,
   }) async {
-    await _repository.pinMessage(
-      threadId: threadId,
-      messageId: messageId,
-    );
+    await _repository.pinMessage(threadId: threadId, messageId: messageId);
   }
 
   Future<void> deleteMessage({
     required String threadId,
     required String messageId,
   }) async {
-    await _repository.deleteMessage(
-      threadId: threadId,
-      messageId: messageId,
-    );
+    await _repository.deleteMessage(threadId: threadId, messageId: messageId);
   }
 }
 

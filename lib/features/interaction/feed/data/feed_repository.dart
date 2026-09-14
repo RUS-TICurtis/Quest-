@@ -3,14 +3,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quest/shared/models/creator_video.dart';
 import 'package:flutter/foundation.dart';
 
-final feedRepositoryProvider = Provider((ref) => FeedRepository(Supabase.instance.client));
+final feedRepositoryProvider = Provider(
+  (ref) => FeedRepository(Supabase.instance.client),
+);
 
 class FeedRepository {
   final SupabaseClient _supabase;
 
   FeedRepository(this._supabase);
 
-  Future<({List<CreatorVideo> videos, Map<String, dynamic>? nextCursor})> getFeed({
+  Future<({List<CreatorVideo> videos, Map<String, dynamic>? nextCursor})>
+  getFeed({
     String seed = 'default',
     Map<String, dynamic>? cursor,
     int limit = 15,
@@ -72,9 +75,11 @@ class FeedRepository {
             id: 'v_sample_1',
             creatorId: 'c1',
             videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-            thumbnailUrl: 'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400',
+            thumbnailUrl:
+                'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400',
             title: 'Big Buck Bunny (HLS Stream)',
-            description: 'Testing the live Mux HLS streaming pipeline on Quest video feed.',
+            description:
+                'Testing the live Mux HLS streaming pipeline on Quest video feed.',
             viewCount: 142,
             likeCount: 38,
             commentCount: 5,
@@ -83,7 +88,8 @@ class FeedRepository {
             engagementScore: 0.95,
             durationSeconds: 30,
             creatorUsername: 'quest_team',
-            creatorAvatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
+            creatorAvatarUrl:
+                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
           ),
         ],
         nextCursor: null,

@@ -9,10 +9,7 @@ import 'story_viewer_modal.dart';
 class MyStatusModal extends ConsumerWidget {
   final List<StoryItem> myStories;
 
-  const MyStatusModal({
-    super.key,
-    required this.myStories,
-  });
+  const MyStatusModal({super.key, required this.myStories});
 
   static void show(BuildContext context, {required List<StoryItem> myStories}) {
     HapticFeedback.lightImpact();
@@ -28,11 +25,12 @@ class MyStatusModal extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch storiesProvider so any deletions or additions dynamically update this modal
     final allStories = ref.watch(storiesProvider).value ?? [];
-    final activeMyStories = allStories.where((s) =>
-        s.isMe ||
-        s.communityName == 'My Story' ||
-        s.authorName == 'You'
-    ).toList();
+    final activeMyStories = allStories
+        .where(
+          (s) =>
+              s.isMe || s.communityName == 'My Story' || s.authorName == 'You',
+        )
+        .toList();
 
     // If all stories were deleted while modal is open, auto pop
     if (activeMyStories.isEmpty) {
@@ -49,9 +47,7 @@ class MyStatusModal extends ConsumerWidget {
       decoration: BoxDecoration(
         color: context.colors.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border(
-          top: BorderSide(color: context.colors.border, width: 1),
-        ),
+        border: Border(top: BorderSide(color: context.colors.border, width: 1)),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
@@ -88,7 +84,10 @@ class MyStatusModal extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
+                    icon: Icon(
+                      Icons.arrow_back,
+                      color: context.colors.textPrimary,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                   const SizedBox(width: 8),
@@ -122,7 +121,11 @@ class MyStatusModal extends ConsumerWidget {
                         color: context.colors.questBlue.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
-                      child: Icon(Icons.add, color: context.colors.questBlue, size: 20),
+                      child: Icon(
+                        Icons.add,
+                        color: context.colors.questBlue,
+                        size: 20,
+                      ),
                     ),
                     onPressed: () {
                       HapticFeedback.lightImpact();
@@ -149,9 +152,13 @@ class MyStatusModal extends ConsumerWidget {
                 ),
                 itemBuilder: (context, index) {
                   final story = activeMyStories[index];
-                  final hasVideo = (story.muxPlaybackId != null && story.muxPlaybackId!.isNotEmpty) ||
+                  final hasVideo =
+                      (story.muxPlaybackId != null &&
+                          story.muxPlaybackId!.isNotEmpty) ||
                       (story.videoUrl != null && story.videoUrl!.isNotEmpty);
-                  final hasImage = story.content != null && story.content!.startsWith('http');
+                  final hasImage =
+                      story.content != null &&
+                      story.content!.startsWith('http');
 
                   return InkWell(
                     onTap: () {
@@ -163,7 +170,10 @@ class MyStatusModal extends ConsumerWidget {
                       );
                     },
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 10,
+                      ),
                       child: Row(
                         children: [
                           // Thumbnail Preview
@@ -175,13 +185,20 @@ class MyStatusModal extends ConsumerWidget {
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: context.colors.questBlue.withValues(alpha: 0.5),
+                                    color: context.colors.questBlue.withValues(
+                                      alpha: 0.5,
+                                    ),
                                     width: 1.5,
                                   ),
                                   color: context.colors.surface,
                                 ),
                                 clipBehavior: Clip.antiAlias,
-                                child: _buildThumbnail(story, hasVideo, hasImage, context),
+                                child: _buildThumbnail(
+                                  story,
+                                  hasVideo,
+                                  hasImage,
+                                  context,
+                                ),
                               ),
                               if (hasVideo)
                                 Positioned(
@@ -190,7 +207,9 @@ class MyStatusModal extends ConsumerWidget {
                                   child: Container(
                                     padding: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.7),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.7,
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
@@ -273,13 +292,19 @@ class MyStatusModal extends ConsumerWidget {
                                 );
                               } else if (value == 'delete') {
                                 HapticFeedback.mediumImpact();
-                                final confirm = await _showDeleteConfirm(context);
+                                final confirm = await _showDeleteConfirm(
+                                  context,
+                                );
                                 if (confirm == true) {
-                                  ref.read(storiesProvider.notifier).deleteStory(story.id);
+                                  ref
+                                      .read(storiesProvider.notifier)
+                                      .deleteStory(story.id);
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
-                                        content: const Text('Status update deleted'),
+                                        content: const Text(
+                                          'Status update deleted',
+                                        ),
                                         backgroundColor: context.colors.card,
                                       ),
                                     );
@@ -292,9 +317,18 @@ class MyStatusModal extends ConsumerWidget {
                                 value: 'view',
                                 child: Row(
                                   children: [
-                                    Icon(Icons.play_circle_outline, size: 18, color: context.colors.textPrimary),
+                                    Icon(
+                                      Icons.play_circle_outline,
+                                      size: 18,
+                                      color: context.colors.textPrimary,
+                                    ),
                                     const SizedBox(width: 10),
-                                    Text('View update', style: TextStyle(color: context.colors.textPrimary)),
+                                    Text(
+                                      'View update',
+                                      style: TextStyle(
+                                        color: context.colors.textPrimary,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -302,9 +336,18 @@ class MyStatusModal extends ConsumerWidget {
                                 value: 'delete',
                                 child: Row(
                                   children: [
-                                    Icon(Icons.delete_outline, size: 18, color: context.colors.crimson),
+                                    Icon(
+                                      Icons.delete_outline,
+                                      size: 18,
+                                      color: context.colors.crimson,
+                                    ),
                                     const SizedBox(width: 10),
-                                    Text('Delete update', style: TextStyle(color: context.colors.crimson)),
+                                    Text(
+                                      'Delete update',
+                                      style: TextStyle(
+                                        color: context.colors.crimson,
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
@@ -323,14 +366,25 @@ class MyStatusModal extends ConsumerWidget {
     );
   }
 
-  Widget _buildThumbnail(StoryItem story, bool hasVideo, bool hasImage, BuildContext context) {
-    if (hasVideo && story.muxPlaybackId != null && story.muxPlaybackId!.isNotEmpty) {
+  Widget _buildThumbnail(
+    StoryItem story,
+    bool hasVideo,
+    bool hasImage,
+    BuildContext context,
+  ) {
+    if (hasVideo &&
+        story.muxPlaybackId != null &&
+        story.muxPlaybackId!.isNotEmpty) {
       return Image.network(
         'https://image.mux.com/${story.muxPlaybackId}/thumbnail.jpg',
         fit: BoxFit.cover,
         errorBuilder: (_, _, _) => Container(
           color: context.colors.surface,
-          child: Icon(Icons.video_library, color: context.colors.questBlue, size: 28),
+          child: Icon(
+            Icons.video_library,
+            color: context.colors.questBlue,
+            size: 28,
+          ),
         ),
       );
     } else if (hasImage) {
@@ -346,21 +400,12 @@ class MyStatusModal extends ConsumerWidget {
       return Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              story.ringColor,
-              context.colors.auroraPurple,
-            ],
+            colors: [story.ringColor, context.colors.auroraPurple],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
         ),
-        child: Center(
-          child: Icon(
-            story.icon,
-            color: Colors.white,
-            size: 24,
-          ),
-        ),
+        child: Center(child: Icon(story.icon, color: Colors.white, size: 24)),
       );
     }
   }
@@ -376,7 +421,10 @@ class MyStatusModal extends ConsumerWidget {
         ),
         title: Text(
           'Delete 1 status update?',
-          style: TextStyle(color: context.colors.textPrimary, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: context.colors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         content: Text(
           'This update will be deleted for everyone who can see your status.',
@@ -385,15 +433,26 @@ class MyStatusModal extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text('Cancel', style: TextStyle(color: context.colors.textMuted)),
+            child: Text(
+              'Cancel',
+              style: TextStyle(color: context.colors.textMuted),
+            ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: context.colors.crimson,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Delete', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'Delete',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         ],
       ),

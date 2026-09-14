@@ -158,10 +158,7 @@ class _LevelUpDialogState extends State<LevelUpDialog>
               SizedBox(height: 20),
 
               Container(
-                padding: EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: context.colors.card,
                   borderRadius: BorderRadius.circular(16),

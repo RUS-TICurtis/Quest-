@@ -90,57 +90,61 @@ class _UserSearchScreenState extends ConsumerState<UserSearchScreen> {
         ),
       ),
       body: _isLoading
-          ? Center(
-              child: CircularProgressIndicator(color: AppColors.questBlue),
-            )
+          ? Center(child: CircularProgressIndicator(color: AppColors.questBlue))
           : _searchResults.isEmpty
-              ? Center(
-                  child: Text(
-                    _searchController.text.isEmpty
-                        ? 'Type a name or username to search'
-                        : 'No users found',
-                    style: TextStyle(color: AppColors.textSecondary),
+          ? Center(
+              child: Text(
+                _searchController.text.isEmpty
+                    ? 'Type a name or username to search'
+                    : 'No users found',
+                style: TextStyle(color: AppColors.textSecondary),
+              ),
+            )
+          : ListView.builder(
+              itemCount: _searchResults.length,
+              itemBuilder: (context, index) {
+                final user = _searchResults[index];
+                return ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.border,
+                    backgroundImage: user['avatarUrl'] != null
+                        ? NetworkImage(user['avatarUrl'])
+                        : null,
+                    child: user['avatarUrl'] == null
+                        ? Icon(Icons.person, color: AppColors.textSecondary)
+                        : null,
                   ),
-                )
-              : ListView.builder(
-                  itemCount: _searchResults.length,
-                  itemBuilder: (context, index) {
-                    final user = _searchResults[index];
-                    return ListTile(
-                      leading: CircleAvatar(
-                        backgroundColor: AppColors.border,
-                        backgroundImage: user['avatarUrl'] != null
-                            ? NetworkImage(user['avatarUrl'])
-                            : null,
-                        child: user['avatarUrl'] == null
-                            ? Icon(Icons.person, color: AppColors.textSecondary)
-                            : null,
-                      ),
-                      title: Text(
-                        user['name'] ?? '',
-                        style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: user['username'] != null
-                          ? Text(
-                              '@${user['username']}',
-                              style: TextStyle(color: AppColors.textSecondary),
-                            )
-                          : null,
-                      onTap: () {
-                        context.push('/profile/${user['id']}');
-                      },
-                      trailing: IconButton(
-                        icon: Icon(Icons.chat_bubble_outline, color: AppColors.questBlue),
-                        onPressed: () {
-                          // TODO: Ensure chat room exists and route to it
-                          // For now, route to a placeholder thread ID which should be generated
-                          // in the real implementation based on roomId
-                          context.push('/connect/${user['id']}'); 
-                        },
-                      ),
-                    );
+                  title: Text(
+                    user['name'] ?? '',
+                    style: TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: user['username'] != null
+                      ? Text(
+                          '@${user['username']}',
+                          style: TextStyle(color: AppColors.textSecondary),
+                        )
+                      : null,
+                  onTap: () {
+                    context.push('/profile/${user['id']}');
                   },
-                ),
+                  trailing: IconButton(
+                    icon: Icon(
+                      Icons.chat_bubble_outline,
+                      color: AppColors.questBlue,
+                    ),
+                    onPressed: () {
+                      // TODO: Ensure chat room exists and route to it
+                      // For now, route to a placeholder thread ID which should be generated
+                      // in the real implementation based on roomId
+                      context.push('/connect/${user['id']}');
+                    },
+                  ),
+                );
+              },
+            ),
     );
   }
 }
