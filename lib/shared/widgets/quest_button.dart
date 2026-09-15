@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+
 /// Quest's primary button with glow effect
 class QuestButton extends StatefulWidget {
   final String label;

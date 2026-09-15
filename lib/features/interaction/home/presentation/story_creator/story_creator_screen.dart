@@ -128,10 +128,7 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding: EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
+                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               ),
               icon: Icon(Icons.send_rounded, size: 16),
               label: Text(
@@ -271,7 +268,9 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
                       child: Container(
                         padding: EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: context.colors.background.withValues(alpha: 0.35),
+                          color: context.colors.background.withValues(
+                            alpha: 0.35,
+                          ),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Column(
@@ -291,9 +290,7 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
                             SizedBox(height: 8),
                             if (_isSpoiler && !_revealedInPreview)
                               Container(
-                                padding: EdgeInsets.symmetric(
-                                  vertical: 20,
-                                ),
+                                padding: EdgeInsets.symmetric(vertical: 20),
                                 alignment: Alignment.center,
                                 child: Column(
                                   children: [
@@ -340,7 +337,9 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: context.colors.textPrimary.withValues(alpha: 0.2),
+                            color: context.colors.textPrimary.withValues(
+                              alpha: 0.2,
+                            ),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
@@ -359,7 +358,11 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
                         ),
                         Row(
                           children: [
-                            Icon(Icons.bolt, color: context.colors.gold, size: 14),
+                            Icon(
+                              Icons.bolt,
+                              color: context.colors.gold,
+                              size: 14,
+                            ),
                             SizedBox(width: 4),
                             Text(
                               '+50 XP',
@@ -494,15 +497,14 @@ class _StoryCreatorScreenState extends ConsumerState<StoryCreatorScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(
-                    Icons.groups,
-                    color: context.colors.questBlue,
-                    size: 20,
-                  ),
+                  Icon(Icons.groups, color: context.colors.questBlue, size: 20),
                   SizedBox(width: 10),
                   Text(
                     'Target Guild:',
-                    style: TextStyle(color: context.colors.textMuted, fontSize: 13),
+                    style: TextStyle(
+                      color: context.colors.textMuted,
+                      fontSize: 13,
+                    ),
                   ),
                   SizedBox(width: 10),
                   Expanded(

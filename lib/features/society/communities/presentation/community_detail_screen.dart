@@ -52,7 +52,10 @@ class CommunityDetailScreen extends ConsumerWidget {
             pinned: true,
             elevation: 0,
             backgroundColor: AppColors.background,
-            title: Text(community.name, style: TextStyle(color: AppColors.textPrimary)),
+            title: Text(
+              community.name,
+              style: TextStyle(color: AppColors.textPrimary),
+            ),
             leading: IconButton(
               icon: Icon(Icons.arrow_back),
               onPressed: () {
@@ -252,7 +255,9 @@ class CommunityDetailScreen extends ConsumerWidget {
                     ),
                   ),
                   SizedBox(height: 12),
-                  ref.watch(communityPostsProvider(community.id)).when(
+                  ref
+                      .watch(communityPostsProvider(community.id))
+                      .when(
                         data: (posts) {
                           if (posts.isEmpty) {
                             return Padding(
@@ -264,14 +269,26 @@ class CommunityDetailScreen extends ConsumerWidget {
                             );
                           }
                           return Column(
-                            children: posts.map((post) => CommunityPostCard(post: post, community: community)).toList(),
+                            children: posts
+                                .map(
+                                  (post) => CommunityPostCard(
+                                    post: post,
+                                    community: community,
+                                  ),
+                                )
+                                .toList(),
                           );
                         },
                         loading: () => Center(
-                          child: CircularProgressIndicator(color: AppColors.questBlue),
+                          child: CircularProgressIndicator(
+                            color: AppColors.questBlue,
+                          ),
                         ),
                         error: (error, stack) => Center(
-                          child: Text('Error loading posts', style: TextStyle(color: AppColors.crimson)),
+                          child: Text(
+                            'Error loading posts',
+                            style: TextStyle(color: AppColors.crimson),
+                          ),
                         ),
                       ),
 
@@ -415,10 +432,7 @@ class CommunityDetailScreen extends ConsumerWidget {
               children: [
                 Text(
                   '${event.attendeesCount + (isRsvpd ? 1 : 0)} going',
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 11),
                 ),
                 SizedBox(height: 4),
                 ElevatedButton(
@@ -428,10 +442,7 @@ class CommunityDetailScreen extends ConsumerWidget {
                         : event.accentColor,
                     foregroundColor: AppColors.textPrimary,
                     minimumSize: Size.zero,
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 5,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),

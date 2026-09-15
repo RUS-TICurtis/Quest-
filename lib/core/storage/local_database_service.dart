@@ -4,7 +4,9 @@ import 'package:quest/core/storage/models/local_chat_room.dart';
 import 'package:quest/core/storage/models/local_chat_message.dart';
 
 final localDatabaseProvider = Provider<LocalDatabaseService>((ref) {
-  throw UnimplementedError('localDatabaseProvider must be overridden in ProviderScope');
+  throw UnimplementedError(
+    'localDatabaseProvider must be overridden in ProviderScope',
+  );
 });
 
 class LocalDatabaseService {

@@ -11,10 +11,7 @@ import 'package:url_launcher/url_launcher.dart';
 class OAuthConsentScreen extends ConsumerStatefulWidget {
   final String authorizationId;
 
-  const OAuthConsentScreen({
-    super.key,
-    required this.authorizationId,
-  });
+  const OAuthConsentScreen({super.key, required this.authorizationId});
 
   @override
   ConsumerState<OAuthConsentScreen> createState() => _OAuthConsentScreenState();
@@ -50,12 +47,15 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
 
     try {
       final service = ref.read(oauthServerServiceProvider);
-      final details = await service.getAuthorizationDetails(widget.authorizationId);
+      final details = await service.getAuthorizationDetails(
+        widget.authorizationId,
+      );
 
       if (!mounted) return;
 
       // If user has already consented, redirect immediately
-      if (details.directRedirectUrl != null && details.directRedirectUrl!.isNotEmpty) {
+      if (details.directRedirectUrl != null &&
+          details.directRedirectUrl!.isNotEmpty) {
         await _performRedirect(details.directRedirectUrl!);
         return;
       }
@@ -139,8 +139,8 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
               child: _isLoading
                   ? _buildLoadingState(colors)
                   : _errorMessage != null
-                      ? _buildErrorState(colors)
-                      : _buildConsentCard(context, colors, userState, email),
+                  ? _buildErrorState(colors)
+                  : _buildConsentCard(context, colors, userState, email),
             ),
           ),
         ),
@@ -193,17 +193,32 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
             Text(
               _errorMessage ?? 'Invalid or expired authorization request.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: colors.textSecondary, fontSize: 13, height: 1.4),
+              style: TextStyle(
+                color: colors.textSecondary,
+                fontSize: 13,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 24),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: colors.questBlue,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
               ),
               onPressed: () => context.go('/home'),
-              child: const Text('Return to Quest Home', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              child: const Text(
+                'Return to Quest Home',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
           ],
         ),
@@ -248,7 +263,11 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Center(
-                    child: Icon(Icons.hub_outlined, color: Colors.white, size: 24),
+                    child: Icon(
+                      Icons.hub_outlined,
+                      color: Colors.white,
+                      size: 24,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -278,7 +297,10 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.emerald.withOpacity(0.12),
                     borderRadius: BorderRadius.circular(8),
@@ -322,7 +344,11 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
                         ? NetworkImage(details.clientLogoUrl!)
                         : null,
                     child: details.clientLogoUrl == null
-                        ? Icon(Icons.developer_board, color: colors.questBlue, size: 24)
+                        ? Icon(
+                            Icons.developer_board,
+                            color: colors.questBlue,
+                            size: 24,
+                          )
                         : null,
                   ),
                   const SizedBox(width: 14),
@@ -377,7 +403,8 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
                   CircleAvatar(
                     radius: 16,
                     backgroundColor: colors.card,
-                    backgroundImage: user.avatarUrl != null && user.avatarUrl!.isNotEmpty
+                    backgroundImage:
+                        user.avatarUrl != null && user.avatarUrl!.isNotEmpty
                         ? NetworkImage(user.avatarUrl!)
                         : null,
                     child: user.avatarUrl == null || user.avatarUrl!.isEmpty
@@ -434,7 +461,9 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
 
             // Scopes list
             Column(
-              children: details.scopes.map((scope) => _buildScopeItem(scope, colors)).toList(),
+              children: details.scopes
+                  .map((scope) => _buildScopeItem(scope, colors))
+                  .toList(),
             ),
 
             const SizedBox(height: 20),
@@ -533,7 +562,8 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
       case 'profile':
         icon = Icons.account_circle_outlined;
         title = 'Basic Profile Info';
-        subtitle = 'Access your display name, handle (@username), avatar, and level/XP';
+        subtitle =
+            'Access your display name, handle (@username), avatar, and level/XP';
         break;
       case 'email':
         icon = Icons.email_outlined;
@@ -543,12 +573,14 @@ class _OAuthConsentScreenState extends ConsumerState<OAuthConsentScreen> {
       case 'offline_access':
         icon = Icons.sync_outlined;
         title = 'Offline Access';
-        subtitle = 'Maintain access to perform actions when you are not actively present';
+        subtitle =
+            'Maintain access to perform actions when you are not actively present';
         break;
       case 'openid':
         icon = Icons.verified_user_outlined;
         title = 'Identity Verification';
-        subtitle = 'Confirm your unique Quest explorer account ID with OpenID Connect';
+        subtitle =
+            'Confirm your unique Quest explorer account ID with OpenID Connect';
         break;
       case 'phone':
         icon = Icons.phone_outlined;

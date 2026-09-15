@@ -75,10 +75,7 @@ class _StageScreenState extends ConsumerState<StageScreen>
               children: [
                 // Top Navigation Bar
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   child: Row(
                     children: [
                       IconButton(
@@ -219,10 +216,7 @@ class _StageScreenState extends ConsumerState<StageScreen>
                 // Main Stage Area
                 Expanded(
                   child: ListView(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     children: [
                       // Topic Card
                       Container(
@@ -283,13 +277,12 @@ class _StageScreenState extends ConsumerState<StageScreen>
                       GridView.builder(
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 3,
-                              childAspectRatio: 0.75,
-                              crossAxisSpacing: 12,
-                              mainAxisSpacing: 12,
-                            ),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                        ),
                         itemCount: stageState.speakers.length,
                         itemBuilder: (context, index) {
                           final speaker = stageState.speakers[index];
@@ -326,13 +319,12 @@ class _StageScreenState extends ConsumerState<StageScreen>
                       GridView.builder(
                         shrinkWrap: true,
                         physics: NeverScrollableScrollPhysics(),
-                        gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 4,
-                              childAspectRatio: 0.85,
-                              crossAxisSpacing: 10,
-                              mainAxisSpacing: 10,
-                            ),
+                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          childAspectRatio: 0.85,
+                          crossAxisSpacing: 10,
+                          mainAxisSpacing: 10,
+                        ),
                         itemCount: stageState.audience.length,
                         itemBuilder: (context, index) {
                           final listener = stageState.audience[index];
@@ -410,10 +402,7 @@ class _StageScreenState extends ConsumerState<StageScreen>
                 top: 0,
                 right: 0,
                 child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 5,
-                    vertical: 3,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 5, vertical: 3),
                   decoration: BoxDecoration(
                     color: context.colors.emerald,
                     borderRadius: BorderRadius.circular(8),
@@ -441,9 +430,7 @@ class _StageScreenState extends ConsumerState<StageScreen>
                                       ).abs() *
                                       8.0);
                               return Container(
-                                margin: EdgeInsets.symmetric(
-                                  horizontal: 0.8,
-                                ),
+                                margin: EdgeInsets.symmetric(horizontal: 0.8),
                                 width: 2,
                                 height: barHeight,
                                 decoration: BoxDecoration(
@@ -467,7 +454,9 @@ class _StageScreenState extends ConsumerState<StageScreen>
               child: Container(
                 padding: EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: speaker.isMuted ? context.colors.crimson : context.colors.card,
+                  color: speaker.isMuted
+                      ? context.colors.crimson
+                      : context.colors.card,
                   shape: BoxShape.circle,
                   border: Border.all(color: context.colors.surface, width: 1.5),
                 ),
@@ -570,10 +559,7 @@ class _StageScreenState extends ConsumerState<StageScreen>
                   notifier.sendReaction(emoji);
                 },
                 child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: context.colors.card,
                     borderRadius: BorderRadius.circular(16),
@@ -670,7 +656,9 @@ class _StageScreenState extends ConsumerState<StageScreen>
               // Leave button
               IconButton(
                 style: IconButton.styleFrom(
-                  backgroundColor: context.colors.crimson.withValues(alpha: 0.15),
+                  backgroundColor: context.colors.crimson.withValues(
+                    alpha: 0.15,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                     side: BorderSide(color: context.colors.crimson),
@@ -716,10 +704,7 @@ class _StageScreenState extends ConsumerState<StageScreen>
               angle: sin(value * pi * 2) * 0.25,
               child: Transform.scale(
                 scale: 0.85 + (value * 0.5),
-                child: Text(
-                  reaction.emoji,
-                  style: TextStyle(fontSize: 32),
-                ),
+                child: Text(reaction.emoji, style: TextStyle(fontSize: 32)),
               ),
             ),
           ),

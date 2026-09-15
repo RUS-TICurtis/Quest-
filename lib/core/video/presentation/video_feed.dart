@@ -9,7 +9,8 @@ class VideoFeed<T> extends ConsumerStatefulWidget {
   final List<T> items;
   final String? Function(T item) urlBuilder;
   final Widget Function(BuildContext context, T item, int index) overlayBuilder;
-  final Widget Function(BuildContext context, T item, int index)? fallbackBuilder;
+  final Widget Function(BuildContext context, T item, int index)?
+  fallbackBuilder;
   final Axis scrollDirection;
   final void Function(int index)? onPageChanged;
   final int initialIndex;
@@ -85,6 +86,7 @@ class _VideoFeedState<T> extends ConsumerState<VideoFeed<T>> {
         child: PageView.builder(
           controller: _pageController,
           scrollDirection: widget.scrollDirection,
+          physics: const BouncingScrollPhysics(),
           itemCount: itemCount,
           onPageChanged: (index) {
             widget.onPageChanged?.call(index);
@@ -138,7 +140,9 @@ class _VideoFeedState<T> extends ConsumerState<VideoFeed<T>> {
                 if (widget.isLoadingMore && index == itemCount - 1)
                   Positioned(
                     bottom: widget.scrollDirection == Axis.vertical ? 16 : null,
-                    right: widget.scrollDirection == Axis.horizontal ? 16 : null,
+                    right: widget.scrollDirection == Axis.horizontal
+                        ? 16
+                        : null,
                     left: widget.scrollDirection == Axis.vertical ? 0 : null,
                     top: widget.scrollDirection == Axis.horizontal ? 0 : null,
                     child: Center(

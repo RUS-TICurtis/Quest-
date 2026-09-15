@@ -133,8 +133,11 @@ class UserState {
 
   factory UserState.fromJson(Map<String, dynamic> json) {
     final rawAvatar = (json['avatarUrl'] ?? json['avatar_url']) as String?;
-    final rawName = (json['name'] ?? json['full_name'] ?? 'Explorer').toString();
-    final rawInitials = json['initials'] as String? ?? (rawName.isNotEmpty ? rawName[0].toUpperCase() : 'Q');
+    final rawName = (json['name'] ?? json['full_name'] ?? 'Explorer')
+        .toString();
+    final rawInitials =
+        json['initials'] as String? ??
+        (rawName.isNotEmpty ? rawName[0].toUpperCase() : 'Q');
 
     return UserState(
       name: rawName,

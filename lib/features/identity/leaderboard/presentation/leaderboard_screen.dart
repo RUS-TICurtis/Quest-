@@ -76,10 +76,7 @@ class LeaderboardScreen extends ConsumerWidget {
                     ),
                   ),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: context.colors.card,
                       borderRadius: BorderRadius.circular(16),
@@ -170,8 +167,7 @@ class LeaderboardScreen extends ConsumerWidget {
                     'Pioneer',
                     'Scholar',
                   ].length,
-                  separatorBuilder: (context, index) =>
-                      SizedBox(width: 8),
+                  separatorBuilder: (context, index) => SizedBox(width: 8),
                   itemBuilder: (context, index) {
                     final archetype = [
                       'All',
@@ -192,10 +188,14 @@ class LeaderboardScreen extends ConsumerWidget {
                           notifier.setArchetype(archetype);
                         }
                       },
-                      selectedColor: context.colors.gold.withValues(alpha: 0.25),
+                      selectedColor: context.colors.gold.withValues(
+                        alpha: 0.25,
+                      ),
                       backgroundColor: context.colors.card,
                       side: BorderSide(
-                        color: isSelected ? context.colors.gold : context.colors.border,
+                        color: isSelected
+                            ? context.colors.gold
+                            : context.colors.border,
                       ),
                       labelStyle: TextStyle(
                         color: isSelected
@@ -392,9 +392,7 @@ class LeaderboardScreen extends ConsumerWidget {
                   badgeColor.withValues(alpha: 0.05),
                 ],
               ),
-              borderRadius: BorderRadius.vertical(
-                top: Radius.circular(12),
-              ),
+              borderRadius: BorderRadius.vertical(top: Radius.circular(12)),
               border: Border.all(color: badgeColor.withValues(alpha: 0.5)),
             ),
             alignment: Alignment.topCenter,
@@ -430,7 +428,9 @@ class LeaderboardScreen extends ConsumerWidget {
             : context.colors.card,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: entry.isCurrentUser ? context.colors.questBlue : context.colors.border,
+          color: entry.isCurrentUser
+              ? context.colors.questBlue
+              : context.colors.border,
           width: entry.isCurrentUser ? 1.5 : 1,
         ),
       ),
@@ -561,7 +561,10 @@ class LeaderboardScreen extends ConsumerWidget {
                 ),
                 Text(
                   'this week',
-                  style: TextStyle(color: context.colors.textMuted, fontSize: 10),
+                  style: TextStyle(
+                    color: context.colors.textMuted,
+                    fontSize: 10,
+                  ),
                 ),
               ],
             ),
@@ -599,9 +602,7 @@ class LeaderboardScreen extends ConsumerWidget {
               Container(
                 height: 80,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(18),
-                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(18)),
                   image: DecorationImage(
                     image: NetworkImage(guild.bannerUrl),
                     fit: BoxFit.cover,
@@ -616,10 +617,7 @@ class LeaderboardScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: color,
                         borderRadius: BorderRadius.circular(8),
@@ -635,10 +633,7 @@ class LeaderboardScreen extends ConsumerWidget {
                     ),
                     Spacer(),
                     Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: context.colors.background54,
                         borderRadius: BorderRadius.circular(8),

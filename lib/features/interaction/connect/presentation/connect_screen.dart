@@ -4,6 +4,8 @@ import 'package:quest/features/society/communities/presentation/communities_scre
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter/services.dart';
 
 class ConnectScreen extends ConsumerStatefulWidget {
   const ConnectScreen({super.key});
@@ -35,6 +37,42 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: context.colors.background,
+      floatingActionButton: _tabController.index == 0
+          ? Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                FloatingActionButton(
+                  heroTag: 'ai_coach',
+                  backgroundColor: context.colors.questBlue,
+                  elevation: 4,
+                  child: const Icon(
+                    Icons.auto_awesome,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/connect/ai_coach');
+                  },
+                ),
+                const SizedBox(height: 16),
+                FloatingActionButton(
+                  heroTag: 'new_message',
+                  backgroundColor: context.colors.questBlue,
+                  elevation: 4,
+                  child: const Icon(
+                    Icons.edit_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/connect/user_discovery');
+                  },
+                ),
+              ],
+            )
+          : null,
       body: Column(
         children: [
           Container(

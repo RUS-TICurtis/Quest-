@@ -10,8 +10,9 @@ class MediaCompressor {
   /// Compresses an image based on its purpose
   static Future<File?> compressImage(File file, MediaPurpose purpose) async {
     if (kIsWeb) return file;
-    final targetPath = '${file.parent.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
-    
+    final targetPath =
+        '${file.parent.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
+
     int quality;
     int minWidth;
     int minHeight;
@@ -61,24 +62,28 @@ class MediaCompressor {
           config = const VVideoCompressionConfig.low();
           break;
       }
-      
+
       debugPrint('Starting video compression with config: $config');
       final result = await _videoCompressor.compressVideo(
         file.absolute.path,
         config,
         onProgress: (progress) {
-          debugPrint('Video compression progress: ${(progress * 100).toStringAsFixed(1)}%');
+          debugPrint(
+            'Video compression progress: ${(progress * 100).toStringAsFixed(1)}%',
+          );
         },
       );
-      
+
       if (result != null) {
-        debugPrint('Video compression completed. Output: ${result.compressedFilePath}');
+        debugPrint(
+          'Video compression completed. Output: ${result.compressedFilePath}',
+        );
         return File(result.compressedFilePath);
       }
     } catch (e) {
       debugPrint('Error compressing video: $e');
     }
-    
+
     debugPrint('Falling back to original video file.');
     return file; // Return original if compression fails
   }

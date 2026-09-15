@@ -1,5 +1,1 @@
-enum MediaPurpose {
-  feed,
-  chat,
-  profile,
-}
+enum MediaPurpose { feed, chat, profile }

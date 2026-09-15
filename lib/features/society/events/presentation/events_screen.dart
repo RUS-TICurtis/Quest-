@@ -20,7 +20,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final eventsState = (ref.watch(eventsProvider).value ?? EventsState.initial());
+    final eventsState =
+        (ref.watch(eventsProvider).value ?? EventsState.initial());
     final userState = (ref.watch(userProvider).value ?? UserState.initial());
     final filteredEvents = eventsState.filteredEvents;
 
@@ -66,11 +67,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.event_busy,
-                    color: Colors.white54,
-                    size: 64,
-                  ),
+                  Icon(Icons.event_busy, color: Colors.white54, size: 64),
                   SizedBox(height: 16),
                   Text(
                     'No events found',
@@ -83,10 +80,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                   SizedBox(height: 8),
                   Text(
                     'Try adjusting your filters or check back later.',
-                    style: TextStyle(
-                      color: Colors.white54,
-                      fontSize: 14,
-                    ),
+                    style: TextStyle(color: Colors.white54, fontSize: 14),
                   ),
                 ],
               ),
@@ -97,7 +91,8 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
               items: filteredEvents,
               scrollDirection: Axis.vertical,
               urlBuilder: (event) {
-                if (event.muxPlaybackId != null && event.muxPlaybackId!.isNotEmpty) {
+                if (event.muxPlaybackId != null &&
+                    event.muxPlaybackId!.isNotEmpty) {
                   return 'https://stream.mux.com/${event.muxPlaybackId!}.m3u8';
                 }
                 return event.videoUrl;
@@ -146,19 +141,28 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     },
                     child: AnimatedContainer(
                       duration: Duration(milliseconds: 200),
-                      padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
-                        color: selected ? eventAccentOrPrimary(filteredEvents, context) : Colors.black45,
+                        color: selected
+                            ? eventAccentOrPrimary(filteredEvents, context)
+                            : Colors.black45,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: selected ? eventAccentOrPrimary(filteredEvents, context) : Colors.white24,
+                          color: selected
+                              ? eventAccentOrPrimary(filteredEvents, context)
+                              : Colors.white24,
                         ),
                       ),
                       child: Text(
                         filter,
                         style: TextStyle(
                           color: Colors.white,
-                          fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                          fontWeight: selected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
                           fontSize: 13,
                         ),
                       ),
@@ -234,7 +238,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
               color: Colors.white,
               height: 1.1,
               shadows: [
-                Shadow(color: Colors.black54, blurRadius: 10, offset: Offset(0, 2)),
+                Shadow(
+                  color: Colors.black54,
+                  blurRadius: 10,
+                  offset: Offset(0, 2),
+                ),
               ],
             ),
           ),
@@ -250,7 +258,11 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     color: Colors.white,
                     fontSize: 14,
                     shadows: [
-                      Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(0, 1)),
+                      Shadow(
+                        color: Colors.black54,
+                        blurRadius: 4,
+                        offset: Offset(0, 1),
+                      ),
                     ],
                   ),
                 ),
@@ -268,7 +280,9 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                     ref.read(eventsProvider.notifier).toggleRsvp(event.id);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: isRsvpd ? Colors.white24 : event.accentColor,
+                    backgroundColor: isRsvpd
+                        ? Colors.white24
+                        : event.accentColor,
                     foregroundColor: Colors.white,
                     padding: EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -296,7 +310,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
                 ),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -337,7 +351,10 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             SizedBox(height: 6),
             Text(
               'Gather members around a meetup, session, or talk.',
-              style: TextStyle(color: context.colors.textSecondary, fontSize: 13),
+              style: TextStyle(
+                color: context.colors.textSecondary,
+                fontSize: 13,
+              ),
             ),
             SizedBox(height: 20),
             TextField(
@@ -357,9 +374,7 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             TextField(
               controller: timeCtrl,
               style: TextStyle(color: context.colors.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'Time (e.g. 6:30 PM)...',
-              ),
+              decoration: InputDecoration(hintText: 'Time (e.g. 6:30 PM)...'),
             ),
             SizedBox(height: 24),
             SizedBox(

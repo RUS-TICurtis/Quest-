@@ -10,9 +10,17 @@ class StoryViewerModal extends ConsumerStatefulWidget {
   final int initialIndex;
   final List<StoryItem>? customStories;
 
-  const StoryViewerModal({super.key, this.initialIndex = 0, this.customStories});
+  const StoryViewerModal({
+    super.key,
+    this.initialIndex = 0,
+    this.customStories,
+  });
 
-  static void show(BuildContext context, {int initialIndex = 0, List<StoryItem>? customStories}) {
+  static void show(
+    BuildContext context, {
+    int initialIndex = 0,
+    List<StoryItem>? customStories,
+  }) {
     HapticFeedback.lightImpact();
     showGeneralDialog(
       context: context,
@@ -20,7 +28,10 @@ class StoryViewerModal extends ConsumerStatefulWidget {
       barrierLabel: 'Story Viewer',
       barrierColor: Colors.black.withValues(alpha: 0.92),
       pageBuilder: (context, anim1, anim2) {
-        return StoryViewerModal(initialIndex: initialIndex, customStories: customStories);
+        return StoryViewerModal(
+          initialIndex: initialIndex,
+          customStories: customStories,
+        );
       },
     );
   }
@@ -140,7 +151,8 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
             _progressController.value = progress;
           });
         }
-        if (pos >= dur - 200 || (!val.isPlaying && pos >= dur - 500 && pos > 0)) {
+        if (pos >= dur - 200 ||
+            (!val.isPlaying && pos >= dur - 500 && pos > 0)) {
           _nextStory();
         }
       }
@@ -150,9 +162,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
   void _markCurrentSeen() {
     final stories = _getStories();
     if (_currentIndex < stories.length) {
-      ref
-          .read(storiesProvider.notifier)
-          .markAsSeen(stories[_currentIndex].id);
+      ref.read(storiesProvider.notifier).markAsSeen(stories[_currentIndex].id);
     }
   }
 
@@ -232,9 +242,11 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
       return const SizedBox.shrink();
     }
     final story = stories[_currentIndex];
-    final hasVideoUrl = (story.muxPlaybackId != null && story.muxPlaybackId!.isNotEmpty) ||
+    final hasVideoUrl =
+        (story.muxPlaybackId != null && story.muxPlaybackId!.isNotEmpty) ||
         (story.videoUrl != null && story.videoUrl!.isNotEmpty);
-    final hasImageUrl = story.content != null && story.content!.startsWith('http');
+    final hasImageUrl =
+        story.content != null && story.content!.startsWith('http');
 
     final controller = pool.getController(_currentIndex);
     final isInitialized = pool.isInitialized(_currentIndex);
@@ -257,10 +269,14 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
             controller?.pause();
           },
           onTapUp: (details) {
-            final elapsed = DateTime.now().difference(_tapDownTime ?? DateTime.now());
+            final elapsed = DateTime.now().difference(
+              _tapDownTime ?? DateTime.now(),
+            );
             if (elapsed.inMilliseconds > 300) {
               // Long press hold released -> resume playback
-              if (_currentStoryHasVideo && controller != null && isInitialized) {
+              if (_currentStoryHasVideo &&
+                  controller != null &&
+                  isInitialized) {
                 controller.play();
               } else if (!_currentStoryHasVideo) {
                 _progressController.forward();
@@ -297,7 +313,9 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                     ),
                   )
                 else
-                  Center(child: CircularProgressIndicator(color: story.ringColor))
+                  Center(
+                    child: CircularProgressIndicator(color: story.ringColor),
+                  )
               else if (hasImageUrl)
                 Image.network(
                   story.content!,
@@ -306,8 +324,13 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                   height: double.infinity,
                   loadingBuilder: (_, child, progress) => progress == null
                       ? child
-                      : Center(child: CircularProgressIndicator(color: story.ringColor)),
-                  errorBuilder: (_, _, _) => _buildGradientFallback(story, context),
+                      : Center(
+                          child: CircularProgressIndicator(
+                            color: story.ringColor,
+                          ),
+                        ),
+                  errorBuilder: (_, _, _) =>
+                      _buildGradientFallback(story, context),
                 )
               else
                 _buildGradientFallback(story, context),
@@ -334,7 +357,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                             color: Colors.black.withValues(alpha: 0.8),
                             blurRadius: 2,
                             offset: Offset(-1, -1),
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -395,11 +418,14 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                             border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           clipBehavior: Clip.antiAlias,
-                          child: story.authorAvatar != null && story.authorAvatar!.isNotEmpty
+                          child:
+                              story.authorAvatar != null &&
+                                  story.authorAvatar!.isNotEmpty
                               ? Image.network(
                                   story.authorAvatar!,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, _, _) => _buildFallbackAvatar(story),
+                                  errorBuilder: (_, _, _) =>
+                                      _buildFallbackAvatar(story),
                                 )
                               : _buildFallbackAvatar(story),
                         ),
@@ -414,7 +440,12 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                                   color: Colors.white,
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
-                                  shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black54,
+                                      blurRadius: 4,
+                                    ),
+                                  ],
                                 ),
                               ),
                               Text(
@@ -423,7 +454,12 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                                   color: Colors.white.withValues(alpha: 0.9),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
-                                  shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                                  shadows: [
+                                    Shadow(
+                                      color: Colors.black54,
+                                      blurRadius: 4,
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -431,10 +467,14 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                         ),
                         IconButton(
                           icon: Icon(
-                            controller?.value.volume == 0 ? Icons.volume_off : Icons.volume_up,
+                            controller?.value.volume == 0
+                                ? Icons.volume_off
+                                : Icons.volume_up,
                             color: Colors.white,
                             size: 24,
-                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                            shadows: [
+                              Shadow(color: Colors.black54, blurRadius: 4),
+                            ],
                           ),
                           onPressed: () {
                             if (controller != null) {
@@ -449,7 +489,9 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                             Icons.more_vert,
                             color: Colors.white,
                             size: 24,
-                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                            shadows: [
+                              Shadow(color: Colors.black54, blurRadius: 4),
+                            ],
                           ),
                           onPressed: () {
                             _showStoryOptionsMenu(story);
@@ -460,7 +502,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                   ],
                 ),
               ),
-              
+
               // Bottom Interaction Bar
               Positioned(
                 bottom: 16,
@@ -469,7 +511,10 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                 child: story.isMe
                     ? Center(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 18,
+                            vertical: 10,
+                          ),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.65),
                             borderRadius: BorderRadius.circular(24),
@@ -481,7 +526,11 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.visibility, color: Colors.white, size: 18),
+                              const Icon(
+                                Icons.visibility,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 '${story.viewsCount} views',
@@ -527,14 +576,18 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                             Icons.shortcut,
                             color: Colors.white,
                             size: 28,
-                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                            shadows: [
+                              Shadow(color: Colors.black54, blurRadius: 4),
+                            ],
                           ),
                           SizedBox(width: 16),
                           Icon(
                             Icons.favorite_border,
                             color: Colors.white,
                             size: 28,
-                            shadows: [Shadow(color: Colors.black54, blurRadius: 4)],
+                            shadows: [
+                              Shadow(color: Colors.black54, blurRadius: 4),
+                            ],
                           ),
                         ],
                       ),
@@ -558,8 +611,17 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
           children: [
             if (story.isMe) ...[
               ListTile(
-                leading: Icon(Icons.delete_outline, color: context.colors.crimson),
-                title: Text('Delete Update', style: TextStyle(color: context.colors.crimson, fontWeight: FontWeight.bold)),
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: context.colors.crimson,
+                ),
+                title: Text(
+                  'Delete Update',
+                  style: TextStyle(
+                    color: context.colors.crimson,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 onTap: () {
                   Navigator.of(ctx).pop();
                   ref.read(storiesProvider.notifier).deleteStory(story.id);
@@ -568,13 +630,25 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
               ),
             ] else ...[
               ListTile(
-                leading: Icon(Icons.volume_mute, color: context.colors.textPrimary),
-                title: Text('Mute ${story.authorName}', style: TextStyle(color: context.colors.textPrimary)),
+                leading: Icon(
+                  Icons.volume_mute,
+                  color: context.colors.textPrimary,
+                ),
+                title: Text(
+                  'Mute ${story.authorName}',
+                  style: TextStyle(color: context.colors.textPrimary),
+                ),
                 onTap: () => Navigator.of(ctx).pop(),
               ),
               ListTile(
-                leading: Icon(Icons.flag_outlined, color: context.colors.crimson),
-                title: Text('Report Story', style: TextStyle(color: context.colors.crimson)),
+                leading: Icon(
+                  Icons.flag_outlined,
+                  color: context.colors.crimson,
+                ),
+                title: Text(
+                  'Report Story',
+                  style: TextStyle(color: context.colors.crimson),
+                ),
                 onTap: () => Navigator.of(ctx).pop(),
               ),
             ],
@@ -608,10 +682,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: story.ringColor.withValues(alpha: 0.2),
-                  border: Border.all(
-                    color: story.ringColor,
-                    width: 3,
-                  ),
+                  border: Border.all(color: story.ringColor, width: 3),
                   boxShadow: [
                     BoxShadow(
                       color: story.ringColor.withValues(alpha: 0.5),
@@ -620,11 +691,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                     ),
                   ],
                 ),
-                child: Icon(
-                  story.icon,
-                  size: 48,
-                  color: Colors.white,
-                ),
+                child: Icon(story.icon, size: 48, color: Colors.white),
               ),
               SizedBox(height: 32),
               Container(
@@ -674,7 +741,11 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
       color: story.ringColor,
       child: Center(
         child: Text(
-          story.authorName.split(' ').map((s) => s.isNotEmpty ? s[0] : '').take(2).join(),
+          story.authorName
+              .split(' ')
+              .map((s) => s.isNotEmpty ? s[0] : '')
+              .take(2)
+              .join(),
           style: TextStyle(
             color: Colors.white,
             fontSize: 14,

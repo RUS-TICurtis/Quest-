@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+
 class LinkPreviewBubble extends StatelessWidget {
   final String title;
   final String? url;
@@ -36,7 +37,9 @@ class LinkPreviewBubble extends StatelessWidget {
               ? Colors.black.withValues(alpha: 0.2)
               : context.colors.background.withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isMe ? Colors.white24 : context.colors.border),
+          border: Border.all(
+            color: isMe ? Colors.white24 : context.colors.border,
+          ),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,

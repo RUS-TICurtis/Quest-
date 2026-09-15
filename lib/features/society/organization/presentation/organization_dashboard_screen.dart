@@ -242,10 +242,7 @@ class OrganizationDashboardScreen extends ConsumerWidget {
                 SizedBox(height: 4),
                 Text(
                   '$members Members',
-                  style: TextStyle(
-                    color: AppColors.textMuted,
-                    fontSize: 13,
-                  ),
+                  style: TextStyle(color: AppColors.textMuted, fontSize: 13),
                 ),
               ],
             ),

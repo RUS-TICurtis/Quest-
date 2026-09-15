@@ -63,7 +63,10 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
             pinned: true,
             elevation: 0,
             backgroundColor: context.colors.background,
-            title: Text(name, style: TextStyle(color: context.colors.textPrimary)),
+            title: Text(
+              name,
+              style: TextStyle(color: context.colors.textPrimary),
+            ),
             leading: IconButton(
               icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
               onPressed: () {
@@ -218,10 +221,14 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
                                 vertical: 3,
                               ),
                               decoration: BoxDecoration(
-                                color: context.colors.gold.withValues(alpha: 0.2),
+                                color: context.colors.gold.withValues(
+                                  alpha: 0.2,
+                                ),
                                 borderRadius: BorderRadius.circular(8),
                                 border: Border.all(
-                                  color: context.colors.gold.withValues(alpha: 0.6),
+                                  color: context.colors.gold.withValues(
+                                    alpha: 0.6,
+                                  ),
                                 ),
                               ),
                               child: Text(
@@ -389,7 +396,8 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
                                         borderRadius: BorderRadius.circular(6),
                                         child: LinearProgressIndicator(
                                           value: entry.value / 100.0,
-                                          backgroundColor: context.colors.surface,
+                                          backgroundColor:
+                                              context.colors.surface,
                                           valueColor: AlwaysStoppedAnimation(
                                             entry.value > 80
                                                 ? context.colors.gold
@@ -440,7 +448,9 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
                               decoration: BoxDecoration(
                                 color: context.colors.card,
                                 borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: context.colors.border),
+                                border: Border.all(
+                                  color: context.colors.border,
+                                ),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,

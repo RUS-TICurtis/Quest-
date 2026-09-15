@@ -91,17 +91,20 @@ class SupabaseChatRepository implements ChatRepository {
   List<ChatThread> _buildThreadsFromLocal(String userId) {
     final threads = <ChatThread>[];
     for (var localRoom in _localDb.chatRoomsBox.values) {
-      final localMessages = _localDb.chatMessagesBox.values
-          .where((m) => m.roomId == localRoom.roomId)
-          .toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final localMessages =
+          _localDb.chatMessagesBox.values
+              .where((m) => m.roomId == localRoom.roomId)
+              .toList()
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
       final messages = localMessages.map((m) {
         return ChatMessage(
           id: m.messageId,
           text: m.text,
           isMe: m.senderId == userId,
-          time: DateTime.tryParse(m.createdAt)?.toLocal().toString() ?? m.createdAt,
+          time:
+              DateTime.tryParse(m.createdAt)?.toLocal().toString() ??
+              m.createdAt,
           sentAt: DateTime.tryParse(m.createdAt),
           type: MessageType.values.firstWhere(
             (e) => e.toString().split('.').last == m.type,
@@ -142,13 +145,20 @@ class SupabaseChatRepository implements ChatRepository {
     }
 
     try {
-      final participantsData = await _supabase.from('chat_participants').select().eq('userId', userId);
+      final participantsData = await _supabase
+          .from('chat_participants')
+          .select()
+          .eq('userId', userId);
 
       for (var pData in participantsData) {
         final roomId = pData['roomId'];
 
-        final roomData = await _supabase.from('chat_rooms').select().eq('id', roomId).single();
-        
+        final roomData = await _supabase
+            .from('chat_rooms')
+            .select()
+            .eq('id', roomId)
+            .single();
+
         final localRoom = LocalChatRoom(
           roomId: roomId,
           name: roomData['name'] ?? 'Chat',
@@ -159,7 +169,12 @@ class SupabaseChatRepository implements ChatRepository {
         );
         await _localDb.chatRoomsBox.put(roomId, localRoom);
 
-        final messagesData = await _supabase.from('chat_messages').select().eq('roomId', roomId).order('createdAt', ascending: false).limit(50);
+        final messagesData = await _supabase
+            .from('chat_messages')
+            .select()
+            .eq('roomId', roomId)
+            .order('createdAt', ascending: false)
+            .limit(50);
 
         for (var m in messagesData) {
           final localMsg = LocalChatMessage(
@@ -182,9 +197,11 @@ class SupabaseChatRepository implements ChatRepository {
   }
 
   Future<void> _syncOutbox(String userId) async {
-    final pendingMessages = _localDb.chatMessagesBox.values.where((m) => m.isPending && m.senderId == userId).toList();
+    final pendingMessages = _localDb.chatMessagesBox.values
+        .where((m) => m.isPending && m.senderId == userId)
+        .toList();
     if (pendingMessages.isEmpty) return;
-    
+
     final isOnline = await _networkInfo.isConnected;
     if (!isOnline) return;
 
@@ -230,7 +247,8 @@ class SupabaseChatRepository implements ChatRepository {
         messages: [
           ChatMessage(
             id: 'ai_1',
-            text: 'Welcome to *Quest Messenger*! 🚀\nYour 1:1 Telegram-speed hub for community communication.\n\nAsk me anything or pick a quick suggestion below.',
+            text:
+                'Welcome to *Quest Messenger*! 🚀\nYour 1:1 Telegram-speed hub for community communication.\n\nAsk me anything or pick a quick suggestion below.',
             isMe: false,
             time: '10:00 AM',
             sentAt: now.subtract(const Duration(hours: 2)),
@@ -238,7 +256,8 @@ class SupabaseChatRepository implements ChatRepository {
           ),
           ChatMessage(
             id: 'ai_2',
-            text: '💡 *Pro Tip*: You can swipe any message right to quote-reply, long-press to add emoji reactions, or use the search bar above with real-time character highlighting!',
+            text:
+                '💡 *Pro Tip*: You can swipe any message right to quote-reply, long-press to add emoji reactions, or use the search bar above with real-time character highlighting!',
             isMe: false,
             time: '10:02 AM',
             sentAt: now.subtract(const Duration(hours: 1, minutes: 58)),
@@ -257,11 +276,13 @@ class SupabaseChatRepository implements ChatRepository {
         isOnline: true,
         lastSeenText: 'online',
         userHandle: '@arivera',
-        avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
+        avatarUrl:
+            'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
         messages: [
           ChatMessage(
             id: 'alex_1',
-            text: 'Hey! Are you still joining the Flutter hackathon this Saturday?',
+            text:
+                'Hey! Are you still joining the Flutter hackathon this Saturday?',
             isMe: false,
             time: '11:15 AM',
             sentAt: now.subtract(const Duration(minutes: 30)),
@@ -277,7 +298,8 @@ class SupabaseChatRepository implements ChatRepository {
           ),
           ChatMessage(
             id: 'alex_3',
-            text: 'Awesome! Listen to the voice note I recorded for our presentation flow:',
+            text:
+                'Awesome! Listen to the voice note I recorded for our presentation flow:',
             isMe: false,
             time: '11:20 AM',
             sentAt: now.subtract(const Duration(minutes: 25)),
@@ -296,7 +318,8 @@ class SupabaseChatRepository implements ChatRepository {
           ),
           ChatMessage(
             id: 'alex_5',
-            text: 'Love this direction! Here is the mockup I just drafted for the live stage:',
+            text:
+                'Love this direction! Here is the mockup I just drafted for the live stage:',
             isMe: true,
             time: '11:24 AM',
             sentAt: now.subtract(const Duration(minutes: 20)),
@@ -305,7 +328,8 @@ class SupabaseChatRepository implements ChatRepository {
           ChatMessage(
             id: 'alex_6',
             text: 'New Telegram styled UI components ✨',
-            mediaUrl: 'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=800&q=80',
+            mediaUrl:
+                'https://images.unsplash.com/photo-1551650975-87deedd944c3?auto=format&fit=crop&w=800&q=80',
             type: MessageType.image,
             isMe: true,
             time: '11:25 AM',
@@ -336,11 +360,13 @@ class SupabaseChatRepository implements ChatRepository {
         unread: 3,
         isGroup: true,
         memberCount: 2410,
-        pinnedMessageText: 'Weekly Stage Session: Building 1:1 Telegram Interfaces today at 3 PM UTC',
+        pinnedMessageText:
+            'Weekly Stage Session: Building 1:1 Telegram Interfaces today at 3 PM UTC',
         messages: [
           ChatMessage(
             id: 'fg_1',
-            text: 'Good morning everyone! ☀️ Reminder that our weekly live stage session kicks off at 3 PM UTC.',
+            text:
+                'Good morning everyone! ☀️ Reminder that our weekly live stage session kicks off at 3 PM UTC.',
             senderName: 'Marcus Vance',
             isMe: false,
             time: '09:10 AM',
@@ -349,7 +375,8 @@ class SupabaseChatRepository implements ChatRepository {
           ),
           ChatMessage(
             id: 'fg_2',
-            text: 'Will we be discussing local offline caching with Hive and real-time state?',
+            text:
+                'Will we be discussing local offline caching with Hive and real-time state?',
             senderName: 'Sarah Chen',
             isMe: false,
             time: '09:14 AM',
@@ -364,11 +391,27 @@ class SupabaseChatRepository implements ChatRepository {
             type: MessageType.poll,
             sentAt: now.subtract(const Duration(hours: 2, minutes: 45)),
             pollData: const VPollData(
-              question: 'Which architecture deep-dive should we prioritize today?',
+              question:
+                  'Which architecture deep-dive should we prioritize today?',
               options: [
-                VPollOption(id: 'p1', text: 'Riverpod 3.0 StreamNotifiers', voteCount: 68, percentage: 52.0),
-                VPollOption(id: 'p2', text: 'v_chat_bubbles Telegram UI Engine', voteCount: 42, percentage: 32.0),
-                VPollOption(id: 'p3', text: 'Supabase Offline-First Outbox', voteCount: 21, percentage: 16.0),
+                VPollOption(
+                  id: 'p1',
+                  text: 'Riverpod 3.0 StreamNotifiers',
+                  voteCount: 68,
+                  percentage: 52.0,
+                ),
+                VPollOption(
+                  id: 'p2',
+                  text: 'v_chat_bubbles Telegram UI Engine',
+                  voteCount: 42,
+                  percentage: 32.0,
+                ),
+                VPollOption(
+                  id: 'p3',
+                  text: 'Supabase Offline-First Outbox',
+                  voteCount: 21,
+                  percentage: 16.0,
+                ),
               ],
               totalVotes: 131,
               hasVoted: true,
@@ -385,7 +428,8 @@ class SupabaseChatRepository implements ChatRepository {
           ),
           ChatMessage(
             id: 'fg_5',
-            text: 'Here you go: https://quest.app/design - check the color tokens and typography guide.',
+            text:
+                'Here you go: https://quest.app/design - check the color tokens and typography guide.',
             isMe: true,
             time: '09:40 AM',
             sentAt: now.subtract(const Duration(hours: 2, minutes: 20)),
@@ -414,11 +458,13 @@ class SupabaseChatRepository implements ChatRepository {
         isOnline: false,
         lastSeenText: 'last seen 15m ago',
         userHandle: '@elena_r',
-        avatarUrl: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
+        avatarUrl:
+            'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
         messages: [
           ChatMessage(
             id: 'el_1',
-            text: 'Hi! Attached the updated system architecture documentation and export files for review:',
+            text:
+                'Hi! Attached the updated system architecture documentation and export files for review:',
             isMe: false,
             time: 'Yesterday',
             sentAt: now.subtract(const Duration(days: 1, hours: 2)),
@@ -431,7 +477,9 @@ class SupabaseChatRepository implements ChatRepository {
             type: MessageType.file,
             isMe: false,
             time: 'Yesterday',
-            sentAt: now.subtract(const Duration(days: 1, hours: 1, minutes: 58)),
+            sentAt: now.subtract(
+              const Duration(days: 1, hours: 1, minutes: 58),
+            ),
           ),
           ChatMessage(
             id: 'el_3',
@@ -453,11 +501,13 @@ class SupabaseChatRepository implements ChatRepository {
         unread: 0,
         isChannel: true,
         memberCount: 18500,
-        pinnedMessageText: 'Quest 2.0 Telegram Experience is now available across all platforms',
+        pinnedMessageText:
+            'Quest 2.0 Telegram Experience is now available across all platforms',
         messages: [
           ChatMessage(
             id: 'qa_1',
-            text: '🎉 *Quest 2.0 is officially live!*\n\nWe have completely revamped our communication layer into a 1:1 Telegram replica experience.\n\n✨ *Key Features*:\n- Native Telegram bubble tails & dynamic grouping\n- High fidelity voice notes with waveforms\n- Interactive polls & emoji reactions\n- In-chat search with keyword highlighting\n\nEnjoy the update!',
+            text:
+                '🎉 *Quest 2.0 is officially live!*\n\nWe have completely revamped our communication layer into a 1:1 Telegram replica experience.\n\n✨ *Key Features*:\n- Native Telegram bubble tails & dynamic grouping\n- High fidelity voice notes with waveforms\n- Interactive polls & emoji reactions\n- In-chat search with keyword highlighting\n\nEnjoy the update!',
             isMe: false,
             time: 'Sep 12',
             sentAt: now.subtract(const Duration(days: 2)),
@@ -495,7 +545,8 @@ class SupabaseChatRepository implements ChatRepository {
     VPollData? pollData,
   }) async {
     final now = DateTime.now();
-    final timeStr = '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
+    final timeStr =
+        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}';
     final newMsg = ChatMessage(
       id: 'msg_${now.millisecondsSinceEpoch}',
       text: text,
@@ -521,10 +572,13 @@ class SupabaseChatRepository implements ChatRepository {
       final threadIndex = _cachedThreads!.indexWhere((t) => t.id == threadId);
       if (threadIndex != -1) {
         final thread = _cachedThreads![threadIndex];
-        final updatedMessages = List<ChatMessage>.from(thread.messages)..add(newMsg);
+        final updatedMessages = List<ChatMessage>.from(thread.messages)
+          ..add(newMsg);
         _cachedThreads![threadIndex] = thread.copyWith(
           messages: updatedMessages,
-          subtitle: text.isNotEmpty ? text : (type == MessageType.image ? '📷 Photo' : 'Voice note'),
+          subtitle: text.isNotEmpty
+              ? text
+              : (type == MessageType.image ? '📷 Photo' : 'Voice note'),
           time: timeStr,
         );
         _notifyDemoStream();
@@ -619,12 +673,16 @@ class SupabaseChatRepository implements ChatRepository {
               );
             }
           } else {
-            reactions.add(VBubbleReaction(emoji: emoji, count: 1, isSelected: true));
+            reactions.add(
+              VBubbleReaction(emoji: emoji, count: 1, isSelected: true),
+            );
           }
 
           final updatedMessages = List<ChatMessage>.from(thread.messages);
           updatedMessages[msgIdx] = msg.copyWith(reactions: reactions);
-          _cachedThreads![threadIdx] = thread.copyWith(messages: updatedMessages);
+          _cachedThreads![threadIdx] = thread.copyWith(
+            messages: updatedMessages,
+          );
           _notifyDemoStream();
         }
       }
@@ -669,7 +727,9 @@ class SupabaseChatRepository implements ChatRepository {
 
             final updatedMessages = List<ChatMessage>.from(thread.messages);
             updatedMessages[msgIdx] = msg.copyWith(pollData: updatedPoll);
-            _cachedThreads![threadIdx] = thread.copyWith(messages: updatedMessages);
+            _cachedThreads![threadIdx] = thread.copyWith(
+              messages: updatedMessages,
+            );
             _notifyDemoStream();
           }
         }
@@ -704,7 +764,9 @@ class SupabaseChatRepository implements ChatRepository {
       final threadIdx = _cachedThreads!.indexWhere((t) => t.id == threadId);
       if (threadIdx != -1) {
         final thread = _cachedThreads![threadIdx];
-        final updatedMessages = thread.messages.where((m) => m.id != messageId).toList();
+        final updatedMessages = thread.messages
+            .where((m) => m.id != messageId)
+            .toList();
         _cachedThreads![threadIdx] = thread.copyWith(messages: updatedMessages);
         _notifyDemoStream();
       }

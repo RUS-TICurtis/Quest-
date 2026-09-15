@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quest/core/video/presentation/video_feed.dart';
 import 'package:quest/core/video/feed_video_pool.dart';
@@ -24,7 +25,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           poolProvider: feedVideoPoolProvider,
           items: videos,
           urlBuilder: (video) {
-            if (video.muxPlaybackId != null && video.muxPlaybackId!.isNotEmpty) {
+            if (video.muxPlaybackId != null &&
+                video.muxPlaybackId!.isNotEmpty) {
               return 'https://stream.mux.com/${video.muxPlaybackId!}.m3u8';
             }
             return video.videoUrl;
@@ -87,14 +89,47 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                       _buildActionIcon(
                         Icons.favorite_border,
                         '${video.likeCount}',
+                        onTap: () async {
+                          // Backend logic to like video
+                          try {
+                            final supabase = Supabase.instance.client;
+                            await supabase.from('video_likes').insert({
+                                'video_id': video.id,
+                            });
+                          } catch (_) {}
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Liked video!')),
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
                       _buildActionIcon(
                         Icons.chat_bubble_outline,
                         '${video.commentCount}',
+                        onTap: () {
+                          // Handle Comments
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Comments coming soon')),
+                          );
+                        },
                       ),
                       const SizedBox(height: 16),
-                      _buildActionIcon(Icons.share_outlined, 'Share'),
+                      _buildActionIcon(
+                        Icons.share_outlined,
+                        'Share',
+                        onTap: () async {
+                          // Backend logic to share video
+                          try {
+                            final supabase = Supabase.instance.client;
+                            await supabase.rpc('increment_share_count', params: {'vid': video.id});
+                          } catch (_) {}
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(
+                            context,
+                          ).showSnackBar(SnackBar(content: Text('Sharing...')));
+                        },
+                      ),
                     ],
                   ),
                 ),
@@ -106,16 +141,19 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
-  Widget _buildActionIcon(IconData icon, String label) {
-    return Column(
-      children: [
-        Icon(icon, color: Colors.white, size: 32),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white, fontSize: 12),
-        ),
-      ],
+  Widget _buildActionIcon(IconData icon, String label, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        children: [
+          Icon(icon, color: Colors.white, size: 32),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ],
+      ),
     );
   }
 }

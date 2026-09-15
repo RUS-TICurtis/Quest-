@@ -87,20 +87,27 @@ class StoryItem {
   factory StoryItem.fromJson(Map<String, dynamic> json) {
     final rawCreatedAt = json['createdAt'] ?? json['created_at'];
     final rawPlaybackId = json['muxPlaybackId'] ?? json['mux_playback_id'];
-    final rawAuthorName = json['authorName'] ?? json['author_name'] ?? 'Anonymous';
-    final rawCommunity = json['communityName'] ?? json['community_name'] ?? 'Community';
-    final rawAuthorAvatar = json['authorAvatar'] ?? json['author_avatar'] ?? json['avatar_url'];
+    final rawAuthorName =
+        json['authorName'] ?? json['author_name'] ?? 'Anonymous';
+    final rawCommunity =
+        json['communityName'] ?? json['community_name'] ?? 'Community';
+    final rawAuthorAvatar =
+        json['authorAvatar'] ?? json['author_avatar'] ?? json['avatar_url'];
     final rawContent = json['content'] ?? json['media_url'];
     final rawVideoUrl = json['videoUrl'] ?? json['video_url'];
 
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     final storyUserId = json['user_id']?.toString();
-    final bool isUserOwner = json['isMe'] as bool? ?? 
-        json['is_me'] as bool? ?? 
-        (storyUserId != null && currentUserId != null && storyUserId == currentUserId);
+    final bool isUserOwner =
+        json['isMe'] as bool? ??
+        json['is_me'] as bool? ??
+        (storyUserId != null &&
+            currentUserId != null &&
+            storyUserId == currentUserId);
 
     return StoryItem(
-      id: (json['id'] ?? 's_${DateTime.now().millisecondsSinceEpoch}').toString(),
+      id: (json['id'] ?? 's_${DateTime.now().millisecondsSinceEpoch}')
+          .toString(),
       authorName: rawAuthorName.toString(),
       communityName: rawCommunity.toString(),
       caption: (json['caption'] ?? '').toString(),
@@ -109,7 +116,9 @@ class StoryItem {
       ),
       icon: _getStoryIcon(json['icon'] as int?),
       isSeen: json['isSeen'] as bool? ?? json['is_seen'] as bool? ?? false,
-      createdAt: rawCreatedAt != null ? DateTime.tryParse(rawCreatedAt.toString()) : null,
+      createdAt: rawCreatedAt != null
+          ? DateTime.tryParse(rawCreatedAt.toString())
+          : null,
       authorAvatar: rawAuthorAvatar?.toString(),
       title: json['title'] as String?,
       content: rawContent?.toString(),
@@ -157,12 +166,14 @@ class StoryItem {
   Map<String, dynamic> toSupabase() {
     return {
       if (content != null || videoUrl != null) 'media_url': content ?? videoUrl,
-      if (muxPlaybackId != null && muxPlaybackId!.isNotEmpty) 'mux_playback_id': muxPlaybackId,
+      if (muxPlaybackId != null && muxPlaybackId!.isNotEmpty)
+        'mux_playback_id': muxPlaybackId,
       'caption': caption,
       'authorName': authorName,
       'timeAgo': formattedTimeAgo,
       'isSeen': isSeen,
-      if (authorAvatar != null && authorAvatar!.isNotEmpty) 'authorAvatar': authorAvatar,
+      if (authorAvatar != null && authorAvatar!.isNotEmpty)
+        'authorAvatar': authorAvatar,
       if (communityName.isNotEmpty) 'communityName': communityName,
     };
   }
@@ -182,7 +193,10 @@ class StoriesNotifier extends AsyncNotifier<List<StoryItem>> {
   Future<void> addStory(StoryItem newStory) async {
     final currentList = state.value ?? [];
     // Optimistically update Riverpod state immediately
-    state = AsyncData([newStory, ...currentList.where((s) => s.id != newStory.id)]);
+    state = AsyncData([
+      newStory,
+      ...currentList.where((s) => s.id != newStory.id),
+    ]);
 
     try {
       await _repository.addStory(newStory);

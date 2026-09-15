@@ -68,7 +68,10 @@ class AppTheme {
     return _buildTheme(Brightness.light, lightColors);
   }
 
-  static ThemeData _buildTheme(Brightness brightness, AppColorsExtension colors) {
+  static ThemeData _buildTheme(
+    Brightness brightness,
+    AppColorsExtension colors,
+  ) {
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -87,7 +90,9 @@ class AppTheme {
       ),
       extensions: [colors],
       textTheme: GoogleFonts.interTextTheme(
-        brightness == Brightness.dark ? ThemeData.dark().textTheme : ThemeData.light().textTheme,
+        brightness == Brightness.dark
+            ? ThemeData.dark().textTheme
+            : ThemeData.light().textTheme,
       ),
       appBarTheme: AppBarTheme(
         backgroundColor: colors.surface,

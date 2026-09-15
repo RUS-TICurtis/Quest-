@@ -65,7 +65,9 @@ final feedControllerProvider = Provider.autoDispose<FeedController>((ref) {
   return controller;
 });
 
-final feedStateProvider = FutureProvider.autoDispose<List<CreatorVideo>>((ref) async {
+final feedStateProvider = FutureProvider.autoDispose<List<CreatorVideo>>((
+  ref,
+) async {
   final repository = ref.watch(feedRepositoryProvider);
   final result = await repository.getFeed();
   return result.videos;

@@ -2,6 +2,7 @@ import 'package:quest/core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'events_provider.dart';
+
 abstract class EventsRepository {
   Future<List<Event>> getEvents();
   Future<void> updateEvent(Event event);

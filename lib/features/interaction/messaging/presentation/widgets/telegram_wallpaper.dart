@@ -6,11 +6,7 @@ class TelegramWallpaper extends StatelessWidget {
   final Widget? child;
   final bool isDark;
 
-  const TelegramWallpaper({
-    super.key,
-    this.child,
-    this.isDark = true,
-  });
+  const TelegramWallpaper({super.key, this.child, this.isDark = true});
 
   @override
   Widget build(BuildContext context) {

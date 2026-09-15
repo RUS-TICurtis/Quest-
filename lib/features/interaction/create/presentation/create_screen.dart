@@ -13,14 +13,15 @@ class CreateScreen extends ConsumerStatefulWidget {
   ConsumerState<CreateScreen> createState() => _CreateScreenState();
 }
 
-class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBindingObserver {
+class _CreateScreenState extends ConsumerState<CreateScreen>
+    with WidgetsBindingObserver {
   int _selectedOptionIndex = 1; // Start with Image by default so camera opens
   final List<String> _options = ['Text', 'Image', 'Vlog'];
-  
+
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
-  
+
   final TextEditingController _textController = TextEditingController();
 
   @override
@@ -29,7 +30,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBinding
     WidgetsBinding.instance.addObserver(this);
     _initCamera();
   }
-  
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final CameraController? cameraController = _cameraController;
@@ -43,7 +44,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBinding
       _initCamera();
     }
   }
-  
+
   Future<void> _initCamera() async {
     try {
       _cameras = await availableCameras();
@@ -115,18 +116,16 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBinding
   @override
   Widget build(BuildContext context) {
     final isTextMode = _selectedOptionIndex == 0;
-    
+
     return Scaffold(
       backgroundColor: Colors.black, // Camera background
       body: Stack(
         children: [
           // Content Area (Camera or Text)
           Positioned.fill(
-            child: isTextMode
-                ? _buildTextMode()
-                : _buildCameraMode(),
+            child: isTextMode ? _buildTextMode() : _buildCameraMode(),
           ),
-          
+
           // Controls at the bottom
           Positioned(
             left: 0,
@@ -153,7 +152,9 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBinding
                             _options[index],
                             style: TextStyle(
                               color: isSelected ? Colors.white : Colors.white54,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              fontWeight: isSelected
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
                               fontSize: isSelected ? 15 : 14,
                             ),
                           ),
@@ -163,7 +164,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBinding
                   ),
                 ),
                 SizedBox(height: 24),
-                
+
                 // Shutter / Action Button
                 GestureDetector(
                   onTap: () async {
@@ -173,14 +174,20 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBinding
                         final file = await _cameraController!.takePicture();
                         if (!context.mounted) return;
                         _disposeCamera();
-                        await context.push('/share-experience', extra: file.path);
+                        await context.push(
+                          '/share-experience',
+                          extra: file.path,
+                        );
                         if (mounted) _initCamera();
                       } catch (e) {
                         debugPrint('Error taking picture: $e');
                       }
                     } else if (isTextMode) {
                       if (!context.mounted) return;
-                      context.push('/share-experience', extra: _textController.text);
+                      context.push(
+                        '/share-experience',
+                        extra: _textController.text,
+                      );
                     }
                   },
                   child: Container(
@@ -195,7 +202,9 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBinding
                         width: 56,
                         height: 56,
                         decoration: BoxDecoration(
-                          color: _selectedOptionIndex == 2 ? Colors.red : Colors.white,
+                          color: _selectedOptionIndex == 2
+                              ? Colors.red
+                              : Colors.white,
                           shape: BoxShape.circle,
                         ),
                         child: isTextMode
@@ -225,20 +234,16 @@ class _CreateScreenState extends ConsumerState<CreateScreen> with WidgetsBinding
 
   Widget _buildCameraMode() {
     if (!_isCameraInitialized || _cameraController == null) {
-      return Center(
-        child: CircularProgressIndicator(color: Colors.white),
-      );
+      return Center(child: CircularProgressIndicator(color: Colors.white));
     }
-    
+
     // Scale the camera preview to fill the screen
     return Transform.scale(
-      scale: 1.0, 
-      child: Center(
-        child: CameraPreview(_cameraController!),
-      ),
+      scale: 1.0,
+      child: Center(child: CameraPreview(_cameraController!)),
     );
   }
-  
+
   Widget _buildTextMode() {
     return Container(
       color: context.colors.background,

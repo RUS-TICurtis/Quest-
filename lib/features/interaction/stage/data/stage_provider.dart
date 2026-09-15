@@ -118,11 +118,7 @@ class StageReaction {
   final String emoji;
   final double xOffset;
 
-  StageReaction({
-    required this.id,
-    required this.emoji,
-    required this.xOffset,
-  });
+  StageReaction({required this.id, required this.emoji, required this.xOffset});
 
   factory StageReaction.fromJson(Map<String, dynamic> json) {
     return StageReaction(

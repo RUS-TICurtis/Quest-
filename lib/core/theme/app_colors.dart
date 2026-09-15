@@ -49,7 +49,7 @@ class AppColors {
   static const Color textPrimary38 = Color(0x61FFFFFF);
   static const Color textPrimary24 = Color(0x3DFFFFFF);
   static const Color textPrimary12 = Color(0x1EFFFFFF);
-  
+
   static const Color textSecondary = Color(0xFF9CA3AF);
   static const Color textMuted = Color(0xFF6B7280);
 

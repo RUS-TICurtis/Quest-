@@ -1,5 +1,3 @@
-
-
 class CommunityPost {
   final String id;
   final String communityId;

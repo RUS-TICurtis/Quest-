@@ -22,8 +22,10 @@ class ImageKitService {
     try {
       // 1. Generate auth parameters
       final String token = DateTime.now().millisecondsSinceEpoch.toString();
-      final int expire = (DateTime.now().millisecondsSinceEpoch / 1000).round() + 1800; // 30 mins
-      
+      final int expire =
+          (DateTime.now().millisecondsSinceEpoch / 1000).round() +
+          1800; // 30 mins
+
       // HMAC-SHA1 of (token + expire) using privateKey
       final String dataToSign = token + expire.toString();
       final hmacSha1 = Hmac(sha1, utf8.encode(privateKey));
@@ -49,7 +51,9 @@ class ImageKitService {
         uploadUrl,
         data: formData,
         onSendProgress: (int sent, int total) {
-          debugPrint('ImageKit Upload progress: ${(sent / total * 100).toStringAsFixed(0)}%');
+          debugPrint(
+            'ImageKit Upload progress: ${(sent / total * 100).toStringAsFixed(0)}%',
+          );
         },
       );
 

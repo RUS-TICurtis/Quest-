@@ -9,7 +9,11 @@ class CloudinaryService {
   final Dio _dio = Dio();
 
   /// Uploads media bytes to Cloudinary.
-  Future<String?> uploadMediaBytes(Uint8List bytes, {bool isVideo = false, String filename = 'media'}) async {
+  Future<String?> uploadMediaBytes(
+    Uint8List bytes, {
+    bool isVideo = false,
+    String filename = 'media',
+  }) async {
     final cloudName = dotenv.env['CLOUDINARY_CLOUD_NAME'];
     final apiKey = dotenv.env['CLOUDINARY_API_KEY'];
     final apiSecret = dotenv.env['CLOUDINARY_API_SECRET'];
@@ -20,17 +24,23 @@ class CloudinaryService {
     }
 
     try {
-      final timestamp = (DateTime.now().millisecondsSinceEpoch / 1000).round().toString();
-      
+      final timestamp = (DateTime.now().millisecondsSinceEpoch / 1000)
+          .round()
+          .toString();
+
       // Signature generation: sha1(timestamp=xxx<api_secret>)
       final paramsToSign = 'timestamp=$timestamp$apiSecret';
       final signature = sha1.convert(utf8.encode(paramsToSign)).toString();
 
       final resourceType = isVideo ? 'video' : 'image';
-      final uploadUrl = 'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload';
+      final uploadUrl =
+          'https://api.cloudinary.com/v1_1/$cloudName/$resourceType/upload';
 
       final formData = FormData.fromMap({
-        'file': MultipartFile.fromBytes(bytes, filename: isVideo ? '$filename.mp4' : '$filename.jpg'),
+        'file': MultipartFile.fromBytes(
+          bytes,
+          filename: isVideo ? '$filename.mp4' : '$filename.jpg',
+        ),
         'api_key': apiKey,
         'timestamp': timestamp,
         'signature': signature,
@@ -40,7 +50,9 @@ class CloudinaryService {
         uploadUrl,
         data: formData,
         onSendProgress: (int sent, int total) {
-          debugPrint('Cloudinary Upload progress: ${(sent / total * 100).toStringAsFixed(0)}%');
+          debugPrint(
+            'Cloudinary Upload progress: ${(sent / total * 100).toStringAsFixed(0)}%',
+          );
         },
       );
 
@@ -58,7 +70,11 @@ class CloudinaryService {
     try {
       final bytes = await file.readAsBytes();
       final filename = file.path.split('/').last.split('\\').last;
-      return await uploadMediaBytes(bytes, isVideo: isVideo, filename: filename);
+      return await uploadMediaBytes(
+        bytes,
+        isVideo: isVideo,
+        filename: filename,
+      );
     } catch (e) {
       debugPrint('Cloudinary Upload File Error: $e');
       return null;

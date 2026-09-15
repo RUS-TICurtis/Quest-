@@ -13,8 +13,6 @@ class ExploreScreen extends ConsumerWidget {
       backgroundColor: context.colors.background,
       body: CustomScrollView(
         slivers: [
-
-          
           SliverAppBar(
             backgroundColor: context.colors.background,
             title: Text(
@@ -44,16 +42,36 @@ class ExploreScreen extends ConsumerWidget {
                     padding: EdgeInsets.symmetric(horizontal: 16),
                     child: Row(
                       children: [
-                        _buildQuickAction(context, 'Leaderboard', Icons.leaderboard, '/leaderboard'),
-                        _buildQuickAction(context, 'Radar', Icons.radar, '/radar'),
-                        _buildQuickAction(context, 'Stage', Icons.mic, '/stage/1'),
-                        _buildQuickAction(context, 'Organization', Icons.business, '/organization'),
+                        _buildQuickAction(
+                          context,
+                          'Leaderboard',
+                          Icons.leaderboard,
+                          '/leaderboard',
+                        ),
+                        _buildQuickAction(
+                          context,
+                          'Radar',
+                          Icons.radar,
+                          '/radar',
+                        ),
+                        _buildQuickAction(
+                          context,
+                          'Stage',
+                          Icons.mic,
+                          '/stage/1',
+                        ),
+                        _buildQuickAction(
+                          context,
+                          'Organization',
+                          Icons.business,
+                          '/organization',
+                        ),
                       ],
                     ),
                   ),
-                  
+
                   SizedBox(height: 32),
-                  
+
                   // Featured Communities Section
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -62,10 +80,11 @@ class ExploreScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'Featured Communities',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: context.colors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: context.colors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         TextButton(
                           onPressed: () => context.push('/communities'),
@@ -113,7 +132,7 @@ class ExploreScreen extends ConsumerWidget {
                   ),
 
                   SizedBox(height: 32),
-                  
+
                   // Trending Events Section
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -122,10 +141,11 @@ class ExploreScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'Trending Events',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: context.colors.textPrimary,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
+                                color: context.colors.textPrimary,
+                                fontWeight: FontWeight.bold,
+                              ),
                         ),
                         TextButton(
                           onPressed: () => context.push('/events'),
@@ -163,7 +183,7 @@ class ExploreScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  
+
                   SizedBox(height: 40),
                 ],
               ),
@@ -174,7 +194,12 @@ class ExploreScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickAction(BuildContext context, String label, IconData icon, String route) {
+  Widget _buildQuickAction(
+    BuildContext context,
+    String label,
+    IconData icon,
+    String route,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(right: 12.0),
       child: ActionChip(

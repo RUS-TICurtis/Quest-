@@ -14,6 +14,7 @@ import 'package:quest/features/society/communities/presentation/community_detail
 import 'package:quest/features/society/events/presentation/events_screen.dart';
 import 'package:quest/features/society/events/presentation/event_detail_screen.dart';
 import 'package:quest/features/interaction/connect/presentation/connect_screen.dart';
+import 'package:quest/features/interaction/connect/presentation/user_discovery_screen.dart';
 import 'package:quest/features/interaction/messaging/presentation/chat_screen.dart';
 import 'package:quest/features/society/organization/presentation/organization_dashboard_screen.dart';
 import 'package:quest/features/identity/profile/presentation/profile_screen.dart';
@@ -154,6 +155,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => ConnectScreen(),
             routes: [
               GoRoute(
+                path: 'user_discovery',
+                name: 'user_discovery',
+                builder: (context, state) => UserDiscoveryScreen(),
+              ),
+              GoRoute(
                 path: ':id',
                 name: 'chat',
                 builder: (context, state) =>
@@ -243,9 +249,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/share-experience',
         name: 'share_experience',
-        builder: (context, state) => ShareExperienceScreen(
-          mediaPath: state.extra as String?,
-        ),
+        builder: (context, state) =>
+            ShareExperienceScreen(mediaPath: state.extra as String?),
       ),
     ],
   );

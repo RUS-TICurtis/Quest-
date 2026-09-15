@@ -76,7 +76,8 @@ class ProfileScreen extends ConsumerWidget {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  if (userState.username != null && userState.username!.isNotEmpty) ...[
+                  if (userState.username != null &&
+                      userState.username!.isNotEmpty) ...[
                     SizedBox(height: 2),
                     Text(
                       '@${userState.username}',
@@ -99,10 +100,7 @@ class ProfileScreen extends ConsumerWidget {
                   ],
                   SizedBox(height: 12),
                   Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 4,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                     decoration: BoxDecoration(
                       color: AppColors.gold.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),

@@ -8,7 +8,11 @@ abstract class AuthRepository {
   User? get currentUser;
   Future<void> signOut();
   Future<User?> signInWithEmail(String email, String password);
-  Future<AuthResponse> signUpWithEmail(String email, String password, String name);
+  Future<AuthResponse> signUpWithEmail(
+    String email,
+    String password,
+    String name,
+  );
   Future<AuthResponse?> signInWithGoogleNative();
 }
 
@@ -48,11 +52,7 @@ class SupabaseAuthRepository implements AuthRepository {
     final response = await _client.auth.signUp(
       email: email,
       password: password,
-      data: {
-        'name': name,
-        'full_name': name,
-        'display_name': name,
-      },
+      data: {'name': name, 'full_name': name, 'display_name': name},
     );
     return response;
   }
@@ -85,7 +85,9 @@ class SupabaseAuthRepository implements AuthRepository {
           'The SHA-1 fingerprint is not registered in Google Cloud Console under an Android OAuth Client ID for package "com.quest.quest".',
         );
       }
-      throw AuthException('Google Sign-In failed: ${e.message ?? e.toString()}');
+      throw AuthException(
+        'Google Sign-In failed: ${e.message ?? e.toString()}',
+      );
     }
 
     if (googleUser == null) {
@@ -98,7 +100,9 @@ class SupabaseAuthRepository implements AuthRepository {
     final accessToken = googleAuth.accessToken;
 
     if (idToken == null) {
-      throw const AuthException('No Google ID token was returned by the sign-in modal.');
+      throw const AuthException(
+        'No Google ID token was returned by the sign-in modal.',
+      );
     }
 
     final response = await _client.auth.signInWithIdToken(

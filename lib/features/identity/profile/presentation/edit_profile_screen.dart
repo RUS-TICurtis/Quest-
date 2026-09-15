@@ -21,7 +21,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _usernameController;
   late TextEditingController _bioController;
-  
+
   bool _isLoading = false;
   Uint8List? _selectedImageBytes;
 
@@ -61,7 +61,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
-    
+
     setState(() {
       _isLoading = true;
     });
@@ -79,7 +79,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
       final userNotifier = ref.read(userProvider.notifier);
       final currentUser = ref.read(userProvider).value ?? UserState.initial();
-      
+
       final updatedUser = currentUser.copyWith(
         name: _nameController.text.trim(),
         username: _usernameController.text.trim().replaceAll('@', ''),
@@ -180,7 +180,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       backgroundImage: avatarImage,
                       child: avatarImage == null
                           ? Text(
-                              userState.initials.isNotEmpty ? userState.initials : 'Q',
+                              userState.initials.isNotEmpty
+                                  ? userState.initials
+                                  : 'Q',
                               style: TextStyle(
                                 fontSize: 32,
                                 fontWeight: FontWeight.bold,
@@ -203,7 +205,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: context.colors.questBlue.withValues(alpha: 0.4),
+                              color: context.colors.questBlue.withValues(
+                                alpha: 0.4,
+                              ),
                               blurRadius: 8,
                             ),
                           ],
@@ -237,7 +241,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: InputDecoration(
                   labelText: 'Full Name',
                   labelStyle: TextStyle(color: context.colors.textMuted),
-                  prefixIcon: Icon(Icons.person_outline, color: context.colors.questBlue),
+                  prefixIcon: Icon(
+                    Icons.person_outline,
+                    color: context.colors.questBlue,
+                  ),
                   filled: true,
                   fillColor: context.colors.card,
                   border: OutlineInputBorder(
@@ -250,10 +257,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                    borderSide: BorderSide(
+                      color: context.colors.questBlue,
+                      width: 2,
+                    ),
                   ),
                 ),
-                validator: (val) => val == null || val.trim().isEmpty ? 'Name cannot be empty' : null,
+                validator: (val) => val == null || val.trim().isEmpty
+                    ? 'Name cannot be empty'
+                    : null,
               ),
               const SizedBox(height: 18),
 
@@ -265,8 +277,14 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   labelText: 'Username',
                   labelStyle: TextStyle(color: context.colors.textMuted),
                   prefixText: '@',
-                  prefixStyle: TextStyle(color: context.colors.questBlue, fontWeight: FontWeight.bold),
-                  prefixIcon: Icon(Icons.alternate_email, color: context.colors.questBlue),
+                  prefixStyle: TextStyle(
+                    color: context.colors.questBlue,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  prefixIcon: Icon(
+                    Icons.alternate_email,
+                    color: context.colors.questBlue,
+                  ),
                   filled: true,
                   fillColor: context.colors.card,
                   border: OutlineInputBorder(
@@ -279,12 +297,17 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                    borderSide: BorderSide(
+                      color: context.colors.questBlue,
+                      width: 2,
+                    ),
                   ),
                 ),
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty) return 'Username cannot be empty';
-                  if (val.trim().contains(' ')) return 'Username cannot contain spaces';
+                  if (val == null || val.trim().isEmpty)
+                    return 'Username cannot be empty';
+                  if (val.trim().contains(' '))
+                    return 'Username cannot contain spaces';
                   return null;
                 },
               ),
@@ -316,9 +339,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.questBlue, width: 2),
+                    borderSide: BorderSide(
+                      color: context.colors.questBlue,
+                      width: 2,
+                    ),
                   ),
-                  counterStyle: TextStyle(color: context.colors.textMuted, fontSize: 12),
+                  counterStyle: TextStyle(
+                    color: context.colors.textMuted,
+                    fontSize: 12,
+                  ),
                 ),
               ),
               const SizedBox(height: 18),
@@ -331,8 +360,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 decoration: InputDecoration(
                   labelText: 'Account Email',
                   labelStyle: TextStyle(color: context.colors.textMuted),
-                  prefixIcon: Icon(Icons.email_outlined, color: context.colors.textMuted),
-                  suffixIcon: Icon(Icons.lock_outline, color: context.colors.textMuted, size: 18),
+                  prefixIcon: Icon(
+                    Icons.email_outlined,
+                    color: context.colors.textMuted,
+                  ),
+                  suffixIcon: Icon(
+                    Icons.lock_outline,
+                    color: context.colors.textMuted,
+                    size: 18,
+                  ),
                   filled: true,
                   fillColor: context.colors.card.withValues(alpha: 0.5),
                   border: OutlineInputBorder(

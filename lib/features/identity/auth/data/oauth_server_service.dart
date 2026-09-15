@@ -62,13 +62,15 @@ class OAuthServerService {
   final String _baseUrl;
   final String _anonKey;
 
-  OAuthServerService({
-    Dio? dio,
-    SupabaseClient? supabase,
-  })  : _dio = dio ?? Dio(),
-        _supabase = supabase ?? Supabase.instance.client,
-        _baseUrl = dotenv.env['SUPABASE_URL'] ?? 'https://ipvsbunseucoheycxpeg.supabase.co',
-        _anonKey = dotenv.env['SUPABASE_ANON_KEY'] ?? 'sb_publishable_HG9KaCul4NDePDRYEruZfg_OUaQ42Y7';
+  OAuthServerService({Dio? dio, SupabaseClient? supabase})
+    : _dio = dio ?? Dio(),
+      _supabase = supabase ?? Supabase.instance.client,
+      _baseUrl =
+          dotenv.env['SUPABASE_URL'] ??
+          'https://ipvsbunseucoheycxpeg.supabase.co',
+      _anonKey =
+          dotenv.env['SUPABASE_ANON_KEY'] ??
+          'sb_publishable_HG9KaCul4NDePDRYEruZfg_OUaQ42Y7';
 
   Map<String, String> _buildHeaders() {
     final session = _supabase.auth.currentSession;
@@ -82,7 +84,9 @@ class OAuthServerService {
   }
 
   /// Fetches client and requested scope details for a given authorization ID.
-  Future<OAuthAuthorizationDetails> getAuthorizationDetails(String authorizationId) async {
+  Future<OAuthAuthorizationDetails> getAuthorizationDetails(
+    String authorizationId,
+  ) async {
     if (authorizationId.isEmpty || authorizationId == 'preview_test') {
       return OAuthAuthorizationDetails.preview(authorizationId);
     }
@@ -97,11 +101,14 @@ class OAuthServerService {
       return OAuthAuthorizationDetails.fromJson(authorizationId, data);
     } on DioException catch (e) {
       // Fallback for preview or offline testing
-      if (authorizationId.startsWith('test_') || authorizationId.startsWith('preview_')) {
+      if (authorizationId.startsWith('test_') ||
+          authorizationId.startsWith('preview_')) {
         return OAuthAuthorizationDetails.preview(authorizationId);
       }
       final msg = e.response?.data is Map
-          ? (e.response?.data['msg'] ?? e.response?.data['message'] ?? e.message)
+          ? (e.response?.data['msg'] ??
+                e.response?.data['message'] ??
+                e.message)
           : e.message;
       throw Exception('Failed to load authorization details: $msg');
     } catch (e) {
@@ -111,7 +118,9 @@ class OAuthServerService {
 
   /// Approves the OAuth authorization and returns the client callback redirect URL.
   Future<String> approveAuthorization(String authorizationId) async {
-    if (authorizationId.isEmpty || authorizationId.startsWith('preview_') || authorizationId.startsWith('test_')) {
+    if (authorizationId.isEmpty ||
+        authorizationId.startsWith('preview_') ||
+        authorizationId.startsWith('test_')) {
       return 'http://localhost:3000/callback?code=mock_oauth_code_success&state=preview';
     }
 
@@ -130,7 +139,9 @@ class OAuthServerService {
       return redirectUrl;
     } on DioException catch (e) {
       final msg = e.response?.data is Map
-          ? (e.response?.data['msg'] ?? e.response?.data['message'] ?? e.message)
+          ? (e.response?.data['msg'] ??
+                e.response?.data['message'] ??
+                e.message)
           : e.message;
       throw Exception('Failed to approve authorization: $msg');
     }
@@ -138,7 +149,9 @@ class OAuthServerService {
 
   /// Denies the OAuth authorization and returns the client callback redirect URL with error.
   Future<String> denyAuthorization(String authorizationId) async {
-    if (authorizationId.isEmpty || authorizationId.startsWith('preview_') || authorizationId.startsWith('test_')) {
+    if (authorizationId.isEmpty ||
+        authorizationId.startsWith('preview_') ||
+        authorizationId.startsWith('test_')) {
       return 'http://localhost:3000/callback?error=access_denied&error_description=User+denied+authorization';
     }
 
@@ -157,7 +170,9 @@ class OAuthServerService {
       return redirectUrl;
     } on DioException catch (e) {
       final msg = e.response?.data is Map
-          ? (e.response?.data['msg'] ?? e.response?.data['message'] ?? e.message)
+          ? (e.response?.data['msg'] ??
+                e.response?.data['message'] ??
+                e.message)
           : e.message;
       throw Exception('Failed to deny authorization: $msg');
     }

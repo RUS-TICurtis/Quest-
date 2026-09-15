@@ -76,10 +76,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
               style: TextStyle(color: context.colors.textPrimary),
               decoration: InputDecoration(
                 hintText: 'Search communities...',
-                prefixIcon: Icon(
-                  Icons.search,
-                  color: context.colors.textMuted,
-                ),
+                prefixIcon: Icon(Icons.search, color: context.colors.textMuted),
                 suffixIcon: communitiesState.searchQuery.isNotEmpty
                     ? IconButton(
                         icon: Icon(
@@ -124,12 +121,11 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                   },
                   child: AnimatedContainer(
                     duration: Duration(milliseconds: 200),
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                     decoration: BoxDecoration(
-                      color: selected ? context.colors.questBlue : context.colors.card,
+                      color: selected
+                          ? context.colors.questBlue
+                          : context.colors.card,
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: selected
@@ -157,8 +153,6 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
           Expanded(
             child: CustomScrollView(
               slivers: [
-
-
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.symmetric(vertical: 24),
@@ -169,8 +163,13 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                             communitiesState.searchQuery.isEmpty &&
                             communitiesState.selectedCategory == 'All') ...[
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: _sectionHeader('Your Communities', '${joined.length}'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
+                            child: _sectionHeader(
+                              'Your Communities',
+                              '${joined.length}',
+                            ),
                           ),
                           SizedBox(height: 12),
                           SizedBox(
@@ -180,17 +179,26 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                               padding: EdgeInsets.symmetric(horizontal: 12),
                               itemCount: joined.length,
                               itemBuilder: (context, index) {
-                                return _buildHorizontalCard(joined[index], true, context);
+                                return _buildHorizontalCard(
+                                  joined[index],
+                                  true,
+                                  context,
+                                );
                               },
                             ),
                           ),
                           SizedBox(height: 32),
                         ],
-                        
+
                         if (discover.isNotEmpty) ...[
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                            child: _sectionHeader('Discover', '${discover.length}'),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                            ),
+                            child: _sectionHeader(
+                              'Discover',
+                              '${discover.length}',
+                            ),
                           ),
                           SizedBox(height: 12),
                           SizedBox(
@@ -200,7 +208,11 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                               padding: EdgeInsets.symmetric(horizontal: 12),
                               itemCount: discover.length,
                               itemBuilder: (context, index) {
-                                return _buildHorizontalCard(discover[index], false, context);
+                                return _buildHorizontalCard(
+                                  discover[index],
+                                  false,
+                                  context,
+                                );
                               },
                             ),
                           ),
@@ -282,7 +294,11 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
     );
   }
 
-  Widget _buildHorizontalCard(Community c, bool isJoined, BuildContext context) {
+  Widget _buildHorizontalCard(
+    Community c,
+    bool isJoined,
+    BuildContext context,
+  ) {
     return GestureDetector(
       onTap: () {
         HapticFeedback.lightImpact();
@@ -313,7 +329,11 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                   child: Icon(c.icon, color: c.accentColor, size: 24),
                 ),
                 if (isJoined)
-                  Icon(Icons.check_circle, color: context.colors.emerald, size: 16),
+                  Icon(
+                    Icons.check_circle,
+                    color: context.colors.emerald,
+                    size: 16,
+                  ),
               ],
             ),
             Column(
@@ -405,9 +425,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                 TextField(
                   controller: nameCtrl,
                   style: TextStyle(color: context.colors.textPrimary),
-                  decoration: InputDecoration(
-                    hintText: 'Community name...',
-                  ),
+                  decoration: InputDecoration(hintText: 'Community name...'),
                 ),
                 SizedBox(height: 12),
                 TextField(
@@ -434,7 +452,7 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
+                    onPressed: () async {
                       HapticFeedback.lightImpact();
                       if (nameCtrl.text.trim().isNotEmpty) {
                         final newId =
@@ -450,12 +468,13 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen> {
                           accentColor: context.colors.questBlue,
                           icon: Icons.groups,
                         );
-                        ref
+                        await ref
                             .read(communitiesProvider.notifier)
                             .addCommunity(newCommunity);
-                        ref
+                        await ref
                             .read(userProvider.notifier)
                             .toggleJoinCommunity(newId);
+                        if (!context.mounted) return;
                         Navigator.pop(sheetContext);
                         context.push('/communities/$newId');
                       }

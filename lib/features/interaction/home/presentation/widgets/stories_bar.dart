@@ -15,12 +15,15 @@ class StoriesBar extends ConsumerWidget {
     final storiesAsync = ref.watch(storiesProvider);
     final allStories = storiesAsync.value ?? [];
 
-    final myStories = allStories.where((s) =>
-        s.isMe ||
-        s.communityName == 'My Story' ||
-        s.authorName == 'You'
-    ).toList();
-    final otherStories = allStories.where((s) => !myStories.contains(s)).toList();
+    final myStories = allStories
+        .where(
+          (s) =>
+              s.isMe || s.communityName == 'My Story' || s.authorName == 'You',
+        )
+        .toList();
+    final otherStories = allStories
+        .where((s) => !myStories.contains(s))
+        .toList();
     final hasMyStories = myStories.isNotEmpty;
 
     return SizedBox(
@@ -53,16 +56,20 @@ class StoriesBar extends ConsumerWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: hasMyStories ? context.colors.questBlue : context.colors.border,
+                            color: hasMyStories
+                                ? context.colors.questBlue
+                                : context.colors.border,
                             width: hasMyStories ? 2.5 : 2.0,
                           ),
                           boxShadow: hasMyStories
                               ? [
                                   BoxShadow(
-                                    color: context.colors.questBlue.withValues(alpha: 0.35),
+                                    color: context.colors.questBlue.withValues(
+                                      alpha: 0.35,
+                                    ),
                                     blurRadius: 8,
                                     spreadRadius: 1,
-                                  )
+                                  ),
                                 ]
                               : null,
                         ),
@@ -91,7 +98,10 @@ class StoriesBar extends ConsumerWidget {
                           decoration: BoxDecoration(
                             color: context.colors.questBlue,
                             shape: BoxShape.circle,
-                            border: Border.all(color: context.colors.background, width: 2),
+                            border: Border.all(
+                              color: context.colors.background,
+                              width: 2,
+                            ),
                           ),
                           child: Icon(
                             hasMyStories ? Icons.camera_alt : Icons.add,
@@ -106,9 +116,13 @@ class StoriesBar extends ConsumerWidget {
                   Text(
                     'My Story',
                     style: TextStyle(
-                      color: hasMyStories ? context.colors.questBlue : context.colors.textSecondary,
+                      color: hasMyStories
+                          ? context.colors.questBlue
+                          : context.colors.textSecondary,
                       fontSize: 11,
-                      fontWeight: hasMyStories ? FontWeight.w700 : FontWeight.w600,
+                      fontWeight: hasMyStories
+                          ? FontWeight.w700
+                          : FontWeight.w600,
                     ),
                   ),
                 ],
@@ -120,8 +134,11 @@ class StoriesBar extends ConsumerWidget {
           final hasSeen = story.isSeen;
 
           return GestureDetector(
-            onTap: () =>
-                StoryViewerModal.show(context, customStories: otherStories, initialIndex: index - 1),
+            onTap: () => StoryViewerModal.show(
+              context,
+              customStories: otherStories,
+              initialIndex: index - 1,
+            ),
             child: Column(
               children: [
                 Container(
@@ -151,7 +168,9 @@ class StoriesBar extends ConsumerWidget {
                       shape: BoxShape.circle,
                     ),
                     clipBehavior: Clip.antiAlias,
-                    child: story.authorAvatar != null && story.authorAvatar!.isNotEmpty
+                    child:
+                        story.authorAvatar != null &&
+                            story.authorAvatar!.isNotEmpty
                         ? Image.network(
                             story.authorAvatar!,
                             fit: BoxFit.cover,
@@ -191,13 +210,7 @@ class StoriesBar extends ConsumerWidget {
         color: story.ringColor.withValues(alpha: 0.15),
         shape: BoxShape.circle,
       ),
-      child: Center(
-        child: Icon(
-          story.icon,
-          color: story.ringColor,
-          size: 32,
-        ),
-      ),
+      child: Center(child: Icon(story.icon, color: story.ringColor, size: 32)),
     );
   }
 
