@@ -34,8 +34,8 @@ if (Test-Path $originalApk) {
     $newApkName = "$appName-release-$randomNumber.apk"
     $newApkPath = "$targetDir\$newApkName"
 
-    # Rename the newly built APK
-    Rename-Item -Path $originalApk -NewName $newApkName
+    # Copy the newly built APK
+    Copy-Item -Path $originalApk -Destination $newApkPath
     
     Write-Host "`n=======================================================" -ForegroundColor Green
     Write-Host "SUCCESS: APK renamed and ready!" -ForegroundColor Green
