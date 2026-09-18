@@ -56,4 +56,4 @@ else → null (no redirect)
 - `NavigationRail` when `MediaQuery.width >= 600` (tablet/desktop)
 
 Navigation destinations: Home, Explore, Create, Connect, Profile.
-The global `AppBar` handles dynamic actions (e.g., rendering Leaderboard and Settings buttons when the user navigates to the Profile tab).
+There is no global `AppBar` on mobile; the app relies on the `BottomNavigationBar` and custom app bars within individual screens (like the transparent `AppBar` in `ProfileScreen` for Leaderboard and Settings). Sub-routes (e.g., Chat, Search) use `parentNavigatorKey` to push above the shell and hide the navigation bar.

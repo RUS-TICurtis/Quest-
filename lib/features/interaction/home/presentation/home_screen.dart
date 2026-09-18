@@ -55,14 +55,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       body: CustomScrollView(
         slivers: [
+          SliverAppBar(
+            title: const Text(
+              'Home',
+              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+            ),
+            backgroundColor: context.colors.background,
+            floating: true,
+            elevation: 0,
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.notifications_none, color: Colors.white),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  // TODO: Navigate to notifications screen
+                },
+              ),
+            ],
+          ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  StoriesBar(),
-                  SizedBox(height: 16),
+                  const StoriesBar(),
+                  const SizedBox(height: 16),
 
                   Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20),

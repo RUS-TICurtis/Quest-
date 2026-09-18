@@ -7,6 +7,8 @@ import 'package:v_chat_bubbles/v_chat_bubbles.dart';
 import 'package:quest/features/interaction/messaging/data/chat_provider.dart';
 import 'package:quest/features/interaction/messaging/presentation/widgets/telegram_wallpaper.dart';
 import 'package:quest/features/interaction/messaging/presentation/widgets/voice_note_bubble.dart';
+import 'package:quest/features/interaction/messaging/presentation/whatsapp_text_field.dart';
+import 'package:quest/features/interaction/messaging/presentation/app_emoji_picker.dart';
 
 class CustomPayload extends VCustomBubbleData {
   final dynamic payload;
@@ -35,6 +37,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   ChatMessage? _replyingMessage;
   bool _isSelectionMode = false;
   final Set<String> _selectedMessageIds = {};
+  
+  bool _showEmojiPicker = false;
+  final FocusNode _focusNode = FocusNode();
+  final bool _isUploadingMedia = false;
 
   @override
   void initState() {
@@ -50,6 +56,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _textController.dispose();
     _scrollController.dispose();
     _searchController.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
@@ -81,12 +88,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     setState(() {
       _replyingMessage = null;
     });
-    _scrollToBottom();
-  }
-
-  void _sendVoiceNote() {
-    HapticFeedback.mediumImpact();
-    ref.read(chatProvider.notifier).sendVoiceNote(widget.threadId);
     _scrollToBottom();
   }
 
@@ -225,60 +226,21 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _sendSampleImage() {
-    ref
-        .read(chatProvider.notifier)
-        .sendMessage(
-          threadId: widget.threadId,
-          text: 'Shared photo from gallery 📷',
-          type: MessageType.image,
-          mediaUrl:
-              'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
-        );
-    _scrollToBottom();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Gallery upload coming soon!')),
+    );
   }
 
   void _sendSampleFile() {
-    ref
-        .read(chatProvider.notifier)
-        .sendMessage(
-          threadId: widget.threadId,
-          text: 'Quest_Release_Notes.pdf',
-          type: MessageType.file,
-          fileName: 'Quest_Release_Notes.pdf',
-          fileSize: 1048576,
-        );
-    _scrollToBottom();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('File upload coming soon!')),
+    );
   }
 
   void _sendSamplePoll() {
-    ref
-        .read(chatProvider.notifier)
-        .sendMessage(
-          threadId: widget.threadId,
-          text: 'Team check-in poll',
-          type: MessageType.poll,
-          pollData: const VPollData(
-            question: 'Ready for today\'s release rollout?',
-            options: [
-              VPollOption(
-                id: 'opt1',
-                text: 'All green, ready! 🚀',
-                voteCount: 12,
-                percentage: 80.0,
-              ),
-              VPollOption(
-                id: 'opt2',
-                text: 'Finishing tests ⏳',
-                voteCount: 3,
-                percentage: 20.0,
-              ),
-            ],
-            totalVotes: 15,
-            hasVoted: false,
-            mode: VPollMode.single,
-          ),
-        );
-    _scrollToBottom();
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Poll creation coming soon!')),
+    );
   }
 
   void _showMessageContextMenu(ChatMessage msg) {
@@ -489,8 +451,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       setState(() {
                         if (_selectedMessageIds.contains(messageId)) {
                           _selectedMessageIds.remove(messageId);
-                          if (_selectedMessageIds.isEmpty)
+                          if (_selectedMessageIds.isEmpty) {
                             _isSelectionMode = false;
+                          }
                         } else {
                           _selectedMessageIds.add(messageId);
                         }
@@ -554,8 +517,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             // Active Reply Preview Banner
             if (_replyingMessage != null) _buildReplyPreviewBanner(),
 
-            // Telegram Input Bar
-            _buildTelegramInputBar(isAi, telegramBlue),
+            _buildMessageInput(true), // We assume dark mode for Telegram style currently
+            if (_showEmojiPicker)
+              AppEmojiPicker(
+                height: 250,
+                textEditingController: _textController,
+                onEmojiSelected: (emoji) {},
+              ),
           ],
         ),
       ),
@@ -1041,7 +1009,53 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       );
     }
 
-    // 5. Standard Text message
+    // 5. Video message
+    if (msg.type == MessageType.video) {
+      return VCustomBubble(
+        messageId: msg.id,
+        isMeSender: isMe,
+        time: msg.time,
+        status:
+            msg.status ?? (isMe ? VMessageStatus.read : VMessageStatus.sent),
+        groupPosition: groupPos,
+        senderName: senderName,
+        senderColor: senderColor,
+        replyTo: msg.replyTo,
+        reactions: msg.reactions,
+        data: CustomPayload(msg),
+        builder: (context, data) {
+          final m = data.payload as ChatMessage;
+          return Container(
+            width: 200,
+            height: 150,
+            decoration: BoxDecoration(
+              color: Colors.black38,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                const Icon(Icons.play_circle_fill, color: Colors.white, size: 48),
+                if (m.text.isNotEmpty)
+                  Positioned(
+                    bottom: 8,
+                    left: 8,
+                    right: 8,
+                    child: Text(
+                      m.text,
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+
+    // 6. Standard Text message
     return VTextBubble(
       messageId: msg.id,
       isMeSender: isMe,
@@ -1172,96 +1186,30 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildTelegramInputBar(bool isAi, Color telegramBlue) {
-    return Container(
-      padding: EdgeInsets.fromLTRB(
-        8,
-        6,
-        8,
-        MediaQuery.of(context).padding.bottom + 6,
-      ),
-      decoration: const BoxDecoration(
-        color: Color(0xFF17212B),
-        border: Border(top: BorderSide(color: Colors.black26)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Emoji / Sticker Button
-          IconButton(
-            icon: const Icon(
-              Icons.sentiment_satisfied_alt_outlined,
-              color: Colors.white60,
-            ),
-            tooltip: 'Emoji & stickers',
-            onPressed: () {
-              HapticFeedback.lightImpact();
-            },
-          ),
+  void _toggleEmojiPicker() {
+    setState(() {
+      _showEmojiPicker = !_showEmojiPicker;
+      if (_showEmojiPicker) {
+        _focusNode.unfocus();
+      } else {
+        _focusNode.requestFocus();
+      }
+    });
+  }
 
-          // Message Input Field
-          Expanded(
-            child: Container(
-              constraints: const BoxConstraints(maxHeight: 120),
-              decoration: BoxDecoration(
-                color: const Color(0xFF242F3D),
-                borderRadius: BorderRadius.circular(22),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: TextField(
-                controller: _textController,
-                style: const TextStyle(color: Colors.white, fontSize: 15),
-                maxLines: null,
-                textCapitalization: TextCapitalization.sentences,
-                onChanged: (_) => setState(() {}),
-                decoration: InputDecoration(
-                  hintText: isAi ? 'Ask AI Guide...' : 'Message',
-                  hintStyle: const TextStyle(
-                    color: Colors.white38,
-                    fontSize: 15,
-                  ),
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                ),
-                onSubmitted: (_) => _sendMessage(),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 4),
-
-          // Attachment Paperclip Button
-          IconButton(
-            icon: const Icon(Icons.attach_file_rounded, color: Colors.white60),
-            tooltip: 'Attach media or file',
-            onPressed: _openAttachmentSheet,
-          ),
-
-          // Mic vs Send Action Button
-          _textController.text.trim().isEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.mic, color: Colors.white60),
-                  tooltip: 'Record voice note',
-                  onPressed: _sendVoiceNote,
-                )
-              : Container(
-                  margin: const EdgeInsets.only(bottom: 2),
-                  decoration: BoxDecoration(
-                    color: telegramBlue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_upward_rounded,
-                      color: Colors.white,
-                      size: 22,
-                    ),
-                    tooltip: 'Send',
-                    onPressed: _sendMessage,
-                  ),
-                ),
-        ],
-      ),
+  Widget _buildMessageInput(bool isDark) {
+    return WhatsAppTextField(
+      controller: _textController,
+      focusNode: _focusNode,
+      hintText: 'Message...',
+      onSend: _sendMessage,
+      onAttachmentPressed: _openAttachmentSheet,
+      onToggleEmoji: _toggleEmojiPicker,
+      emojiPickerVisible: _showEmojiPicker,
+      isBusy: _isUploadingMedia,
+      maxLines: 5,
+      minLines: 1,
+      onSubmitted: (_) => _sendMessage(),
     );
   }
 }

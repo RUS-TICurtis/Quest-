@@ -73,29 +73,32 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen>
               ],
             )
           : null,
-      body: Column(
-        children: [
-          Container(
-            color: context.colors.background,
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: context.colors.questBlue,
-              labelColor: context.colors.questBlue,
-              unselectedLabelColor: context.colors.textMuted,
-              dividerColor: context.colors.border,
-              tabs: [
-                Tab(text: 'Chats'),
-                Tab(text: 'Communities'),
-              ],
-            ),
+      appBar: AppBar(
+        toolbarHeight: 30,
+        backgroundColor: context.colors.background,
+        elevation: 0,
+        title: Text(
+          'Connect',
+          style: TextStyle(
+            color: context.colors.textPrimary,
+            fontWeight: FontWeight.bold,
           ),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [MessagesScreen(), CommunitiesScreen()],
-            ),
-          ),
-        ],
+        ),
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: context.colors.questBlue,
+          labelColor: context.colors.questBlue,
+          unselectedLabelColor: context.colors.textMuted,
+          dividerColor: context.colors.border,
+          tabs: [
+            Tab(text: 'Chats'),
+            Tab(text: 'Communities'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [MessagesScreen(), CommunitiesScreen()],
       ),
     );
   }

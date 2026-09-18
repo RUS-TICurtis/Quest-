@@ -9,14 +9,14 @@ class PoolEntry {
   PoolEntry(this.controller);
 }
 
-class FeedVideoPool extends Notifier<void> {
+class FeedVideoPool extends Notifier<int> {
   final Map<int, PoolEntry> _entries = {};
   List<String> _urls = [];
   int _currentIndex = 0;
   bool _isGloballyPaused = false;
 
   @override
-  void build() {}
+  int build() => 0;
 
   void setVideos(List<String> urls) {
     _urls = urls;
@@ -81,10 +81,10 @@ class FeedVideoPool extends Notifier<void> {
       if (autoPlay && index == _currentIndex && !_isGloballyPaused) {
         controller.play();
       }
-      ref.notifyListeners();
+      state++;
     } catch (e) {
       entry.isError = true;
-      ref.notifyListeners();
+      state++;
     }
   }
 
@@ -115,14 +115,14 @@ class FeedVideoPool extends Notifier<void> {
   }
 }
 
-final feedVideoPoolProvider = NotifierProvider<FeedVideoPool, void>(() {
+final feedVideoPoolProvider = NotifierProvider<FeedVideoPool, int>(() {
   return FeedVideoPool();
 });
 
-final eventsVideoPoolProvider = NotifierProvider<FeedVideoPool, void>(() {
+final eventsVideoPoolProvider = NotifierProvider<FeedVideoPool, int>(() {
   return FeedVideoPool();
 });
 
-final storiesVideoPoolProvider = NotifierProvider<FeedVideoPool, void>(() {
+final storiesVideoPoolProvider = NotifierProvider<FeedVideoPool, int>(() {
   return FeedVideoPool();
 });

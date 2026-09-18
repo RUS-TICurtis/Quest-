@@ -54,10 +54,11 @@ class SupabaseUserRepository implements UserRepository {
 
     // Update profile (exclude quests, handled separately)
     final profileData = user.toJson();
+    profileData.remove('joinedCommunityIds');
     profileData.remove('dailyQuests');
+    profileData.remove('avatarUrl');
     profileData['id'] = userId;
     if (user.avatarUrl != null) {
-      profileData['avatarUrl'] = user.avatarUrl;
       profileData['avatar_url'] = user.avatarUrl;
     }
 

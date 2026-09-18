@@ -82,7 +82,7 @@ class _UserDiscoveryScreenState extends ConsumerState<UserDiscoveryScreen> {
           Expanded(
             child: ListView.separated(
               itemCount: filteredUsers.length,
-              separatorBuilder: (_, __) => Divider(color: context.colors.border, height: 1, indent: 70),
+              separatorBuilder: (context, index) => Divider(color: context.colors.border, height: 1, indent: 70),
               itemBuilder: (context, index) {
                 final user = filteredUsers[index];
                 return ListTile(

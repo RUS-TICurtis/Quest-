@@ -1,9 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quest/features/interaction/messaging/data/chat_provider.dart';
 
-class MainShell extends StatelessWidget {
+class MainShell extends ConsumerWidget {
   final Widget child;
   const MainShell({super.key, required this.child});
 
@@ -14,23 +15,6 @@ class MainShell extends StatelessWidget {
     if (location.startsWith('/connect')) return 3;
     if (location.startsWith('/profile')) return 4;
     return 0;
-  }
-
-  String _getTitle(int index) {
-    switch (index) {
-      case 0:
-        return 'Home';
-      case 1:
-        return 'Explore';
-      case 2:
-        return 'Create & Share Experience';
-      case 3:
-        return 'Connect';
-      case 4:
-        return 'Profile';
-      default:
-        return 'Quest';
-    }
   }
 
   void _onTap(BuildContext context, int index) {
@@ -54,9 +38,13 @@ class MainShell extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final idx = _selectedIndex(context);
     final isWide = MediaQuery.of(context).size.width >= 768;
+    
+    final chatStateAsync = ref.watch(chatProvider);
+    final chatState = chatStateAsync.value;
+    final unreadCount = chatState?.threads.fold<int>(0, (sum, t) => sum + t.unreadCount) ?? 0;
 
     if (isWide) {
       // Desktop/tablet: side navigation rail
@@ -154,51 +142,6 @@ class MainShell extends StatelessWidget {
     // Mobile: bottom navigation bar
     return Scaffold(
       backgroundColor: context.colors.background,
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(kToolbarHeight),
-        child: ClipRRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: AppBar(
-              backgroundColor: context.colors.surface.withValues(alpha: 0.5),
-              elevation: 0,
-              centerTitle: true,
-              title: Text(
-                _getTitle(idx),
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: context.colors.textPrimary,
-                ),
-              ),
-              actions: idx == 4
-                  ? [
-                      IconButton(
-                        icon: Icon(
-                          Icons.leaderboard,
-                          color: context.colors.gold,
-                        ),
-                        tooltip: 'Season Leaderboard',
-                        onPressed: () {
-                          context.push('/leaderboard');
-                        },
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          Icons.settings_outlined,
-                          color: context.colors.textPrimary,
-                        ),
-                        tooltip: 'Settings',
-                        onPressed: () {
-                          context.push('/settings');
-                        },
-                      ),
-                    ]
-                  : null,
-            ),
-          ),
-        ),
-      ),
       body: child,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -233,8 +176,8 @@ class MainShell extends StatelessWidget {
               label: 'Create',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.people_alt_outlined),
-              activeIcon: Icon(Icons.people_alt),
+              icon: _buildConnectIcon(context, unreadCount, false),
+              activeIcon: _buildConnectIcon(context, unreadCount, true),
               label: 'Connect',
             ),
             BottomNavigationBarItem(
@@ -245,6 +188,37 @@ class MainShell extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildConnectIcon(BuildContext context, int unreadCount, bool isActive) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Icon(isActive ? Icons.people_alt : Icons.people_alt_outlined),
+        if (unreadCount > 0)
+          Positioned(
+            right: -2,
+            top: -2,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Colors.red,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                unreadCount > 9 ? '9+' : unreadCount.toString(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  height: 1,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+      ],
     );
   }
 }

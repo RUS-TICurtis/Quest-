@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-21_
+_Last Modified: 2026-09-18_
 
 ## 6. State Management Architecture (Riverpod 3.x)
 
@@ -27,8 +27,8 @@ Every feature module contains a dedicated `data/` provider managing immutable st
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Implemented Modules (Phase 2 Refactoring)
-The following modules strictly adhere to this `AsyncNotifier` + `Repository` pattern:
+## Implemented Modules (Phase 2 & 3 Refactoring)
+The following modules strictly adhere to this `AsyncNotifier`/`StateNotifier` + `Repository` pattern:
 - **Auth**: `AuthProvider` -> `AuthRepository`
 - **Chat**: `ChatProvider` -> `ChatRepository`
 - **Radar**: `RadarProvider` -> `RadarRepository`
@@ -36,5 +36,6 @@ The following modules strictly adhere to this `AsyncNotifier` + `Repository` pat
 - **Communities**: `CommunitiesProvider` -> `CommunitiesRepository`
 - **Stories**: `StoriesProvider` -> `StoriesRepository`
 - **Leaderboard**: `LeaderboardProvider` -> `LeaderboardRepository`
+- **Global Search**: `GlobalSearchNotifier` (`globalSearchProvider`) -> `GlobalSearchRepository` (`globalSearchRepositoryProvider`)
 
-Each model (e.g. `User`, `ChatMessage`, `StageState`) implements `fromJson` and `toJson` serialization for seamless Supabase interoperability.
+Each model (e.g. `User`, `ChatMessage`, `StageState`, `UserSearchResult`, `GlobalSearchResults`) implements `fromJson` and `toJson` serialization for seamless Supabase interoperability.

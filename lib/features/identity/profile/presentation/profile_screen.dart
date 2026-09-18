@@ -21,6 +21,29 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: AppBar(
+        backgroundColor: AppColors.background,
+        elevation: 0,
+        title: Text(
+          'Profile',
+          style: TextStyle(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.leaderboard, color: AppColors.gold),
+            tooltip: 'Season Leaderboard',
+            onPressed: () => context.push('/leaderboard'),
+          ),
+          IconButton(
+            icon: Icon(Icons.settings_outlined, color: AppColors.textPrimary),
+            tooltip: 'Settings',
+            onPressed: () => context.push('/settings'),
+          ),
+        ],
+      ),
       body: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 24),
         child: Column(
@@ -35,12 +58,12 @@ class ProfileScreen extends ConsumerWidget {
                       CircleAvatar(
                         radius: 48,
                         backgroundColor: AppColors.border,
-                        backgroundImage: userState.avatarUrl != null
+                        backgroundImage: (userState.avatarUrl != null && userState.avatarUrl!.isNotEmpty)
                             ? NetworkImage(userState.avatarUrl!)
                             : null as ImageProvider?,
-                        child: userState.avatarUrl == null
+                        child: (userState.avatarUrl == null || userState.avatarUrl!.isEmpty)
                             ? Text(
-                                userState.initials,
+                                userState.initials.isNotEmpty ? userState.initials : 'Q',
                                 style: TextStyle(
                                   color: AppColors.textPrimary,
                                   fontWeight: FontWeight.bold,

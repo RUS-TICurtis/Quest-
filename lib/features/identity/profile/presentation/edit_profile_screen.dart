@@ -304,10 +304,12 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ),
                 ),
                 validator: (val) {
-                  if (val == null || val.trim().isEmpty)
+                  if (val == null || val.trim().isEmpty) {
                     return 'Username cannot be empty';
-                  if (val.trim().contains(' '))
+                  }
+                  if (val.trim().contains(' ')) {
                     return 'Username cannot contain spaces';
+                  }
                   return null;
                 },
               ),

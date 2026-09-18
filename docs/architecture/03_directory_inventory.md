@@ -1,4 +1,4 @@
-_Last Modified: 2026-09-13_
+_Last Modified: 2026-09-18_
 
 ## 3. Directory & File Inventory (Exhaustive)
 
@@ -18,6 +18,17 @@ Quest/
 │   │   │   └── app_router.dart                     # GoRouter configuration & route definitions
 │   │   ├── shell/
 │   │   │   └── main_shell.dart                     # Persistent bottom/side navigation shell
+│   │   ├── services/
+│   │   │   └── app_notification_service.dart       # Device-level local notifications (3 channels: uploads/chat/general)
+│   │   ├── media/
+│   │   │   ├── media_service_gateway.dart          # Routes video/image uploads; Mux→Cloudinary fallback; UploadStatusCallback
+│   │   │   ├── media_upload_result.dart            # Upload result model (url, assetId, usedFallback)
+│   │   │   ├── media_purpose.dart                  # Enum: feed | chat | profile
+│   │   │   ├── media_compressor.dart               # Local video/image compression before upload
+│   │   │   └── providers/
+│   │   │       ├── mux_service.dart                # Mux direct-upload + fixed 2-phase polling; MuxQuotaException
+│   │   │       ├── cloudinary_service.dart         # Cloudinary file/bytes upload (fallback)
+│   │   │       └── imagekit_service.dart           # ImageKit image upload (feed images & avatars)
 │   │   └── theme/
 │   │       ├── app_colors.dart                     # Standardized design system color palette
 │   │       ├── app_theme.dart                      # ThemeData configuration (Dark/Light)
@@ -92,6 +103,13 @@ Quest/
 │       │       └── widgets/
 │       │           ├── create_event_sheet.dart     # Modal form for hosting events
 │       │           └── post_announcement_sheet.dart# Modal for broadcasting updates
+│       ├── explore/
+│       │   ├── data/
+│       │   │   ├── global_search_repository.dart   # Unified search repository across Users, Quests, Events, Guilds
+│       │   │   └── global_search_provider.dart     # Riverpod StateNotifier for search query, debouncing & archetypes
+│       │   └── presentation/
+│       │       ├── explore_screen.dart             # Discover feed with hero carousels and horizontal cards
+│       │       └── user_search_screen.dart         # Finishd-styled Global Search screen (All, Users, Quests, Events, Guilds)
 │       └── profile/
 │           ├── data/
 │           │   └── user_provider.dart              # Current user profile, XP engine & streak tracking
@@ -100,6 +118,10 @@ Quest/
 │               ├── member_profile_screen.dart      # Public peer profiles with connect action
 │               ├── edit_profile_screen.dart        # Supabase profile editor with avatar upload & bio
 │               └── settings_screen.dart            # App preferences, notifications, theme toggles
+├── supabase/
+│   └── migrations/
+│       ├── 20260918000554_unify_videos_and_phase3_schema.sql # Unified videos table, trust scores, 24h cron
+│       └── 20260918000629_phase3_mock_seed_data.sql          # Seed data for users, trust scores, quests, events
 ├── CODEBASE_DOCUMENTATION.md                       # Master technical architecture & living manual
 ├── DESIGN.md                                       # Core product design principles & specifications
 └── pubspec.yaml                                    # Manifest & package dependencies

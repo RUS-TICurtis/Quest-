@@ -18,35 +18,42 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   Widget build(BuildContext context) {
     final feedController = ref.watch(feedControllerProvider);
 
-    return ValueListenableBuilder<List<CreatorVideo>>(
-      valueListenable: feedController.videos,
-      builder: (context, videos, child) {
-        return VideoFeed<CreatorVideo>(
-          poolProvider: feedVideoPoolProvider,
-          items: videos,
-          urlBuilder: (video) {
-            if (video.muxPlaybackId != null &&
-                video.muxPlaybackId!.isNotEmpty) {
-              return 'https://stream.mux.com/${video.muxPlaybackId!}.m3u8';
-            }
-            return video.videoUrl;
-          },
-          scrollDirection: Axis.vertical,
-          onPageChanged: (index) {
-            feedController.onPageChanged(index);
-          },
-          isLoadingMore: feedController.isLoadingMore.value,
-          fallbackBuilder: (context, video, index) {
-            return Container(
-              color: Colors.black,
-              child: Center(
-                child: Text(
-                  'Video unavailable',
-                  style: TextStyle(color: Colors.white54),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        elevation: 0,
+        leading: const BackButton(color: Colors.white),
+      ),
+      body: ValueListenableBuilder<List<CreatorVideo>>(
+        valueListenable: feedController.videos,
+        builder: (context, videos, child) {
+          return VideoFeed<CreatorVideo>(
+            poolProvider: feedVideoPoolProvider,
+            items: videos,
+            urlBuilder: (video) {
+              if (video.muxPlaybackId != null &&
+                  video.muxPlaybackId!.isNotEmpty) {
+                return 'https://stream.mux.com/${video.muxPlaybackId!}.m3u8';
+              }
+              return video.videoUrl;
+            },
+            scrollDirection: Axis.vertical,
+            onPageChanged: (index) {
+              feedController.onPageChanged(index);
+            },
+            isLoadingMore: feedController.isLoadingMore.value,
+            fallbackBuilder: (context, video, index) {
+              return Container(
+                color: Colors.black,
+                child: const Center(
+                  child: Text(
+                    'Video unavailable',
+                    style: TextStyle(color: Colors.white54),
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
           overlayBuilder: (context, video, index) {
             return Stack(
               children: [
@@ -138,7 +145,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           },
         );
       },
-    );
+    ));
   }
 
   Widget _buildActionIcon(IconData icon, String label, {VoidCallback? onTap}) {

@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-05_
+_Last Modified: 2026-09-18_
 
 # 10. External Services & APIs (Free-Tier Optimized)
 
@@ -46,6 +46,25 @@ For out-of-app alerts (e.g., direct messages, event reminders).
 * **Services**: Firebase Crashlytics & Google Analytics for Firebase.
 * **Use Case**: Tracking fatal/non-fatal app crashes and tracking screen views.
 * **Free Tier Limits**: 100% Free indefinitely.
+
+## 6. Video Streaming: Mux + Cloudinary Fallback
+* **Primary**: Mux direct-upload → adaptive HLS streaming via `stream.mux.com/<id>.m3u8`.
+  * Fixed polling: polls `/video/v1/uploads/$uploadId` first to resolve `asset_id` before polling `/video/v1/assets/$assetId`.
+  * Throws `MuxQuotaException` on HTTP 402/429 for clean gateway fallback.
+* **Fallback**: Cloudinary (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` in `.env`).
+  * `MediaServiceGateway` automatically routes to Cloudinary when Mux fails, is null, or quota is exceeded.
+  * `MediaUploadResult.usedFallback == true` signals the caller (share screen, notification) that Cloudinary was used.
+* **Callback**: `UploadStatusCallback` in `MediaServiceGateway` feeds human-readable stage messages to the UI.
+
+## 7. Device Notifications: `flutter_local_notifications`
+* **Package**: `flutter_local_notifications: ^18.0.1`
+* **Service**: `lib/core/services/app_notification_service.dart`
+* **Channels**:
+  * `quest_uploads` – upload progress (ongoing) and completion/failure alerts.
+  * `quest_chat` – incoming message alerts.
+  * `quest_general` – quest events, level-ups, general updates.
+* **Permissions**: `POST_NOTIFICATIONS` + `VIBRATE` added to `AndroidManifest.xml`.
+* **Initialization**: Called once in `main()` before `runApp`.
 
 ## 6. Email Delivery: Resend
 For sending transactional emails (Event tickets, Guild invitations, Welcome emails).

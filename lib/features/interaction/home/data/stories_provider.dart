@@ -175,6 +175,7 @@ class StoryItem {
       if (authorAvatar != null && authorAvatar!.isNotEmpty)
         'authorAvatar': authorAvatar,
       if (communityName.isNotEmpty) 'communityName': communityName,
+      'created_at': createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
     };
   }
 

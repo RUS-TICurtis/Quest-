@@ -11,6 +11,7 @@ import 'package:quest/core/theme/app_colors.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 import 'package:quest/core/media/media_service_gateway.dart';
 import 'package:quest/core/media/media_purpose.dart';
+import 'package:quest/core/services/app_notification_service.dart';
 import 'package:quest/features/interaction/home/data/stories_provider.dart';
 
 class ShareExperienceScreen extends ConsumerStatefulWidget {
@@ -27,6 +28,8 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
   bool _shareToFeed = false;
   bool _shareToCommunities = false;
   bool _isUploading = false;
+  String _uploadStatus = 'Preparing…';
+  bool _usedFallback = false;
   final TextEditingController _captionController = TextEditingController();
   VideoPlayerController? _videoPlayerController;
 
@@ -415,7 +418,15 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                         HapticFeedback.heavyImpact();
                         setState(() {
                           _isUploading = true;
+                          _uploadStatus = 'Preparing…';
+                          _usedFallback = false;
                         });
+
+                        void updateStatus(String msg) {
+                          if (mounted) setState(() => _uploadStatus = msg);
+                          AppNotificationService().showUploadProgress(msg);
+                        }
+
 
                         try {
                           String? mediaUrl;
@@ -442,9 +453,17 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                                       await MediaServiceGateway.uploadVideoBytes(
                                         bytes,
                                         MediaPurpose.feed,
+                                        onStatus: updateStatus,
                                       );
-                                  muxPlaybackId = result?.url;
-                                  muxAssetId = result?.assetId;
+                                  if (result != null) {
+                                    _usedFallback = result.usedFallback;
+                                    if (result.usedFallback) {
+                                      mediaUrl = result.url;
+                                    } else {
+                                      muxPlaybackId = result.url;
+                                      muxAssetId = result.assetId;
+                                    }
+                                  }
                                 } else {
                                   mediaUrl =
                                       await MediaServiceGateway.uploadImageBytes(
@@ -464,10 +483,19 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                                       await MediaServiceGateway.uploadVideo(
                                         file,
                                         MediaPurpose.feed,
+                                        onStatus: updateStatus,
                                       );
-                                  muxPlaybackId = result?.url;
-                                  muxAssetId = result?.assetId;
+                                  if (result != null) {
+                                    _usedFallback = result.usedFallback;
+                                    if (result.usedFallback) {
+                                      mediaUrl = result.url;
+                                    } else {
+                                      muxPlaybackId = result.url;
+                                      muxAssetId = result.assetId;
+                                    }
+                                  }
                                 } else {
+                                  updateStatus('Uploading image…');
                                   mediaUrl =
                                       await MediaServiceGateway.uploadImage(
                                         file,
@@ -498,7 +526,11 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                               muxPlaybackId: muxPlaybackId,
                               videoUrl: muxPlaybackId != null
                                   ? 'https://stream.mux.com/$muxPlaybackId.m3u8'
-                                  : (mediaUrl != null && _isVideo(mediaUrl)
+                                  : (mediaUrl != null &&
+                                          (mediaUrl.endsWith('.mp4') ||
+                                              mediaUrl.endsWith('.mov') ||
+                                              mediaUrl.contains('cloudinary') ||
+                                              _isVideo(mediaUrl))
                                         ? mediaUrl
                                         : null),
                               ringColor: AppColors.questBlue,
@@ -523,11 +555,12 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                             final currentUser = supabase.auth.currentUser;
                             if (currentUser != null) {
                               try {
-                                await supabase.from('creator_videos').insert({
+                                await supabase.from('feed_videos').insert({
                                   'creator_id': currentUser.id,
                                   'video_url': muxPlaybackId != null
                                       ? 'https://stream.mux.com/$muxPlaybackId.m3u8'
                                       : (mediaUrl ?? ''),
+                                  'is_cloudinary': _usedFallback,
                                   'thumbnail_url':
                                       mediaUrl ??
                                       (muxPlaybackId != null
@@ -565,17 +598,24 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                             }
                           }
 
+                          await AppNotificationService().showUploadComplete(
+                            usedFallback: _usedFallback,
+                          );
+
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: const Text(
-                                'Experience Shared Successfully!',
+                              content: Text(
+                                _usedFallback
+                                    ? '✅ Shared via Cloudinary backup!'
+                                    : '✅ Experience Shared!',
                               ),
                               backgroundColor: context.colors.emerald,
                             ),
                           );
                           context.go('/home');
                         } catch (e) {
+                          await AppNotificationService().showUploadFailed();
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
@@ -592,13 +632,31 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                         }
                       },
                 child: _isUploading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
+                    ? Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Flexible(
+                            child: Text(
+                              _uploadStatus,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       )
                     : const Text(
                         'Share Now',

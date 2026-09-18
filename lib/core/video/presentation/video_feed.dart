@@ -15,7 +15,7 @@ class VideoFeed<T> extends ConsumerStatefulWidget {
   final void Function(int index)? onPageChanged;
   final int initialIndex;
   final bool isLoadingMore;
-  final NotifierProvider<FeedVideoPool, void> poolProvider;
+  final NotifierProvider<FeedVideoPool, int> poolProvider;
 
   const VideoFeed({
     super.key,
@@ -52,6 +52,7 @@ class _VideoFeedState<T> extends ConsumerState<VideoFeed<T>> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(widget.poolProvider);
     final pool = ref.watch(widget.poolProvider.notifier);
 
     // Sync URLs to pool
@@ -86,7 +87,6 @@ class _VideoFeedState<T> extends ConsumerState<VideoFeed<T>> {
         child: PageView.builder(
           controller: _pageController,
           scrollDirection: widget.scrollDirection,
-          physics: const BouncingScrollPhysics(),
           itemCount: itemCount,
           onPageChanged: (index) {
             widget.onPageChanged?.call(index);

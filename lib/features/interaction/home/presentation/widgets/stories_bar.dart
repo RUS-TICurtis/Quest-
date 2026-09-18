@@ -16,10 +16,7 @@ class StoriesBar extends ConsumerWidget {
     final allStories = storiesAsync.value ?? [];
 
     final myStories = allStories
-        .where(
-          (s) =>
-              s.isMe || s.communityName == 'My Story' || s.authorName == 'You',
-        )
+        .where((s) => s.isMe)
         .toList();
     final otherStories = allStories
         .where((s) => !myStories.contains(s))

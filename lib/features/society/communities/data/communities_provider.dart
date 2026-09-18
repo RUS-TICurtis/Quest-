@@ -12,6 +12,7 @@ class Community {
   final Color accentColor;
   final IconData icon;
   final List<String> tags;
+  final String? bannerUrl;
 
   Community({
     required this.id,
@@ -22,6 +23,7 @@ class Community {
     this.accentColor = AppColors.questBlue,
     this.icon = Icons.groups,
     this.tags = const ['General', 'Networking'],
+    this.bannerUrl,
   });
 
   Community copyWith({
@@ -33,6 +35,7 @@ class Community {
     Color? accentColor,
     IconData? icon,
     List<String>? tags,
+    String? bannerUrl,
   }) {
     return Community(
       id: id ?? this.id,
@@ -43,6 +46,7 @@ class Community {
       accentColor: accentColor ?? this.accentColor,
       icon: icon ?? this.icon,
       tags: tags ?? this.tags,
+      bannerUrl: bannerUrl ?? this.bannerUrl,
     );
   }
 
@@ -60,6 +64,7 @@ class Community {
       tags:
           (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           ['General'],
+      bannerUrl: json['bannerUrl'] as String?,
     );
   }
 
@@ -93,6 +98,7 @@ class Community {
       'accentColor': accentColor.toARGB32(),
       'icon': icon.codePoint,
       'tags': tags,
+      'bannerUrl': bannerUrl,
     };
   }
 }

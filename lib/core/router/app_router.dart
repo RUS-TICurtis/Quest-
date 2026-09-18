@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/features/identity/auth/data/auth_provider.dart';
@@ -44,10 +44,13 @@ final _routerNotifierProvider = Provider<_RouterNotifier>((ref) {
   return _RouterNotifier(ref);
 });
 
+final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+
 final appRouterProvider = Provider<GoRouter>((ref) {
   final notifier = ref.read(_routerNotifierProvider);
 
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     // refreshListenable ensures redirect fires on every auth state change,
     // including spontaneous session expiry and sign-out, without recreating the router.
@@ -140,6 +143,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'search',
                 name: 'user_search',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) => UserSearchScreen(),
               ),
             ],
@@ -157,11 +161,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: 'user_discovery',
                 name: 'user_discovery',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) => UserDiscoveryScreen(),
               ),
               GoRoute(
                 path: ':id',
                 name: 'chat',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) =>
                     ChatScreen(threadId: state.pathParameters['id'] ?? '1'),
               ),
@@ -175,6 +181,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: ':id',
                 name: 'member_profile',
+                parentNavigatorKey: _rootNavigatorKey,
                 builder: (context, state) => MemberProfileScreen(
                   memberId: state.pathParameters['id'] ?? 'u_curr',
                 ),
@@ -221,7 +228,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => SettingsScreen(),
       ),
       GoRoute(
-        path: '/profile/edit',
+        path: '/edit-profile',
         name: 'edit_profile',
         builder: (context, state) => EditProfileScreen(),
       ),

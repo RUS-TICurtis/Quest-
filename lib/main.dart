@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 import 'core/env/env.dart';
+import 'core/services/app_notification_service.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/storage/local_storage_service.dart';
@@ -17,6 +18,9 @@ void main() async {
     url: Env.supabaseUrl,
     publishableKey: Env.supabaseAnonKey,
   );
+
+  // Initialize device notification channels
+  await AppNotificationService().initialize();
 
   final sharedPreferences = await SharedPreferences.getInstance();
 

@@ -3,12 +3,40 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+import 'package:quest/features/interaction/explore/presentation/widgets/discover_components.dart';
 
 class ExploreScreen extends ConsumerWidget {
   const ExploreScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final heroItems = [
+      HeroItem(
+        title: 'Global Game Jam 2026',
+        subtitle: 'Join thousands of developers in a 48-hour coding sprint.',
+        imageUrl: 'https://images.unsplash.com/photo-1552820728-8b83bb6b773f?auto=format&fit=crop&w=800&q=80',
+        tag: 'Event',
+        tagColor: context.colors.amber,
+        route: '/events/1',
+      ),
+      HeroItem(
+        title: 'Design Systems',
+        subtitle: 'A community for UI/UX designers building scalable systems.',
+        imageUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=800&q=80',
+        tag: 'Community',
+        tagColor: context.colors.auroraPurple,
+        route: '/communities/1',
+      ),
+      HeroItem(
+        title: 'First Steps',
+        subtitle: 'Complete your profile and join your first community.',
+        imageUrl: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=800&q=80',
+        tag: 'Quest',
+        tagColor: context.colors.emerald,
+        route: '/quests/1',
+      ),
+    ];
+
     return Scaffold(
       backgroundColor: context.colors.background,
       body: CustomScrollView(
@@ -31,162 +59,100 @@ class ExploreScreen extends ConsumerWidget {
             floating: true,
           ),
           SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Quick Actions (Horizontal Chips)
-                  SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 16),
+                
+                // Hero Slideshow Section
+                DiscoverHeroSlideshow(items: heroItems),
+                
+                const SizedBox(height: 32),
+
+                // Quick Actions (Horizontal Chips)
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      _buildQuickAction(context, 'Leaderboard', Icons.leaderboard, '/leaderboard'),
+                      _buildQuickAction(context, 'Radar', Icons.radar, '/radar'),
+                      _buildQuickAction(context, 'Stage', Icons.mic, '/stage/1'),
+                      _buildQuickAction(context, 'Organization', Icons.business, '/organization'),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // Featured Communities Section
+                _buildSectionHeader(
+                  context,
+                  title: 'Featured Communities',
+                  onSeeAll: () => context.push('/communities'),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 180,
+                  child: ListView(
                     scrollDirection: Axis.horizontal,
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      children: [
-                        _buildQuickAction(
-                          context,
-                          'Leaderboard',
-                          Icons.leaderboard,
-                          '/leaderboard',
-                        ),
-                        _buildQuickAction(
-                          context,
-                          'Radar',
-                          Icons.radar,
-                          '/radar',
-                        ),
-                        _buildQuickAction(
-                          context,
-                          'Stage',
-                          Icons.mic,
-                          '/stage/1',
-                        ),
-                        _buildQuickAction(
-                          context,
-                          'Organization',
-                          Icons.business,
-                          '/organization',
-                        ),
-                      ],
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    children: [
+                      DiscoverHorizontalCard(
+                        title: 'Flutter Builders',
+                        subtitle: 'Technology',
+                        imageUrl: 'https://images.unsplash.com/photo-1617042375876-a13e36732a30?auto=format&fit=crop&w=400&q=80',
+                        onTap: () => context.push('/communities/1'),
+                      ),
+                      DiscoverHorizontalCard(
+                        title: 'Startup Founders',
+                        subtitle: 'Business',
+                        imageUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32d7?auto=format&fit=crop&w=400&q=80',
+                        onTap: () => context.push('/communities/2'),
+                      ),
+                      DiscoverHorizontalCard(
+                        title: 'Design Systems',
+                        subtitle: 'Design',
+                        imageUrl: 'https://images.unsplash.com/photo-1561070791-2526d30994b5?auto=format&fit=crop&w=400&q=80',
+                        onTap: () => context.push('/communities/3'),
+                      ),
+                    ],
                   ),
+                ),
 
-                  SizedBox(height: 32),
+                const SizedBox(height: 32),
 
-                  // Featured Communities Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Featured Communities',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: context.colors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        TextButton(
-                          onPressed: () => context.push('/communities'),
-                          child: Text(
-                            'See All',
-                            style: TextStyle(color: context.colors.questBlue),
-                          ),
-                        ),
-                      ],
-                    ),
+                // Trending Events Section
+                _buildSectionHeader(
+                  context,
+                  title: 'Trending Events',
+                  onSeeAll: () => context.push('/events'),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 180,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    children: [
+                      DiscoverHorizontalCard(
+                        title: 'Tech Meetup 2026',
+                        subtitle: 'San Francisco',
+                        imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=400&q=80',
+                        onTap: () => context.push('/events/1'),
+                      ),
+                      DiscoverHorizontalCard(
+                        title: 'Hackathon Finals',
+                        subtitle: 'New York',
+                        imageUrl: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=400&q=80',
+                        onTap: () => context.push('/events/2'),
+                      ),
+                    ],
                   ),
-                  SizedBox(height: 12),
-                  SizedBox(
-                    height: 160,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      children: [
-                        _buildHorizontalCard(
-                          context,
-                          'Flutter Builders',
-                          'Technology',
-                          Icons.phone_android,
-                          context.colors.questBlue,
-                          '/communities/1',
-                        ),
-                        _buildHorizontalCard(
-                          context,
-                          'Startup Founders',
-                          'Business',
-                          Icons.rocket_launch,
-                          context.colors.emerald,
-                          '/communities/2',
-                        ),
-                        _buildHorizontalCard(
-                          context,
-                          'Design Systems',
-                          'Design',
-                          Icons.palette,
-                          context.colors.auroraPurple,
-                          '/communities/3',
-                        ),
-                      ],
-                    ),
-                  ),
+                ),
 
-                  SizedBox(height: 32),
-
-                  // Trending Events Section
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Trending Events',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                color: context.colors.textPrimary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                        ),
-                        TextButton(
-                          onPressed: () => context.push('/events'),
-                          child: Text(
-                            'See All',
-                            style: TextStyle(color: context.colors.questBlue),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  SizedBox(
-                    height: 160,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: 12),
-                      children: [
-                        _buildHorizontalCard(
-                          context,
-                          'Tech Meetup 2026',
-                          'Networking',
-                          Icons.event,
-                          context.colors.amber,
-                          '/events/1',
-                        ),
-                        _buildHorizontalCard(
-                          context,
-                          'Hackathon Finals',
-                          'Competition',
-                          Icons.emoji_events,
-                          context.colors.crimson,
-                          '/events/2',
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  SizedBox(height: 40),
-                ],
-              ),
+                const SizedBox(height: 40),
+              ],
             ),
           ),
         ],
@@ -194,12 +160,32 @@ class ExploreScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickAction(
-    BuildContext context,
-    String label,
-    IconData icon,
-    String route,
-  ) {
+  Widget _buildSectionHeader(BuildContext context, {required String title, required VoidCallback onSeeAll}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: context.colors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
+          TextButton(
+            onPressed: onSeeAll,
+            child: Text(
+              'See All',
+              style: TextStyle(color: context.colors.questBlue),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickAction(BuildContext context, String label, IconData icon, String route) {
     return Padding(
       padding: const EdgeInsets.only(right: 12.0),
       child: ActionChip(
@@ -211,71 +197,6 @@ class ExploreScreen extends ConsumerWidget {
           HapticFeedback.lightImpact();
           context.push(route);
         },
-      ),
-    );
-  }
-
-  Widget _buildHorizontalCard(
-    BuildContext context,
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-    String route,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.lightImpact();
-        context.push(route);
-      },
-      child: Container(
-        width: 140,
-        margin: EdgeInsets.symmetric(horizontal: 4),
-        padding: EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.colors.card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: context.colors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Container(
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: context.colors.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: context.colors.textSecondary,
-                    fontSize: 12,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     );
   }

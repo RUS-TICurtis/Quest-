@@ -173,7 +173,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   void _showSignOutDialog(BuildContext context) {
-    final router = GoRouter.of(context);
     final colors = context.colors;
 
     showDialog(
@@ -205,9 +204,6 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Navigator.pop(ctx);
               HapticFeedback.mediumImpact();
               await ref.read(authProvider.notifier).signOut();
-              if (mounted) {
-                router.go('/landing');
-              }
             },
             child: const Text(
               'Sign Out',
@@ -369,7 +365,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     onPressed: () {
                       HapticFeedback.lightImpact();
-                      context.push('/profile/edit');
+                      context.push('/edit-profile');
                     },
                   ),
                 ),

@@ -236,6 +236,7 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
   @override
   Widget build(BuildContext context) {
     final stories = _getStories();
+    ref.watch(storiesVideoPoolProvider);
     final pool = ref.watch(storiesVideoPoolProvider.notifier);
 
     if (stories.isEmpty || _currentIndex >= stories.length) {
@@ -715,17 +716,28 @@ class _StoryViewerModalState extends ConsumerState<StoryViewerModal>
                         letterSpacing: 1.5,
                       ),
                     ),
-                    SizedBox(height: 12),
-                    Text(
-                      '"${story.caption}"',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        height: 1.4,
+                    const SizedBox(height: 12),
+                    if (story.caption.trim().isNotEmpty)
+                      Text(
+                        '"${story.caption}"',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          height: 1.4,
+                        ),
+                      )
+                    else
+                      Text(
+                        'No caption',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                        ),
                       ),
-                    ),
                   ],
                 ),
               ),

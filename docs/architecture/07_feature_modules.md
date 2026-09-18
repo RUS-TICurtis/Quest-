@@ -1,4 +1,4 @@
-_Last Modified: 2026-09-13_
+_Last Modified: 2026-09-18_
 
 # 7. Feature Modules
 
@@ -17,6 +17,7 @@ _Last Modified: 2026-09-13_
 | **Leaderboard** | `lib/features/leaderboard/` | 🟡 Partial | `leaderboard` ✅, guilds are mock |
 | **Organization** | `lib/features/organization/` | 🟡 Scaffold | Host/admin portal |
 | **Create** | `lib/features/interaction/create/` | ✅ Complete | Mux, Cloudinary, `stories`, `creator_videos`, `community_posts` |
+| **Explore / Discover** | `lib/features/interaction/explore/` | ✅ Complete | Finishd UI/UX Port + Global Search Cards System |
 
 ## Module Structure (per feature)
 
@@ -44,6 +45,7 @@ lib/features/<feature>/
 | `radarProvider` | `AsyncNotifier<RadarState>` | `selectHub()`, `checkInToHub()` |
 | `leaderboardProvider` | `AsyncNotifier<LeaderboardState>` | `setTab()`, `setArchetype()` |
 | `storiesProvider` | `AsyncNotifier<List<StoryItem>>` | `addStory()`, `deleteStory()`, `markAsSeen()` |
+| `globalSearchProvider` | `StateNotifier<GlobalSearchState>` | `onQueryChanged()`, `setArchetypeFilter()`, `clearSearch()`, `loadTrending()` |
 
 ## Telegram Replica Messaging Engine
 
@@ -57,6 +59,7 @@ The messaging architecture is built as a **1:1 Telegram replica** powered by `v_
   - Actor-aware emoji reaction pills (`VBubbleReaction`) with quick toggle.
   - In-chat search with real-time character-level substring highlighting (`searchQuery`).
   - Category tabs on `MessagesScreen` (*All, Direct, Groups, Channels, Bots*), unread count pills, and floating action pencil button.
+- **Input System**: Features a port of Finishd's WhatsApp-style input field (`WhatsAppTextField`) with integrated attachment sheets rendered below the input box and a fully themed, persistent emoji picker (`AppEmojiPicker`).
 
 ## Media & WhatsApp-Style Status Updates Engine
 
@@ -134,4 +137,18 @@ XP and leveling logic lives entirely in `UserNotifier`:
 - Daily quests can be toggled on/off (XP is reverted on un-toggle)
 - Streak is tracked as consecutive days with at least one quest completed
 - Level-up triggers a dialog via `LevelUpDialog` widget (`lib/features/home/presentation/widgets/level_up_dialog.dart`)
+
+## Global Search & Discovery System (Phase 3 Finishd Port)
+
+The Global Search architecture (`GlobalSearchScreen` / `UserSearchScreen` at `/explore/search`) delivers unified multi-entity discovery powered by Finishd's design language:
+- **Glassmorphic App Bar**: `BackdropFilter` (sigma 20) with blurred translucent background, search input, clear button, and close action.
+- **5-Tab Filter System**:
+  - `ALL`: Categorized feed showing top matches across Users, Quests, Events, and Guilds with "See All" drilldowns.
+  - `USERS`: User cards with profile avatar, `@username`, archetype chips, trust score badges (e.g. Platinum 95.5), and quick Chat/Profile actions.
+  - `QUESTS`: Gamified challenge cards with XP reward badges and status indicators.
+  - `EVENTS`: Rich visual cards with cover imagery, date/time chips, category badges, location, and attendee counters.
+  - `GUILDS`: Community cards with category badges, member counts, and descriptions.
+- **Archetype Filtering**: Horizontal filter chip bar under the Users tab supporting dynamic filtering across `All`, `Adventurer`, `Leader`, `Organizer`, `Creator`, `Connector`, and `Strategist`.
+- **Pre-Search Trending**: Populates dynamic "Trending on Quest" items before query execution so the screen is never empty.
+- **Unified Videos Schema**: Centralized `videos` table in Supabase supporting multiple archetypes (`feed`, `story`, `chat`, `community`, `event`, `vlog`) with `trust_score` and hourly `pg_cron` 24h story cleanup.
 

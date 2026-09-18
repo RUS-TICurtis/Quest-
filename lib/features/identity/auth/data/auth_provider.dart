@@ -45,7 +45,14 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   Future<void> signOut() async {
-    await _repository.signOut();
+    try {
+      await _repository.signOut();
+    } catch (e) {
+      // Ignore Supabase network errors on sign out
+    } finally {
+      // Guarantee local state reflects sign out so router redirects
+      state = state.copyWith(user: null, isLoading: false);
+    }
   }
 
   Future<void> signInWithEmail(String email, String password) async {

@@ -1,6 +1,16 @@
 class MediaUploadResult {
-  final String url; // Could be direct URL or Mux Playback ID
-  final String? assetId; // Required for deleting from Mux
+  /// Could be a Mux Playback ID or a full Cloudinary/direct HTTPS URL.
+  final String url;
 
-  MediaUploadResult({required this.url, this.assetId});
+  /// Mux asset ID – required for deletion. Null when Cloudinary fallback is used.
+  final String? assetId;
+
+  /// True when the upload was served by Cloudinary instead of Mux.
+  final bool usedFallback;
+
+  MediaUploadResult({
+    required this.url,
+    this.assetId,
+    this.usedFallback = false,
+  });
 }
