@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:quest/features/identity/auth/data/auth_repository.dart';
+import 'package:quest/features/identity/profile/data/user_provider.dart';
 
 class AuthState {
   final User? user;
@@ -11,9 +12,9 @@ class AuthState {
 
   bool get isAuthenticated => user != null;
 
-  AuthState copyWith({User? user, bool? isLoading}) {
+  AuthState copyWith({User? user, bool? isLoading, bool clearUser = false}) {
     return AuthState(
-      user: user ?? this.user,
+      user: clearUser ? null : (user ?? this.user),
       isLoading: isLoading ?? this.isLoading,
     );
   }
@@ -50,8 +51,10 @@ class AuthNotifier extends Notifier<AuthState> {
     } catch (e) {
       // Ignore Supabase network errors on sign out
     } finally {
+      // Invalidate userProvider so it clears the local user state
+      ref.invalidate(userProvider);
       // Guarantee local state reflects sign out so router redirects
-      state = state.copyWith(user: null, isLoading: false);
+      state = state.copyWith(clearUser: true, isLoading: false);
     }
   }
 

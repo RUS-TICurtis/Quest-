@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:quest/features/identity/auth/data/auth_provider.dart';
 import 'package:quest/features/identity/profile/data/user_repository.dart';
 import 'package:quest/core/storage/local_storage_service.dart';
 
@@ -205,8 +206,9 @@ class UserNotifier extends AsyncNotifier<UserState> {
   @override
   Future<UserState> build() async {
     _repository = ref.watch(userRepositoryProvider);
-    // Read the authenticated user's ID from Supabase — no magic strings.
-    final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+    // Watch authProvider so the user profile re-fetches when authentication state changes
+    final authState = ref.watch(authProvider);
+    final userId = authState.user?.id ?? '';
     var baseState = await _repository.getUser(userId);
 
     // Apply local offline storage if available

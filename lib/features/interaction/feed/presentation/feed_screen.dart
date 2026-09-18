@@ -5,6 +5,7 @@ import 'package:quest/core/video/presentation/video_feed.dart';
 import 'package:quest/core/video/feed_video_pool.dart';
 import 'package:quest/shared/models/creator_video.dart';
 import 'package:quest/features/interaction/feed/data/feed_provider.dart';
+import 'package:quest/shared/widgets/expandable_caption.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -74,14 +75,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        video.description,
+                      ExpandableCaption(
+                        text: video.description,
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 14,
                         ),
                         maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -100,9 +100,13 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
                           // Backend logic to like video
                           try {
                             final supabase = Supabase.instance.client;
-                            await supabase.from('video_likes').insert({
+                            await supabase.functions.invoke(
+                              'interact-video',
+                              body: {
                                 'video_id': video.id,
-                            });
+                                'action': 'like',
+                              },
+                            );
                           } catch (_) {}
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(

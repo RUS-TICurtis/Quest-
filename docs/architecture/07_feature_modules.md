@@ -4,20 +4,24 @@ _Last Modified: 2026-09-18_
 
 ## Feature Inventory
 
-| Feature | Path | Status | Backend |
-|---|---|---|---|
-| **Auth** | `lib/features/auth/` | ✅ Complete | Supabase Auth |
-| **Profile / XP** | `lib/features/identity/profile/` | ✅ Complete (UI Refactored) | `profiles`, `daily_quests` tables |
-| **Home / Stories** | `lib/features/interaction/home/` | ✅ Complete | `stories` table (`createdAt`, `isSeen`, `mux_playback_id`) with local fallback |
-| **Events** | `lib/features/events/` | ✅ Complete | `events` table |
-| **Communities** | `lib/features/communities/` | ✅ Complete | `communities` table |
-| **Messaging / Chat** | `lib/features/interaction/messaging/` | ✅ Complete (1:1 Telegram Replica) | Supabase Realtime + Offline Outbox + `v_chat_bubbles 2.2.0` Engine |
-| **Stage (Audio)** | `lib/features/stage/` | 🟡 Mock Data | Agora/LiveKit not yet integrated |
-| **Radar** | `lib/features/radar/` | 🟡 Partial | `radar_nodes` ✅, `radar_members` pending PostGIS |
-| **Leaderboard** | `lib/features/leaderboard/` | 🟡 Partial | `leaderboard` ✅, guilds are mock |
-| **Organization** | `lib/features/organization/` | 🟡 Scaffold | Host/admin portal |
-| **Create** | `lib/features/interaction/create/` | ✅ Complete | Mux, Cloudinary, `stories`, `creator_videos`, `community_posts` |
-| **Explore / Discover** | `lib/features/interaction/explore/` | ✅ Complete | Finishd UI/UX Port + Global Search Cards System |
+| Feature | Path | Domain | Status | Backend |
+|---|---|---|---|---|
+| **Auth & OAuth 2.1** | `lib/features/identity/auth/` | Identity | ✅ Complete | Supabase Auth + Google Native + OAuth 2.1 Server |
+| **Profile / XP** | `lib/features/identity/profile/` | Identity | ✅ Complete | `profiles`, `daily_quests` tables |
+| **Leaderboard** | `lib/features/identity/leaderboard/` | Identity | ✅ Complete | `leaderboard` table & season rankings |
+| **Home / Stories** | `lib/features/interaction/home/` | Interaction | ✅ Complete | `stories` & `videos` tables, Mux/Cloudinary |
+| **Video Feed** | `lib/features/interaction/feed/` | Interaction | ✅ Complete | `videos` table, `FeedVideoPool`, TikTok scroll |
+| **Explore & Global Search** | `lib/features/interaction/explore/` | Interaction | ✅ Complete | Multi-entity repository & Glassmorphic UI |
+| **Connect & User Discovery** | `lib/features/interaction/connect/` | Interaction | ✅ Complete | Archetype matching, trust score badges |
+| **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Camera, Mux, Cloudinary, gateway upload |
+| **Notifications** | `lib/features/interaction/notifications/` | Interaction | ✅ Complete | In-app alerts, interactive notification feed |
+| **Messaging / Chat** | `lib/features/interaction/messaging/` | Interaction | ✅ Complete | Supabase Realtime + Hive outbox + `v_chat_bubbles 2.2.0` |
+| **Stage (Audio)** | `lib/features/interaction/stage/` | Interaction | 🟡 Mock Data | Sinusoidal physics canvas, Agora/LiveKit pending |
+| **Communities / Guilds** | `lib/features/society/communities/` | Society | ✅ Complete | `communities`, `community_posts` |
+| **Events** | `lib/features/society/events/` | Society | ✅ Complete | `events` table & RSVP state |
+| **Organization Portal** | `lib/features/society/organization/` | Society | 🟡 Scaffold | Host & guild management dashboards |
+| **Radar (Proximity)** | `lib/features/world/radar/` | World | 🟡 Partial | `radar_nodes` HUD canvas, PostGIS pending |
+| **Commerce & Wallet** | `lib/features/economy/` | Economy | 🟡 Prototype | Models & state providers scaffolded |
 
 ## Module Structure (per feature)
 

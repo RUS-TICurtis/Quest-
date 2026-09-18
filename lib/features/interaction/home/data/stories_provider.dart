@@ -175,7 +175,7 @@ class StoryItem {
       if (authorAvatar != null && authorAvatar!.isNotEmpty)
         'authorAvatar': authorAvatar,
       if (communityName.isNotEmpty) 'communityName': communityName,
-      'created_at': createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
+      'createdAt': createdAt?.toIso8601String() ?? DateTime.now().toIso8601String(),
     };
   }
 
@@ -192,18 +192,22 @@ class StoriesNotifier extends AsyncNotifier<List<StoryItem>> {
   }
 
   Future<void> addStory(StoryItem newStory) async {
-    final currentList = state.value ?? [];
-    // Optimistically update Riverpod state immediately
-    state = AsyncData([
-      newStory,
-      ...currentList.where((s) => s.id != newStory.id),
-    ]);
+    addStoryLocally(newStory);
 
     try {
       await _repository.addStory(newStory);
     } catch (err) {
       debugPrint('[StoriesNotifier] addStory persistence notice: $err');
     }
+  }
+
+  void addStoryLocally(StoryItem newStory) {
+    final currentList = state.value ?? [];
+    // Optimistically update Riverpod state immediately
+    state = AsyncData([
+      newStory,
+      ...currentList.where((s) => s.id != newStory.id),
+    ]);
   }
 
   Future<void> deleteStory(String storyId) async {

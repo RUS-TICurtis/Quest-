@@ -52,17 +52,32 @@ class SupabaseUserRepository implements UserRepository {
     final userId = _supabase.auth.currentUser?.id;
     if (userId == null) return;
 
-    // Update profile (exclude quests, handled separately)
-    final profileData = user.toJson();
-    profileData.remove('joinedCommunityIds');
-    profileData.remove('dailyQuests');
-    profileData.remove('avatarUrl');
-    profileData['id'] = userId;
-    if (user.avatarUrl != null) {
-      profileData['avatar_url'] = user.avatarUrl;
-    }
+    // Build profile update — write all known column variants for resilience
+    // across the split migration eras. See docs/architecture/11_database_schema_reference.md
+    // for the architecture decision on intentional dual-column design.
+    final profileData = <String, dynamic>{
+      'id': userId,
+      // Name — camelCase (20260805 migration) + snake_case (20260821 migration)
+      'name': user.name,
+      'full_name': user.name,
+      // Avatar — camelCase (20260828 migration) + snake_case (20260821 migration)
+      // ARCHITECTURE DECISION: Both columns kept intentionally — see schema reference doc
+      'avatarUrl': user.avatarUrl,
+      'avatar_url': user.avatarUrl,
+      // Standard snake_case columns
+      'username': user.username,
+      'bio': user.bio,
+    };
 
-    await _supabase.from('profiles').upsert(profileData);
+    try {
+      await _supabase.functions.invoke(
+        'update-profile',
+        body: profileData,
+      );
+    } catch (_) {
+      // Fallback to direct upsert in case of edge function unavailability
+      await _supabase.from('profiles').upsert(profileData);
+    }
 
     // Upsert daily quests. Server generates UUID if quest has a non-UUID id
     // by omitting the id field on insert. On subsequent saves, the server-

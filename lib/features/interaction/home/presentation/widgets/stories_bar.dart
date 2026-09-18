@@ -3,7 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/features/interaction/home/data/stories_provider.dart';
-import 'story_viewer_modal.dart';
+
+import 'package:quest/features/interaction/home/presentation/widgets/story_viewer_modal_v2.dart';
 import 'my_status_modal.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 
@@ -19,8 +20,19 @@ class StoriesBar extends ConsumerWidget {
         .where((s) => s.isMe)
         .toList();
     final otherStories = allStories
-        .where((s) => !myStories.contains(s))
+        .where((s) => !s.isMe)
         .toList();
+
+    // Group other stories by author so a user only appears once in the circles
+    final List<StoryItem> groupedOtherStories = [];
+    final seenAuthors = <String>{};
+    for (var s in otherStories) {
+      if (!seenAuthors.contains(s.authorName)) {
+        groupedOtherStories.add(s);
+        seenAuthors.add(s.authorName);
+      }
+    }
+    
     final hasMyStories = myStories.isNotEmpty;
 
     return SizedBox(
@@ -28,7 +40,7 @@ class StoriesBar extends ConsumerWidget {
       child: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         scrollDirection: Axis.horizontal,
-        itemCount: otherStories.length + 1,
+        itemCount: groupedOtherStories.length + 1,
         separatorBuilder: (_, _) => const SizedBox(width: 14),
         itemBuilder: (context, index) {
           if (index == 0) {
@@ -127,15 +139,18 @@ class StoriesBar extends ConsumerWidget {
             );
           }
 
-          final story = otherStories[index - 1];
+          final story = groupedOtherStories[index - 1];
           final hasSeen = story.isSeen;
 
           return GestureDetector(
-            onTap: () => StoryViewerModal.show(
-              context,
-              customStories: otherStories,
-              initialIndex: index - 1,
-            ),
+            onTap: () {
+              final firstStoryIndex = otherStories.indexOf(story);
+              StoryViewerModalV2.show(
+                context,
+                customStories: otherStories, // Pass all flat stories
+                initialIndex: firstStoryIndex,
+              );
+            },
             child: Column(
               children: [
                 Container(

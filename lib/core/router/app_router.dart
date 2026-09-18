@@ -29,6 +29,7 @@ import 'package:quest/features/interaction/explore/presentation/user_search_scre
 import 'package:quest/features/interaction/feed/presentation/feed_screen.dart';
 import 'package:quest/features/interaction/create/presentation/create_screen.dart';
 import 'package:quest/features/interaction/create/presentation/share_experience_screen.dart';
+import 'package:quest/features/interaction/notifications/presentation/notifications_screen.dart';
 import 'package:quest/core/shell/main_shell.dart';
 
 /// A [ChangeNotifier] that wraps Riverpod's [Ref] so [GoRouter] can
@@ -258,6 +259,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         name: 'share_experience',
         builder: (context, state) =>
             ShareExperienceScreen(mediaPath: state.extra as String?),
+      ),
+      GoRoute(
+        path: '/notifications',
+        name: 'notifications',
+        builder: (context, state) => const NotificationsScreen(),
       ),
     ],
   );

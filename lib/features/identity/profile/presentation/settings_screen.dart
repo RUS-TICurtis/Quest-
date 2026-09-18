@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quest/core/storage/local_storage_service.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 import 'package:quest/features/identity/auth/data/auth_provider.dart';
 import 'package:quest/features/identity/profile/data/user_provider.dart';
@@ -41,6 +42,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     {'name': 'Crimson', 'color': const Color(0xFFEF4444)},
     {'name': 'Gold', 'color': const Color(0xFFF59E0B)},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Load persisted settings from SharedPreferences on first render
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final prefs = ref.read(localStorageServiceProvider);
+      setState(() {
+        _directMessages = prefs.notifyDMs;
+        _groupMessages = prefs.notifyGroups;
+        _questReminders = prefs.notifyQuests;
+        _eventAlerts = prefs.notifyEvents;
+        _soundEnabled = prefs.soundEnabled;
+        _hapticFeedback = prefs.hapticEnabled;
+        _storyPrivacy = prefs.storyPrivacy;
+        _readReceipts = prefs.readReceipts;
+        _autoDownloadWifiOnly = prefs.wifiOnly;
+        _selectedTheme = prefs.selectedTheme;
+        _selectedAccent = prefs.selectedAccent;
+      });
+    });
+  }
 
   void _showChangePasswordDialog(BuildContext context) {
     final messenger = ScaffoldMessenger.of(context);
@@ -530,6 +553,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           setState(
                             () => _selectedAccent = acc['name'] as String,
                           );
+                          ref
+                              .read(localStorageServiceProvider)
+                              .setString(
+                                LocalStorageService.keySelectedAccent,
+                                acc['name'] as String,
+                              );
                         },
                         child: Container(
                           width: 44,
@@ -585,7 +614,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
               activeThumbColor: context.colors.questBlue,
-              onChanged: (val) => setState(() => _hapticFeedback = val),
+              onChanged: (val) {
+                setState(() => _hapticFeedback = val);
+                ref.read(localStorageServiceProvider).setBool(
+                      LocalStorageService.keyHapticEnabled, val);
+              },
             ),
           ]),
 
@@ -610,7 +643,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               activeThumbColor: context.colors.questBlue,
-              onChanged: (val) => setState(() => _directMessages = val),
+              onChanged: (val) {
+                setState(() => _directMessages = val);
+                ref.read(localStorageServiceProvider).setBool(
+                      LocalStorageService.keyNotifyDMs, val);
+              },
             ),
             _buildDivider(),
             SwitchListTile(
@@ -627,7 +664,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               activeThumbColor: context.colors.questBlue,
-              onChanged: (val) => setState(() => _groupMessages = val),
+              onChanged: (val) {
+                setState(() => _groupMessages = val);
+                ref.read(localStorageServiceProvider).setBool(
+                      LocalStorageService.keyNotifyGroups, val);
+              },
             ),
             _buildDivider(),
             SwitchListTile(
@@ -648,7 +689,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
               activeThumbColor: context.colors.questBlue,
-              onChanged: (val) => setState(() => _eventAlerts = val),
+              onChanged: (val) {
+                setState(() => _eventAlerts = val);
+                ref.read(localStorageServiceProvider).setBool(
+                      LocalStorageService.keyNotifyEvents, val);
+              },
             ),
             _buildDivider(),
             SwitchListTile(
@@ -665,7 +710,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
               ),
               activeThumbColor: context.colors.questBlue,
-              onChanged: (val) => setState(() => _questReminders = val),
+              onChanged: (val) {
+                setState(() => _questReminders = val);
+                ref.read(localStorageServiceProvider).setBool(
+                      LocalStorageService.keyNotifyQuests, val);
+              },
             ),
             _buildDivider(),
             SwitchListTile(

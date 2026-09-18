@@ -11,7 +11,12 @@ Supabase serves as our primary unified backend, replacing the need for separate 
   * **Database**: PostgreSQL (handling users, events, guilds).
   * **Realtime**: WebSockets for live chat messages and presence (Online/Offline status).
   * **Storage**: Avatars, community banners, event images.
-  * **Edge Functions**: Executing server-side logic (e.g., triggering push notifications).
+  * **Edge Functions**: Executing server-side logic and managing atomic operations:
+    * `publish-experience`: Secure, centralized creation of posts across feed, story, and community destinations.
+    * `interact-video`: Atomic handling of likes and comments with automatic calculation of creator engagement scores.
+    * `send-message`: Chat message transmission with simultaneous updates to thread metadata (`lastMessageText`, `lastMessageTime`).
+    * `update-profile`: Sanitized profile mutation preventing modification of protected properties like `trust_score`.
+    * `delete-experience`: Cascading removal of stories and videos across unified and legacy tables with creator authorization checks.
 * **Free Tier Limits**:
   * 50,000 Monthly Active Users (MAU).
   * 500 MB Database space & 1 GB File Storage.

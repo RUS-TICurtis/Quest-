@@ -7,12 +7,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:video_player/video_player.dart';
-import 'package:quest/core/theme/app_colors.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 import 'package:quest/core/media/media_service_gateway.dart';
 import 'package:quest/core/media/media_purpose.dart';
 import 'package:quest/core/services/app_notification_service.dart';
 import 'package:quest/features/interaction/home/data/stories_provider.dart';
+import 'package:quest/shared/models/creator_video.dart';
+import 'package:quest/features/interaction/feed/data/feed_provider.dart';
 
 class ShareExperienceScreen extends ConsumerStatefulWidget {
   final String? mediaPath;
@@ -508,93 +509,68 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                             }
                           }
 
-                          if (_shareToStory) {
-                            final now = DateTime.now();
-                            final currentUserName =
-                                supabase
-                                    .auth
-                                    .currentUser
-                                    ?.userMetadata?['full_name'] ??
-                                'You';
+                          final destinations = <String>[];
+                          if (_shareToFeed) destinations.add('feed');
+                          if (_shareToStory) destinations.add('story');
+                          if (_shareToCommunities) destinations.add('community');
 
-                            final newStory = StoryItem(
-                              id: 's_${now.millisecondsSinceEpoch}',
-                              authorName: currentUserName,
-                              communityName: 'My Story',
-                              caption: _captionController.text,
-                              content: mediaUrl,
-                              muxPlaybackId: muxPlaybackId,
-                              videoUrl: muxPlaybackId != null
-                                  ? 'https://stream.mux.com/$muxPlaybackId.m3u8'
-                                  : (mediaUrl != null &&
-                                          (mediaUrl.endsWith('.mp4') ||
-                                              mediaUrl.endsWith('.mov') ||
-                                              mediaUrl.contains('cloudinary') ||
-                                              _isVideo(mediaUrl))
-                                        ? mediaUrl
-                                        : null),
-                              ringColor: AppColors.questBlue,
-                              createdAt: now,
-                              isSeen: false,
-                              isMe: true,
-                            );
-
-                            // Persists to local state & Supabase backend seamlessly
+                          if (destinations.isNotEmpty) {
                             try {
-                              await ref
-                                  .read(storiesProvider.notifier)
-                                  .addStory(newStory);
-                            } catch (err) {
-                              debugPrint(
-                                'Could not update stories provider: $err',
-                              );
-                            }
-                          }
-
-                          if (_shareToFeed) {
-                            final currentUser = supabase.auth.currentUser;
-                            if (currentUser != null) {
-                              try {
-                                await supabase.from('feed_videos').insert({
-                                  'creator_id': currentUser.id,
-                                  'video_url': muxPlaybackId != null
-                                      ? 'https://stream.mux.com/$muxPlaybackId.m3u8'
-                                      : (mediaUrl ?? ''),
-                                  'is_cloudinary': _usedFallback,
-                                  'thumbnail_url':
-                                      mediaUrl ??
-                                      (muxPlaybackId != null
-                                          ? 'https://image.mux.com/$muxPlaybackId/thumbnail.jpg'
-                                          : ''),
-                                  'title': _captionController.text.isNotEmpty
-                                      ? _captionController.text
-                                      : 'New Experience',
-                                  'description': _captionController.text,
+                              final res = await supabase.functions.invoke(
+                                'publish-experience',
+                                body: {
+                                  'media_url': mediaUrl,
                                   'mux_playback_id': muxPlaybackId,
                                   'mux_asset_id': muxAssetId,
-                                  'duration_seconds': 15,
-                                  'status': 'approved',
-                                });
-                              } catch (feedErr) {
-                                debugPrint(
-                                  'Feed video insert notice: $feedErr',
-                                );
-                              }
-                            }
-                          }
-
-                          if (_shareToCommunities) {
-                            try {
-                              await supabase.from('community_posts').insert({
-                                'media_url': mediaUrl,
-                                'content': _captionController.text,
-                                'user_id': supabase.auth.currentUser?.id,
-                                'community_id': '1',
-                              });
-                            } catch (commErr) {
-                              debugPrint(
-                                'Community post insert fallback: $commErr',
+                                  'caption': _captionController.text,
+                                  'destinations': destinations,
+                                  'community_id': '1',
+                                },
                               );
+                              
+                              final data = res.data;
+                              if (data != null && data['success'] == true) {
+                                final List<dynamic> videosJson = data['videos'] ?? [];
+                                
+                                // Optimistic Updates
+                                if (_shareToFeed) {
+                                  final feedVideoJson = videosJson.firstWhere(
+                                    (v) => v['video_type'] == 'feed', 
+                                    orElse: () => null
+                                  );
+                                  if (feedVideoJson != null) {
+                                    try {
+                                      // feedControllerProvider expects CreatorVideo
+                                      // We will add insertVideoTop to FeedController in the next step
+                                      final newFeedVideo = CreatorVideo.fromJson(feedVideoJson);
+                                      ref.read(feedControllerProvider).insertVideoTop(newFeedVideo);
+                                    } catch (_) {}
+                                  }
+                                }
+
+                                if (_shareToStory) {
+                                  final storyJson = videosJson.firstWhere(
+                                    (v) => v['video_type'] == 'story', 
+                                    orElse: () => null
+                                  );
+                                  if (storyJson != null) {
+                                    try {
+                                      final newStory = StoryItem.fromJson(storyJson);
+                                      ref.read(storiesProvider.notifier).addStoryLocally(newStory);
+                                    } catch (_) {}
+                                  }
+                                }
+                              }
+                            } catch (e) {
+                              debugPrint('Publish experience edge function failed: $e');
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Failed to publish experience: $e'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                              return;
                             }
                           }
 

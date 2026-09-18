@@ -80,8 +80,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       final userNotifier = ref.read(userProvider.notifier);
       final currentUser = ref.read(userProvider).value ?? UserState.initial();
 
+      // Recompute initials from the new name so avatar updates immediately
+      final trimmedName = _nameController.text.trim();
+      final nameParts =
+          trimmedName.split(' ').where((p) => p.isNotEmpty).toList();
+      final newInitials = nameParts.isEmpty
+          ? 'Q'
+          : nameParts.first[0].toUpperCase() +
+              (nameParts.length > 1
+                  ? nameParts.last[0].toUpperCase()
+                  : '');
+
       final updatedUser = currentUser.copyWith(
-        name: _nameController.text.trim(),
+        name: trimmedName,
+        initials: newInitials,
         username: _usernameController.text.trim().replaceAll('@', ''),
         bio: _bioController.text.trim(),
         avatarUrl: newAvatarUrl ?? currentUser.avatarUrl,

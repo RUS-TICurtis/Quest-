@@ -38,6 +38,7 @@ The codebase documentation is being actively transitioned to the new Platform Ar
 
 ### Essential References
 * [Canonical Vocabulary Registry](docs/architecture/canonical_vocabulary.md) — The single source of truth for platform terminology.
+* [Agent Onboarding & System Audit Brief](CODEBASE_STATE_PROMPT.md) — Self-contained prompt for AI agents and onboarding engineers detailing full codebase state.
 
 ### Legacy / Supplemental Documents
 *These documents are being actively migrated into the new `00-10` structure above.*
@@ -46,3 +47,4 @@ The codebase documentation is being actively transitioned to the new Platform Ar
 - [State Management](docs/architecture/06_state_management.md)
 - [QA & Verification](docs/architecture/09_qa_verification.md)
 - [External Services](docs/architecture/10_external_services.md)
+- [Database Schema Reference](docs/architecture/11_database_schema_reference.md) — Column naming conventions, caching decisions, edge function notes, dual-column architecture, Hive TypeAdapter patterns.

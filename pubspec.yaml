@@ -67,8 +67,14 @@ dependencies:
   image_cropper: ^12.2.1
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  # NOTE: isar is intentionally omitted — isar 3.1.0+1 only supports Dart <3.0
+  # and isar_community has no stable pub.dev release. Offline caching uses Hive
+  # (Boxes) for all structured data (feed, profiles, stories, chat).
+  # Revisit if a Dart-3-compatible Isar release appears on pub.dev.
+  # See docs/architecture/11_database_schema_reference.md for caching decisions.
   emoji_picker_flutter: ^4.5.4
   flutter_local_notifications: ^18.0.1
+  story_view: ^0.16.6
 dev_dependencies:
   flutter_test:
     sdk: flutter

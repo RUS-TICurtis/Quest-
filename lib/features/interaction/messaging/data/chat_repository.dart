@@ -28,6 +28,7 @@ abstract class ChatRepository {
   });
   Future<void> sendVoiceNote(String threadId);
   Future<void> markThreadRead(String threadId);
+  Future<void> createChatRoom(String otherUserId);
   Future<void> toggleReaction({
     required String threadId,
     required String messageId,
@@ -56,8 +57,14 @@ class SupabaseChatRepository implements ChatRepository {
   final StreamController<List<ChatThread>> _demoStreamController =
       StreamController<List<ChatThread>>.broadcast();
   List<ChatThread>? _cachedThreads;
+  RealtimeChannel? _realtimeChannel;
 
   SupabaseChatRepository(this._supabase, this._networkInfo, this._localDb);
+
+  void dispose() {
+    _realtimeChannel?.unsubscribe();
+    _demoStreamController.close();
+  }
 
   @override
   Stream<List<ChatThread>> getThreadsStream() async* {
@@ -74,15 +81,26 @@ class SupabaseChatRepository implements ChatRepository {
 
     // Yield initial local data
     final localThreads = _buildThreadsFromLocal(userId);
-    if (localThreads.length <= 1) {
-      // If local DB only has the AI coach or empty, prepend rich demo threads
-      _cachedThreads ??= _generateTelegramDemoThreads();
-      yield _cachedThreads!;
+    if (localThreads.isEmpty) {
+      // Only seed demo threads when user has genuinely no real rooms
+      yield _generateTelegramDemoThreads();
     } else {
       yield localThreads;
     }
 
-    // Listen to local DB changes and demo controller updates
+    // Subscribe to Realtime — any new chat_message triggers a re-sync
+    _realtimeChannel?.unsubscribe();
+    _realtimeChannel = _supabase
+        .channel('chat_messages_for_$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'chat_messages',
+          callback: (_) => _syncThreads(userId),
+        )
+        .subscribe();
+
+    // Listen to local DB changes for live UI updates
     await for (final _ in _localDb.chatRoomsBox.watch()) {
       yield _buildThreadsFromLocal(userId);
     }
@@ -207,13 +225,25 @@ class SupabaseChatRepository implements ChatRepository {
 
     for (var pendingMsg in pendingMessages) {
       try {
-        await _supabase.from('chat_messages').insert({
-          'roomId': pendingMsg.roomId,
-          'senderId': pendingMsg.senderId,
-          'text': pendingMsg.text,
-          'time': pendingMsg.createdAt,
-          'type': pendingMsg.type,
-        });
+        try {
+          await _supabase.functions.invoke(
+            'send-message',
+            body: {
+              'roomId': pendingMsg.roomId,
+              'text': pendingMsg.text,
+              'time': pendingMsg.createdAt,
+              'type': pendingMsg.type,
+            },
+          );
+        } catch (_) {
+          await _supabase.from('chat_messages').insert({
+            'roomId': pendingMsg.roomId,
+            'senderId': pendingMsg.senderId,
+            'text': pendingMsg.text,
+            'time': pendingMsg.createdAt,
+            'type': pendingMsg.type,
+          });
+        }
 
         await _localDb.chatMessagesBox.delete(pendingMsg.messageId);
       } catch (_) {
@@ -603,13 +633,25 @@ class SupabaseChatRepository implements ChatRepository {
     final isOnline = await _networkInfo.isConnected;
     if (isOnline) {
       try {
-        await _supabase.from('chat_messages').insert({
-          'roomId': threadId,
-          'senderId': userId,
-          'text': text,
-          'time': now.toIso8601String(),
-          'type': type.toString().split('.').last,
-        });
+        try {
+          await _supabase.functions.invoke(
+            'send-message',
+            body: {
+              'roomId': threadId,
+              'text': text,
+              'time': now.toIso8601String(),
+              'type': type.toString().split('.').last,
+            },
+          );
+        } catch (_) {
+          await _supabase.from('chat_messages').insert({
+            'roomId': threadId,
+            'senderId': userId,
+            'text': text,
+            'time': now.toIso8601String(),
+            'type': type.toString().split('.').last,
+          });
+        }
         await _localDb.chatMessagesBox.delete(tempId);
       } catch (_) {}
     }
@@ -634,6 +676,95 @@ class SupabaseChatRepository implements ChatRepository {
         _cachedThreads![idx] = _cachedThreads![idx].copyWith(unread: 0);
         _notifyDemoStream();
       }
+    }
+
+    // Persist read receipt to Supabase (non-critical — best effort)
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId != null && !threadId.startsWith('ai_coach')) {
+      try {
+        await _supabase
+            .from('chat_participants')
+            .update({'lastReadAt': DateTime.now().toIso8601String()})
+            .eq('roomId', threadId)
+            .eq('userId', userId);
+      } catch (_) {}
+    }
+  }
+
+  @override
+  Future<void> createChatRoom(String otherUserId) async {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return;
+
+    try {
+      // 1. Check if a 1:1 room already exists between the two users
+      final existing = await _supabase
+          .from('chat_participants')
+          .select('roomId')
+          .eq('userId', userId);
+
+      final existingRoomIds =
+          (existing as List).map((e) => e['roomId'] as String).toSet();
+
+      final otherRooms = await _supabase
+          .from('chat_participants')
+          .select('roomId')
+          .eq('userId', otherUserId);
+
+      final otherRoomIds =
+          (otherRooms as List).map((e) => e['roomId'] as String).toSet();
+
+      final sharedRoomId =
+          existingRoomIds.intersection(otherRoomIds).firstOrNull;
+
+      if (sharedRoomId != null) {
+        // Room already exists — just ensure it's in local Hive cache
+        final roomData = await _supabase
+            .from('chat_rooms')
+            .select()
+            .eq('id', sharedRoomId)
+            .single();
+        final localRoom = LocalChatRoom(
+          roomId: sharedRoomId,
+          name: roomData['name'] ?? 'Chat',
+          lastMessageText: roomData['lastMessageText'] ?? '',
+          lastMessageTime: roomData['lastMessageTime'] ?? '',
+          unreadCount: 0,
+          isAiCoach: false,
+        );
+        await _localDb.chatRoomsBox.put(sharedRoomId, localRoom);
+        return;
+      }
+
+      // 2. Create new 1:1 room
+      final roomInsert = await _supabase
+          .from('chat_rooms')
+          .insert({'isGroup': false})
+          .select()
+          .single();
+
+      final newRoomId = roomInsert['id'] as String;
+
+      // 3. Add both participants
+      await _supabase.from('chat_participants').insert([
+        {'roomId': newRoomId, 'userId': userId},
+        {'roomId': newRoomId, 'userId': otherUserId},
+      ]);
+
+      // 4. Persist to Hive
+      await _localDb.chatRoomsBox.put(
+        newRoomId,
+        LocalChatRoom(
+          roomId: newRoomId,
+          name: 'New Chat',
+          lastMessageText: '',
+          lastMessageTime: '',
+          unreadCount: 0,
+          isAiCoach: false,
+        ),
+      );
+    } catch (_) {
+      // Non-critical — user can retry
     }
   }
 

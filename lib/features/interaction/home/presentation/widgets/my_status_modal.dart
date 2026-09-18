@@ -4,7 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 import 'package:quest/features/interaction/home/data/stories_provider.dart';
-import 'story_viewer_modal.dart';
+
+import 'story_viewer_modal_v2.dart';
 
 class MyStatusModal extends ConsumerWidget {
   final List<StoryItem> myStories;
@@ -26,10 +27,7 @@ class MyStatusModal extends ConsumerWidget {
     // Watch storiesProvider so any deletions or additions dynamically update this modal
     final allStories = ref.watch(storiesProvider).value ?? [];
     final activeMyStories = allStories
-        .where(
-          (s) =>
-              s.isMe || s.communityName == 'My Story' || s.authorName == 'You',
-        )
+        .where((s) => s.isMe)
         .toList();
 
     // If all stories were deleted while modal is open, auto pop
@@ -163,7 +161,7 @@ class MyStatusModal extends ConsumerWidget {
                   return InkWell(
                     onTap: () {
                       HapticFeedback.selectionClick();
-                      StoryViewerModal.show(
+                      StoryViewerModalV2.show(
                         context,
                         customStories: activeMyStories,
                         initialIndex: index,
@@ -285,7 +283,7 @@ class MyStatusModal extends ConsumerWidget {
                             onSelected: (value) async {
                               if (value == 'view') {
                                 HapticFeedback.selectionClick();
-                                StoryViewerModal.show(
+                                StoryViewerModalV2.show(
                                   context,
                                   customStories: activeMyStories,
                                   initialIndex: index,

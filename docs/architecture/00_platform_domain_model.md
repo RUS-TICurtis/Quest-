@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-07_
+_Last Modified: 2026-09-18_
 
 # 00. Platform Domain Model & Architectural Vision
 
@@ -155,3 +155,9 @@ The following table tracks the implementation maturity of the platform domains. 
 
 > [!TIP]
 > **To all agents and engineers:** When designing a new feature, database schema, or API, first identify which **Platform Layer** it belongs to. Do not build isolated features; build capabilities that enrich the interconnected Domain Model.
+
+---
+
+## 4. Related Platform Specifications
+* [Database Schema & Persistence Reference](11_database_schema_reference.md) — Exhaustive database columns, dual-column patterns, Hive caching architecture, and Edge Functions contract.
+

@@ -68,7 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 icon: const Icon(Icons.notifications_none, color: Colors.white),
                 onPressed: () {
                   HapticFeedback.lightImpact();
-                  // TODO: Navigate to notifications screen
+                  context.push('/notifications');
                 },
               ),
             ],

@@ -2,9 +2,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quest/core/storage/local_database_service.dart';
+import 'package:quest/core/storage/models/cached_member_profile.dart';
 import 'package:quest/core/theme/quest_icons.dart';
 import 'package:quest/features/identity/profile/data/user_provider.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MemberProfileScreen extends ConsumerStatefulWidget {
   final String memberId;
@@ -18,40 +21,129 @@ class MemberProfileScreen extends ConsumerStatefulWidget {
 
 class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
   bool _hasEndorsed = false;
+  UserState _memberProfile = UserState.initial();
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final localDb = ref.read(localDatabaseProvider);
+
+    // 1. Instant cache hit from Hive (no network wait)
+    final cached = localDb.getCachedProfile(widget.memberId);
+    if (cached != null && mounted) {
+      setState(() {
+        _memberProfile = _fromCached(cached);
+        _isLoading = false;
+      });
+      // If cache is fresh (< 15 min), skip network fetch
+      if (!cached.isStale) return;
+    }
+
+    // 2. Background network refresh from Supabase
+    try {
+      final data = await Supabase.instance.client
+          .from('profiles')
+          .select()
+          .eq('id', widget.memberId)
+          .maybeSingle();
+
+      if (data != null && mounted) {
+        final freshProfile = UserState.fromJson(data);
+        // Update Isar cache with fresh data
+        await localDb.cacheProfile(
+          CachedMemberProfile.fromSupabaseJson(data),
+        );
+        if (mounted) {
+          setState(() {
+            _memberProfile = freshProfile;
+            _isLoading = false;
+          });
+        }
+      } else if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  UserState _fromCached(CachedMemberProfile cached) {
+    return UserState.initial().copyWith(
+      name: cached.name,
+      username: cached.username,
+      avatarUrl: cached.avatarUrl,
+      bio: cached.bio,
+      initials: cached.initials ?? (cached.name.isNotEmpty
+          ? cached.name[0].toUpperCase()
+          : 'Q'),
+      level: cached.level,
+      currentXp: cached.currentXp,
+      xpToNextLevel: cached.xpToNextLevel,
+      streak: cached.streak,
+      archetypes: cached.archetypes,
+      badges: cached.badges,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    // Mock profile data for member lookup
-    final isAlex = widget.memberId == 'u_curr';
-    final name = isAlex ? 'Alex L.' : 'Sarah Chen';
-    final initials = isAlex ? 'AL' : 'SC';
-    final role = isAlex ? 'Lead Product Engineer' : 'Founder & YC Alum';
-    final bio = isAlex
-        ? 'Passionate about mobile craft, real-time collaboration engines, and gamified systems.'
-        : 'Building the future of decentralized collaboration. YC S22 alum, ex-Stripe engineer. Obsessed with participatory software.';
-    final level = isAlex ? 4 : 9;
-    final currentXp = isAlex ? 940 : 4200;
-    final streak = isAlex ? 12 : 24;
-    final archetypes = isAlex
-        ? ['Builder', 'Connector']
-        : ['Strategist', 'Builder', 'Pioneer'];
-    final badges = isAlex
-        ? ['Early Adopter', '7-Day Streak', 'First Connection']
-        : [
-            'Top Strategist S2',
-            '20-Day Streak',
-            'Guild Host',
-            'Hackathon Judge',
-          ];
+    if (_isLoading && _memberProfile.name.isEmpty) {
+      return Scaffold(
+        backgroundColor: context.colors.background,
+        appBar: AppBar(
+          backgroundColor: context.colors.background,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: context.colors.textPrimary),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/profile');
+              }
+            },
+          ),
+        ),
+        body: Center(
+          child: CircularProgressIndicator(
+            color: context.colors.questBlue,
+          ),
+        ),
+      );
+    }
 
-    final archetypeScores = {
-      'Strategist': 92,
-      'Builder': 85,
-      'Pioneer': 74,
-      'Connector': 65,
-      'Explorer': 58,
-      'Scholar': 40,
+    final name = _memberProfile.name.isEmpty ? 'Explorer' : _memberProfile.name;
+    final initials = _memberProfile.initials.isEmpty
+        ? (name.isNotEmpty ? name[0].toUpperCase() : 'Q')
+        : _memberProfile.initials;
+    final bio = _memberProfile.bio ?? '';
+    final level = _memberProfile.level;
+    final currentXp = _memberProfile.currentXp;
+    final streak = _memberProfile.streak;
+    final archetypes = _memberProfile.archetypes;
+    final badges = _memberProfile.badges;
+    final username = _memberProfile.username;
+    final subtitle = (username != null && username.isNotEmpty)
+        ? '@$username'
+        : (archetypes.isNotEmpty ? archetypes.join(' • ') : 'Member');
+
+    // Placeholder archetype score map derived from archetypes list
+    final archetypeScores = <String, int>{
+      for (final a in archetypes)
+        a: 50 + archetypes.indexOf(a) * 10,
     };
+    // Ensure Strategist + other common ones are always shown
+    const allArchetypes = [
+      'Strategist', 'Builder', 'Pioneer',
+      'Connector', 'Explorer', 'Scholar'
+    ];
+    for (final a in allArchetypes) {
+      archetypeScores.putIfAbsent(a, () => 0);
+    }
 
     return Scaffold(
       backgroundColor: context.colors.background,
@@ -244,7 +336,7 @@ class _MemberProfileScreenState extends ConsumerState<MemberProfileScreen> {
                         ),
                         SizedBox(height: 2),
                         Text(
-                          role,
+                          subtitle,
                           style: TextStyle(
                             color: context.colors.textMuted,
                             fontSize: 13,

@@ -61,6 +61,13 @@ class FeedController {
     isLoadingMore.value = false;
   }
 
+  void insertVideoTop(CreatorVideo video) {
+    videos.value = [video, ...videos.value];
+    // If the feed was empty, or if we want to ensure the newly added video plays immediately,
+    // we can reset the currentIndex, but usually the user will just pull to refresh or
+    // PageView will maintain index 0 if they are at the top.
+  }
+
   void appendVideos(List<CreatorVideo> moreVideos) {
     videos.value = [...videos.value, ...moreVideos];
     _isFetchingMore = false;

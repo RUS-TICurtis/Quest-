@@ -156,11 +156,18 @@ class SupabaseStoriesRepository implements StoriesRepository {
     _localStories.removeWhere((s) => s.id == storyId);
     if (!storyId.startsWith('s_') && !storyId.startsWith('s')) {
       try {
-        await _client.from('stories').delete().eq('id', storyId);
-      } catch (e) {
-        debugPrint(
-          '[SupabaseStoriesRepository] deleteStory fallback notice: $e',
+        await _client.functions.invoke(
+          'delete-experience',
+          body: {'id': storyId},
         );
+      } catch (e) {
+        try {
+          await _client.from('stories').delete().eq('id', storyId);
+        } catch (innerErr) {
+          debugPrint(
+            '[SupabaseStoriesRepository] deleteStory fallback notice: $innerErr',
+          );
+        }
       }
     }
   }

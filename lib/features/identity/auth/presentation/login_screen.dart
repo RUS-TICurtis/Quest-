@@ -757,7 +757,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     redirectParam.isNotEmpty) {
                                   router.go(redirectParam);
                                 } else {
-                                  router.go('/home');
+                                  final createdAt = DateTime.tryParse(res.user?.createdAt ?? '');
+                                  final lastSignIn = DateTime.tryParse(res.user?.lastSignInAt ?? '');
+                                  bool isNewUser = false;
+                                  if (createdAt != null && lastSignIn != null) {
+                                    isNewUser = lastSignIn.difference(createdAt).inSeconds.abs() < 5;
+                                  }
+                                  
+                                  if (isNewUser) {
+                                    router.go('/onboarding');
+                                  } else {
+                                    router.go('/home');
+                                  }
                                 }
                               }
                               // Note: if res == null, the user simply cancelled or dismissed the Google modal sheet
