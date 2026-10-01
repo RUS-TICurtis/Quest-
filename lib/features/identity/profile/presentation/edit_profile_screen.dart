@@ -144,7 +144,15 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     return Scaffold(
       backgroundColor: context.colors.background,
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text(
+          'Edit Profile',
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 18,
+            letterSpacing: 0.5,
+          ),
+        ),
+        centerTitle: true,
         actions: [
           if (_isLoading)
             Padding(
@@ -161,21 +169,31 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               ),
             )
           else
-            TextButton(
-              onPressed: _saveProfile,
-              child: Text(
-                'Save',
-                style: TextStyle(
-                  color: context.colors.questBlue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+            Padding(
+              padding: const EdgeInsets.only(right: 8.0),
+              child: TextButton(
+                onPressed: _saveProfile,
+                style: TextButton.styleFrom(
+                  foregroundColor: context.colors.questBlue,
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                child: const Text(
+                  'Save',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                  ),
                 ),
               ),
             ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
         child: Form(
           key: _formKey,
           child: Column(
@@ -186,47 +204,58 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 onTap: _pickImage,
                 child: Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 56,
-                      backgroundColor: context.colors.card,
-                      backgroundImage: avatarImage,
-                      child: avatarImage == null
-                          ? Text(
-                              userState.initials.isNotEmpty
-                                  ? userState.initials
-                                  : 'Q',
-                              style: TextStyle(
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                color: context.colors.textPrimary,
-                              ),
-                            )
-                          : null,
+                    Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: context.colors.questBlue.withValues(alpha: 0.2),
+                            blurRadius: 20,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                      child: CircleAvatar(
+                        radius: 64,
+                        backgroundColor: context.colors.card,
+                        backgroundImage: avatarImage,
+                        child: avatarImage == null
+                            ? Text(
+                                userState.initials.isNotEmpty
+                                    ? userState.initials
+                                    : 'Q',
+                                style: TextStyle(
+                                  fontSize: 40,
+                                  fontWeight: FontWeight.w800,
+                                  color: context.colors.textPrimary,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
                     Positioned(
-                      bottom: 0,
-                      right: 0,
+                      bottom: 4,
+                      right: 4,
                       child: Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: context.colors.questBlue,
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: context.colors.background,
-                            width: 3,
+                            width: 4,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: context.colors.questBlue.withValues(
-                                alpha: 0.4,
-                              ),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 8,
+                              offset: const Offset(0, 2),
                             ),
                           ],
                         ),
                         child: const Icon(
-                          Icons.camera_alt,
-                          size: 18,
+                          Icons.camera_alt_rounded,
+                          size: 20,
                           color: Colors.white,
                         ),
                       ),
@@ -234,170 +263,147 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 16),
               Text(
                 'Change Profile Photo',
                 style: TextStyle(
                   color: context.colors.questBlue,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.3,
                 ),
               ),
+              const SizedBox(height: 48),
+
+              // Form Fields
+              Container(
+                decoration: BoxDecoration(
+                  color: context.colors.card,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    _buildTextField(
+                      controller: _nameController,
+                      label: 'Full Name',
+                      icon: Icons.person_outline_rounded,
+                      textCapitalization: TextCapitalization.words,
+                      validator: (val) => val == null || val.trim().isEmpty
+                          ? 'Name cannot be empty'
+                          : null,
+                    ),
+                    Divider(height: 1, color: context.colors.border),
+                    _buildTextField(
+                      controller: _usernameController,
+                      label: 'Username',
+                      icon: Icons.alternate_email_rounded,
+                      prefixText: '@',
+                      validator: (val) {
+                        if (val == null || val.trim().isEmpty) {
+                          return 'Username cannot be empty';
+                        }
+                        if (val.trim().contains(' ')) {
+                          return 'Username cannot contain spaces';
+                        }
+                        return null;
+                      },
+                    ),
+                    Divider(height: 1, color: context.colors.border),
+                    _buildTextField(
+                      controller: _bioController,
+                      label: 'Bio',
+                      icon: Icons.notes_rounded,
+                      maxLines: 3,
+                      maxLength: 150,
+                    ),
+                  ],
+                ),
+              ),
+
               const SizedBox(height: 32),
 
-              // Full Name Field
-              TextFormField(
-                controller: _nameController,
-                style: TextStyle(color: context.colors.textPrimary),
-                textCapitalization: TextCapitalization.words,
-                decoration: InputDecoration(
-                  labelText: 'Full Name',
-                  labelStyle: TextStyle(color: context.colors.textMuted),
-                  prefixIcon: Icon(
-                    Icons.person_outline,
-                    color: context.colors.questBlue,
-                  ),
-                  filled: true,
-                  fillColor: context.colors.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(
-                      color: context.colors.questBlue,
-                      width: 2,
-                    ),
-                  ),
-                ),
-                validator: (val) => val == null || val.trim().isEmpty
-                    ? 'Name cannot be empty'
-                    : null,
-              ),
-              const SizedBox(height: 18),
-
-              // Username Field
-              TextFormField(
-                controller: _usernameController,
-                style: TextStyle(color: context.colors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  labelStyle: TextStyle(color: context.colors.textMuted),
-                  prefixText: '@',
-                  prefixStyle: TextStyle(
-                    color: context.colors.questBlue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  prefixIcon: Icon(
-                    Icons.alternate_email,
-                    color: context.colors.questBlue,
-                  ),
-                  filled: true,
-                  fillColor: context.colors.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(
-                      color: context.colors.questBlue,
-                      width: 2,
-                    ),
-                  ),
-                ),
-                validator: (val) {
-                  if (val == null || val.trim().isEmpty) {
-                    return 'Username cannot be empty';
-                  }
-                  if (val.trim().contains(' ')) {
-                    return 'Username cannot contain spaces';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 18),
-
-              // Bio Field
-              TextFormField(
-                controller: _bioController,
-                maxLines: 4,
-                maxLength: 150,
-                style: TextStyle(color: context.colors.textPrimary),
-                decoration: InputDecoration(
-                  labelText: 'Bio',
-                  alignLabelWithHint: true,
-                  labelStyle: TextStyle(color: context.colors.textMuted),
-                  prefixIcon: Padding(
-                    padding: const EdgeInsets.only(bottom: 50),
-                    child: Icon(Icons.notes, color: context.colors.questBlue),
-                  ),
-                  filled: true,
-                  fillColor: context.colors.card,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(
-                      color: context.colors.questBlue,
-                      width: 2,
-                    ),
-                  ),
-                  counterStyle: TextStyle(
-                    color: context.colors.textMuted,
-                    fontSize: 12,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 18),
-
               // Account Email (Read-Only)
-              TextFormField(
-                initialValue: email,
-                readOnly: true,
-                style: TextStyle(color: context.colors.textMuted),
-                decoration: InputDecoration(
-                  labelText: 'Account Email',
-                  labelStyle: TextStyle(color: context.colors.textMuted),
-                  prefixIcon: Icon(
-                    Icons.email_outlined,
-                    color: context.colors.textMuted,
-                  ),
-                  suffixIcon: Icon(
-                    Icons.lock_outline,
-                    color: context.colors.textMuted,
-                    size: 18,
-                  ),
-                  filled: true,
-                  fillColor: context.colors.card.withValues(alpha: 0.5),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(14),
-                    borderSide: BorderSide(color: context.colors.border),
-                  ),
+              Container(
+                decoration: BoxDecoration(
+                  color: context.colors.card.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: _buildTextField(
+                  initialValue: email,
+                  label: 'Account Email',
+                  icon: Icons.email_outlined,
+                  readOnly: true,
+                  showBorder: false,
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    TextEditingController? controller,
+    String? initialValue,
+    required String label,
+    required IconData icon,
+    int maxLines = 1,
+    int? maxLength,
+    String? prefixText,
+    bool readOnly = false,
+    TextCapitalization textCapitalization = TextCapitalization.none,
+    String? Function(String?)? validator,
+    bool showBorder = true,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: TextFormField(
+        controller: controller,
+        initialValue: initialValue,
+        readOnly: readOnly,
+        maxLines: maxLines,
+        maxLength: maxLength,
+        textCapitalization: textCapitalization,
+        style: TextStyle(
+          color: readOnly ? context.colors.textMuted : context.colors.textPrimary,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: TextStyle(
+            color: context.colors.textMuted,
+            fontWeight: FontWeight.w400,
+          ),
+          prefixText: prefixText,
+          prefixStyle: TextStyle(
+            color: context.colors.questBlue,
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+          prefixIcon: Icon(
+            icon,
+            color: readOnly ? context.colors.textMuted : context.colors.questBlue,
+            size: 22,
+          ),
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          counterStyle: TextStyle(
+            color: context.colors.textMuted,
+            fontSize: 12,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+        validator: validator,
       ),
     );
   }

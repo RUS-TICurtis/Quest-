@@ -1,4 +1,4 @@
-_Last Modified: 2026-09-18_
+_Last Modified: 2026-09-27_
 
 # 7. Feature Modules
 
@@ -9,10 +9,10 @@ _Last Modified: 2026-09-18_
 | **Auth & OAuth 2.1** | `lib/features/identity/auth/` | Identity | ✅ Complete | Supabase Auth + Google Native + OAuth 2.1 Server |
 | **Profile / XP** | `lib/features/identity/profile/` | Identity | ✅ Complete | `profiles`, `daily_quests` tables |
 | **Leaderboard** | `lib/features/identity/leaderboard/` | Identity | ✅ Complete | `leaderboard` table & season rankings |
-| **Home / Stories** | `lib/features/interaction/home/` | Interaction | ✅ Complete | `stories` & `videos` tables, Mux/Cloudinary |
+| **Home (Mission Control)** | `lib/features/interaction/home/` | Interaction | ✅ Complete | XP Bar, Quests, Gamification Cockpit |
 | **Video Feed** | `lib/features/interaction/feed/` | Interaction | ✅ Complete | `videos` table, `FeedVideoPool`, TikTok scroll |
 | **Explore & Global Search** | `lib/features/interaction/explore/` | Interaction | ✅ Complete | Multi-entity repository & Glassmorphic UI |
-| **Connect & User Discovery** | `lib/features/interaction/connect/` | Interaction | ✅ Complete | Archetype matching, trust score badges |
+| **Connect & Social** | `lib/features/interaction/connect/` | Interaction | ✅ Complete | Search, Stories, Chats, Communities |
 | **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Camera, Mux, Cloudinary, gateway upload |
 | **Notifications** | `lib/features/interaction/notifications/` | Interaction | ✅ Complete | In-app alerts, interactive notification feed |
 | **Messaging / Chat** | `lib/features/interaction/messaging/` | Interaction | ✅ Complete | Supabase Realtime + Hive outbox + `v_chat_bubbles 2.2.0` |
@@ -69,22 +69,26 @@ The messaging architecture is built as a **1:1 Telegram replica** powered by `v_
 
 The media and story ingestion layer follows a **WhatsApp-style status flow**:
 - **WhatsApp-Style Status Flow (`StoriesBar` & `MyStatusModal`)**:
+  - Located in the Connect Screen (`ConnectScreen`).
   - When the user has no active stories: "My Story" renders a gray ring with a `+` badge; tapping routes to `/create`.
   - When the user has active stories: the outer ring turns from gray to **Quest Blue** with glowing border, displaying the latest story's media thumbnail.
   - Tapping "My Story" with active stories opens `MyStatusModal`:
     - Shows list of uploaded status items (thumbnails, timestamps, view counter pills).
     - 3-dots action menu with "View update" and "Delete update" (calls `ref.read(storiesProvider.notifier).deleteStory(id)`).
     - WhatsApp-style floating camera/add button and header `+` action routing to `/create`.
-  - Full-screen `StoryViewerModal` supports `customStories`, rendering both Mux/HLS videos and high-resolution images, with bottom views pill (`${viewsCount} views`) for own stories and delete options in `more_vert`.
+  - Full-screen `StoryViewerModalV2` supports `customStories`, rendering both Mux/HLS videos and high-resolution images, with bottom views pill (`${viewsCount} views`) for own stories and delete options in `more_vert`.
+  - **User-to-User Grouping**: `StoryViewerModalV2` groups stories by `authorName` and wraps them in a horizontal `PageView` (like Instagram), distinguishing between stories with extensive media content vs different users.
   - **Video & Image Story Playback Timing**:
     - Video stories synchronize directly with the native video player duration (setLooping is disabled during story playback), advancing automatically only when the video actually reaches completion.
     - Image and text status updates default to a generous 8-second display window.
     - Hold-to-pause gesture: holding down halts playback and progress, releasing resumes playback instantly.
+  - **Video Playback UX**: Visual playback indicators are actively maintained in `VideoFeed` for manual toggle/pause interactions, and explicit visibility-based pooling in `FeedVideoPool` resolves background muting bugs.
 - **Web (`kIsWeb`) Compatibility**: Uses byte streams (`XFile.readAsBytes()`) to bypass `dart:io` `_Namespace` restrictions on the web platform.
 - **Mux Direct Video Ingestion**: Generates direct upload URLs via `https://api.mux.com/video/v1/uploads` and streams bytes directly with `Dio.put()`, then polls for the ready asset `playback_id`.
 - **Cloudinary Image/Video Ingestion**: Generates client-side sha1 signatures with timestamp and secret, uploading via multipart form data (`MultipartFile.fromBytes`).
 - **Resilient Real Backend Sync**: When remote records are returned from Supabase, mock seeds are cleanly replaced by the real database data. Fallback seeds are preserved only if the remote table is empty or the network is unavailable.
 - **Feed & Community Distribution**: `ShareExperienceScreen` persists feeds to the `creator_videos` table, stories to `stories` (`createdAt`, `isSeen`), and community discussions to `community_posts`.
+- **Interaction / Stories**: Uses Hive `storiesBox` for offline cache.
 
 ## Authentication & Account Lifecycle
 
@@ -118,21 +122,23 @@ The Settings experience (`SettingsScreen` at `/settings`) combines best-in-class
 - **Account & Security**:
   - Read-only display of the authenticated Supabase email.
   - In-app "Change Password" dialog leveraging `Supabase.instance.client.auth.updateUser(UserAttributes(password: ...))`.
-  - Privacy controls: Story visibility dropdown (*Everyone*, *Friends*, *Private*), read receipts switch.
+  - Privacy controls: Story visibility dropdown (*Everyone*, *Friends*, *Private*), read receipts switch (using native `SwitchListTile.adaptive`).
 - **Appearance & Accent Customization**:
   - Theme palette selector (*Midnight OLED*, *Deep Cyber Dark*, *Aurora Nebula*, *Emerald Matrix*).
   - Dynamic accent color chips (*Quest Blue*, *Emerald*, *Aurora Purple*, *Crimson*, *Gold*).
-  - Tactile haptic feedback toggle.
+  - Tactile haptic feedback toggle (using native `SwitchListTile.adaptive`).
 - **Notifications & Storage Controls**:
-  - Granular notification toggles for DMs, Group chats, Event alerts, and In-app sounds.
+  - Granular notification toggles (using native `SwitchListTile.adaptive`) for DMs, Group chats, Event alerts, and In-app sounds.
   - Telegram-style storage manager: Wi-Fi only auto-download toggle and instant "Clear Media Cache" button (`imageCache.clear()` and `imageCache.clearLiveImages()`).
 - **Organization Portal Link**:
   - Direct route entry to `/organization` for host and community admins.
 - **Real Backend Profile Persistence (`EditProfileScreen`)**:
   - Avatar image picker uploading bytes directly through `MediaServiceGateway.uploadImageBytes` (web & mobile compatible).
+  - Sleek, glassmorphic fields with updated typography and layout padding.
   - Live editing of `name`, `@username`, and `bio` (with remaining character counter).
   - Syncs directly to Supabase `profiles` table: `{ name, username, bio, avatarUrl, avatar_url }`.
   - Replaces all mock placeholder data with active Supabase user profile info.
+
 
 ## Gamification System
 

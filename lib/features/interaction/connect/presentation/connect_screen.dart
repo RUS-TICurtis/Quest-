@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:quest/features/interaction/messaging/presentation/messages_screen.dart';
-import 'package:quest/features/society/communities/presentation/communities_screen.dart';
+import 'package:quest/features/interaction/home/presentation/widgets/stories_bar.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
@@ -17,11 +18,18 @@ class ConnectScreen extends ConsumerStatefulWidget {
 class _ConnectScreenState extends ConsumerState<ConnectScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final List<String> _categories = [
+    'All',
+    'Direct',
+    'Groups',
+    'Channels',
+    'Bots',
+  ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       setState(() {});
     });
@@ -74,31 +82,75 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen>
             )
           : null,
       appBar: AppBar(
-        toolbarHeight: 30,
+        toolbarHeight: 0,
         backgroundColor: context.colors.background,
         elevation: 0,
-        title: Text(
-          'Connect',
-          style: TextStyle(
-            color: context.colors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: context.colors.questBlue,
-          labelColor: context.colors.questBlue,
-          unselectedLabelColor: context.colors.textMuted,
-          dividerColor: context.colors.border,
-          tabs: [
-            Tab(text: 'Chats'),
-            Tab(text: 'Communities'),
-          ],
-        ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [MessagesScreen(), CommunitiesScreen()],
+      body: Column(
+        children: [
+          const SizedBox(height: 8),
+          const StoriesBar(),
+          SizedBox(
+            height: 38,
+            child: ListView.separated(
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              scrollDirection: Axis.horizontal,
+              itemCount: _categories.length,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, i) {
+                final isSelected = _tabController.index == i;
+                return GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    _tabController.animateTo(i);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? context.colors.questBlue
+                          : context.colors.surface,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected
+                            ? context.colors.questBlue
+                            : context.colors.border,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        _categories[i],
+                        style: TextStyle(
+                          color: isSelected ? Colors.white : context.colors.textMuted,
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 8),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: const [
+                MessagesScreen(categoryIndex: 0),
+                MessagesScreen(categoryIndex: 1),
+                MessagesScreen(categoryIndex: 2),
+                MessagesScreen(categoryIndex: 3),
+                MessagesScreen(categoryIndex: 4),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

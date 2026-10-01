@@ -38,7 +38,7 @@ class SupabaseUserRepository implements UserRepository {
     final dailyQuestsResponse = await _supabase
         .from('daily_quests')
         .select()
-        .eq('user_id', userId);
+        .eq('userId', userId);
 
     final List<QuestItem> dailyQuests = (dailyQuestsResponse as List<dynamic>)
         .map((q) => QuestItem.fromJson(q as Map<String, dynamic>))
@@ -60,13 +60,12 @@ class SupabaseUserRepository implements UserRepository {
       // Name — camelCase (20260805 migration) + snake_case (20260821 migration)
       'name': user.name,
       'full_name': user.name,
-      // Avatar — camelCase (20260828 migration) + snake_case (20260821 migration)
-      // ARCHITECTURE DECISION: Both columns kept intentionally — see schema reference doc
-      'avatarUrl': user.avatarUrl,
+      // Avatar standardized to what edge functions use
       'avatar_url': user.avatarUrl,
       // Standard snake_case columns
       'username': user.username,
       'bio': user.bio,
+      'onboarding_completed': user.onboardingCompleted,
     };
 
     try {
@@ -84,7 +83,7 @@ class SupabaseUserRepository implements UserRepository {
     // returned UUID is used for upsert, preventing orphaned row accumulation.
     for (final quest in user.dailyQuests) {
       final questData = quest.toJson();
-      questData['user_id'] = userId;
+      questData['userId'] = userId;
 
       // Determine if the quest has a real server UUID or a client-side
       // placeholder (e.g. '1', '2'). A real UUID is 36 chars with dashes.

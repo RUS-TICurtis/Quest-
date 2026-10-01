@@ -1,7 +1,7 @@
 # Quest Codebase Architecture & Technical Documentation
 > **Living Technical Specification & Architectural Reference**  
 > *Version: 1.0.0 | Status: Production Prototype | Ecosystem: Flutter Multiplatform (Android, iOS, Web, Windows, macOS, Linux)*
-> *Last Modified: 2026-09-18*
+> *Last Modified: 2026-09-21*
 
 ---
 
@@ -35,6 +35,7 @@ The codebase documentation is being actively transitioned to the new Platform Ar
 08. [Design System](docs/architecture/04_design_system.md)
 09. [AI Systems](#) *(Planned)*
 10. [Deployment](docs/architecture/08_platform_notes.md) *(Refactoring from Platform Notes)*
+12. [Quest Resource Engine](docs/architecture/12_resource_engine.md) — FastApi backend architecture.
 
 ### Essential References
 * [Canonical Vocabulary Registry](docs/architecture/canonical_vocabulary.md) — The single source of truth for platform terminology.

@@ -8,25 +8,31 @@ import 'package:quest/features/identity/auth/data/auth_provider.dart';
 import 'package:quest/shared/widgets/quest_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class LoginScreen extends ConsumerStatefulWidget {
-  const LoginScreen({super.key});
+class SignupScreen extends ConsumerStatefulWidget {
+  const SignupScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<SignupScreen> createState() => _SignupScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _SignupScreenState extends ConsumerState<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
+  bool _obscureConfirmPassword = true;
   bool _isLoading = false;
 
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   @override
   void dispose() {
+    _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -35,6 +41,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
+    final name = _nameController.text.trim();
     final messenger = ScaffoldMessenger.of(context);
     final router = GoRouter.of(context);
     final colors = context.colors;
@@ -43,11 +50,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     HapticFeedback.mediumImpact();
 
     try {
-      await ref.read(authProvider.notifier).signInWithEmail(email, password);
+      final res = await ref
+          .read(authProvider.notifier)
+          .signUpWithEmail(email, password, name);
       if (!mounted) return;
+
+      if (res.session == null) {
+        // Supabase has email confirmation enabled
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: colors.surface,
+            title: Text(
+              'Verify Your Email',
+              style: TextStyle(
+                color: colors.textPrimary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            content: Text(
+              'Your account was created! We sent a confirmation link to $email.\n\nPlease verify your email address, then Sign In.',
+              style: TextStyle(color: colors.textSecondary, height: 1.4),
+            ),
+            actions: [
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.questBlue,
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  router.go('/login');
+                },
+                child: const Text(
+                  'Go to Sign In',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
       messenger.showSnackBar(
         SnackBar(
-          content: const Text('Welcome back!'),
+          content: const Text('Account created! Welcome to Quest.'),
           backgroundColor: colors.emerald,
         ),
       );
@@ -57,7 +107,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       if (redirectParam != null && redirectParam.isNotEmpty) {
         router.go(redirectParam);
       } else {
-        router.go('/home');
+        router.go('/onboarding');
       }
     } on AuthException catch (e) {
       if (!mounted) return;
@@ -174,87 +224,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
-  Future<void> _handleForgotPassword() async {
-    final email = _emailController.text.trim();
-    final resetEmailCtrl = TextEditingController(text: email);
-    final messenger = ScaffoldMessenger.of(context);
-    final colors = context.colors;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: colors.surface,
-        title: Text(
-          'Reset Password',
-          style: TextStyle(
-            color: colors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Enter your account email to receive a password reset link:',
-              style: TextStyle(color: colors.textSecondary, fontSize: 13),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: resetEmailCtrl,
-              style: TextStyle(color: colors.textPrimary),
-              decoration: const InputDecoration(
-                labelText: 'Email Address',
-                prefixIcon: Icon(Icons.email_outlined),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: Text('Cancel', style: TextStyle(color: colors.textMuted)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: colors.questBlue),
-            onPressed: () async {
-              final resetEmail = resetEmailCtrl.text.trim();
-              if (resetEmail.isEmpty) return;
-              Navigator.pop(ctx);
-              try {
-                await Supabase.instance.client.auth.resetPasswordForEmail(
-                  resetEmail,
-                );
-                if (!mounted) return;
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text('Password reset email sent to $resetEmail'),
-                    backgroundColor: colors.emerald,
-                  ),
-                );
-              } catch (e) {
-                if (!mounted) return;
-                messenger.showSnackBar(
-                  SnackBar(
-                    content: Text('Could not send reset email: $e'),
-                    backgroundColor: colors.crimson,
-                  ),
-                );
-              }
-            },
-            child: const Text(
-              'Send Reset Link',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -356,7 +325,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
-                                  'Sign in to access your guild & quests',
+                                  'Forge your real-world identity',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: context.colors.textSecondary,
@@ -420,7 +389,54 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 
                                 const SizedBox(height: 20),
 
-                                // Email Address or Username
+                                // Full Name
+                                TextFormField(
+                                  controller: _nameController,
+                                  style: TextStyle(
+                                    color: context.colors.textPrimary,
+                                  ),
+                                  textCapitalization: TextCapitalization.words,
+                                  decoration: InputDecoration(
+                                    labelText: 'Full Name',
+                                    labelStyle: TextStyle(
+                                      color: context.colors.textMuted,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.person_outline,
+                                      color: context.colors.questBlue,
+                                    ),
+                                    filled: true,
+                                    fillColor: context.colors.surface,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: context.colors.border,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: context.colors.border,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: context.colors.questBlue,
+                                        width: 2,
+                                      ),
+                                    ),
+                                  ),
+                                  validator: (value) {
+                                    if (value == null || value.trim().isEmpty) {
+                                      return 'Please enter your name';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Email Address
                                 TextFormField(
                                   controller: _emailController,
                                   keyboardType: TextInputType.emailAddress,
@@ -428,7 +444,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     color: context.colors.textPrimary,
                                   ),
                                   decoration: InputDecoration(
-                                    labelText: 'Email or Username',
+                                    labelText: 'Email Address',
                                     labelStyle: TextStyle(
                                       color: context.colors.textMuted,
                                     ),
@@ -460,7 +476,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                   validator: (value) {
                                     if (value == null || value.trim().isEmpty) {
-                                      return 'Please enter your email or username';
+                                      return 'Please enter your email';
+                                    }
+                                    if (!RegExp(
+                                      r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                    ).hasMatch(value.trim())) {
+                                      return 'Please enter a valid email';
                                     }
                                     return null;
                                   },
@@ -520,31 +541,78 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     if (value == null || value.isEmpty) {
                                       return 'Please enter a password';
                                     }
+                                    if (value.length < 6) {
+                                      return 'Password must be at least 6 characters';
+                                    }
                                     return null;
                                   },
                                 ),
+                                const SizedBox(height: 16),
 
-                                // Forgot Password
-                                Align(
-                                  alignment: Alignment.centerRight,
-                                  child: TextButton(
-                                    onPressed: _handleForgotPassword,
-                                    child: Text(
-                                      'Forgot Password?',
-                                      style: TextStyle(
+                                // Confirm Password
+                                TextFormField(
+                                  controller: _confirmPasswordController,
+                                  obscureText: _obscureConfirmPassword,
+                                  style: TextStyle(
+                                    color: context.colors.textPrimary,
+                                  ),
+                                  decoration: InputDecoration(
+                                    labelText: 'Confirm Password',
+                                    labelStyle: TextStyle(
+                                      color: context.colors.textMuted,
+                                    ),
+                                    prefixIcon: Icon(
+                                      Icons.lock_outline,
+                                      color: context.colors.questBlue,
+                                    ),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscureConfirmPassword
+                                            ? Icons.visibility_off
+                                            : Icons.visibility,
+                                        color: context.colors.textMuted,
+                                      ),
+                                      onPressed: () => setState(
+                                        () => _obscureConfirmPassword =
+                                            !_obscureConfirmPassword,
+                                      ),
+                                    ),
+                                    filled: true,
+                                    fillColor: context.colors.surface,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: context.colors.border,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
+                                        color: context.colors.border,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(
                                         color: context.colors.questBlue,
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w600,
+                                        width: 2,
                                       ),
                                     ),
                                   ),
+                                  validator: (value) {
+                                    if (value != _passwordController.text) {
+                                      return 'Passwords do not match';
+                                    }
+                                    return null;
+                                  },
                                 ),
-
-                                const SizedBox(height: 8),
+                                
+                                const SizedBox(height: 24),
 
                                 // Submit Button
                                 QuestButton(
-                                  label: _isLoading ? 'Please wait...' : 'Sign In',
+                                  label: _isLoading ? 'Please wait...' : 'Create Account',
+                                  icon: Icons.rocket_launch,
                                   isFullWidth: true,
                                   onPressed: _isLoading ? null : _submit,
                                 ),
@@ -559,7 +627,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             child: GestureDetector(
                               onTap: () {
                                 HapticFeedback.selectionClick();
-                                GoRouter.of(context).push('/signup');
+                                GoRouter.of(context).push('/login');
                               },
                               child: RichText(
                                 text: TextSpan(
@@ -569,10 +637,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                   children: [
                                     const TextSpan(
-                                      text: "Don't have an account? ",
+                                      text: 'Already have an account? ',
                                     ),
                                     TextSpan(
-                                      text: 'Sign Up',
+                                      text: 'Sign In',
                                       style: TextStyle(
                                         color: context.colors.questBlue,
                                         fontWeight: FontWeight.bold,
@@ -596,4 +664,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 }
-

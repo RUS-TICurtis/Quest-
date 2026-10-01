@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 import 'package:quest/features/interaction/messaging/data/chat_provider.dart';
 
 class MessagesScreen extends ConsumerStatefulWidget {
-  const MessagesScreen({super.key});
+  final int categoryIndex;
+
+  const MessagesScreen({super.key, required this.categoryIndex});
 
   @override
   ConsumerState<MessagesScreen> createState() => _MessagesScreenState();
@@ -13,14 +15,6 @@ class MessagesScreen extends ConsumerStatefulWidget {
 
 class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   String _searchQuery = '';
-  int _selectedCategoryIndex = 0;
-  final List<String> _categories = [
-    'All',
-    'Direct',
-    'Groups',
-    'Channels',
-    'Bots',
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +32,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
 
     // Category filtering
     final categoryFiltered = chatState.threads.where((t) {
-      switch (_selectedCategoryIndex) {
+      switch (widget.categoryIndex) {
         case 1: // Direct
           return !t.isGroup && !t.isChannel && !t.isAiCoach;
         case 2: // Groups
@@ -105,58 +99,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
             ),
           ),
 
-          // Telegram Category Filter Tabs
-          SizedBox(
-            height: 38,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              scrollDirection: Axis.horizontal,
-              itemCount: _categories.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, i) {
-                final isSelected = _selectedCategoryIndex == i;
-                return GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    setState(() {
-                      _selectedCategoryIndex = i;
-                    });
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? const Color(0xFF2AABEE)
-                          : const Color(0xFF17212B),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected
-                            ? const Color(0xFF2AABEE)
-                            : Colors.white10,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _categories[i],
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : Colors.white60,
-                          fontSize: 13,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
 
-          const SizedBox(height: 6),
 
           // Chat List
           Expanded(

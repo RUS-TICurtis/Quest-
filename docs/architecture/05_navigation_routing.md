@@ -52,8 +52,9 @@ else → null (no redirect)
 ## Shell Navigation
 
 `MainShell` (`lib/core/shell/main_shell.dart`) uses:
-- `BottomNavigationBar` when `MediaQuery.width < 600` (mobile)
+- `BottomNavigationBar` when `MediaQuery.width < 600` (mobile). The navigation bar explicitly displays text labels for each tab.
 - `NavigationRail` when `MediaQuery.width >= 600` (tablet/desktop)
 
 Navigation destinations: Home, Explore, Create, Connect, Profile.
 There is no global `AppBar` on mobile; the app relies on the `BottomNavigationBar` and custom app bars within individual screens (like the transparent `AppBar` in `ProfileScreen` for Leaderboard and Settings). Sub-routes (e.g., Chat, Search) use `parentNavigatorKey` to push above the shell and hide the navigation bar.
+- **Mission Control Gestures**: The Home tab serves as Mission Control. The Home icon on the navigation bar is wrapped in a `GestureDetector` that routes to the full-screen Experience Feed (`/feed`) on double-tap or swipe gestures.

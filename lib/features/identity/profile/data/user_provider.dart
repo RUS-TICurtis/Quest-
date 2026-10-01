@@ -9,6 +9,7 @@ class QuestItem {
   final String title;
   final int xp;
   final bool isDone;
+  final String category; // Personal, Social, Community, Event, Team, Exploration, Growth
 
   bool get isCompleted => isDone;
 
@@ -17,14 +18,16 @@ class QuestItem {
     required this.title,
     required this.xp,
     this.isDone = false,
+    this.category = 'Personal',
   });
 
-  QuestItem copyWith({String? id, String? title, int? xp, bool? isDone}) {
+  QuestItem copyWith({String? id, String? title, int? xp, bool? isDone, String? category}) {
     return QuestItem(
       id: id ?? this.id,
       title: title ?? this.title,
       xp: xp ?? this.xp,
       isDone: isDone ?? this.isDone,
+      category: category ?? this.category,
     );
   }
 
@@ -34,11 +37,12 @@ class QuestItem {
       title: json['title'] as String,
       xp: json['xp'] as int,
       isDone: json['isDone'] as bool? ?? false,
+      category: json['category'] as String? ?? 'Personal',
     );
   }
 
   Map<String, dynamic> toJson() {
-    return {'id': id, 'title': title, 'xp': xp, 'isDone': isDone};
+    return {'id': id, 'title': title, 'xp': xp, 'isDone': isDone, 'category': category};
   }
 }
 
@@ -58,6 +62,8 @@ class UserState {
   final List<String> joinedCommunityIds;
   final List<String> rsvpdEventIds;
   final bool recentlyLeveledUp;
+  final String playStyle; // Explore, Participate, Compete, Grow, Create, Everything
+  final bool onboardingCompleted;
 
   UserState({
     required this.name,
@@ -75,6 +81,8 @@ class UserState {
     required this.joinedCommunityIds,
     required this.rsvpdEventIds,
     this.recentlyLeveledUp = false,
+    this.playStyle = 'Everything',
+    this.onboardingCompleted = false,
   });
 
   factory UserState.initial() {
@@ -93,6 +101,8 @@ class UserState {
       dailyQuests: [],
       joinedCommunityIds: [],
       rsvpdEventIds: [],
+      playStyle: 'Everything',
+      onboardingCompleted: false,
     );
   }
 
@@ -112,6 +122,8 @@ class UserState {
     List<String>? joinedCommunityIds,
     List<String>? rsvpdEventIds,
     bool? recentlyLeveledUp,
+    String? playStyle,
+    bool? onboardingCompleted,
   }) {
     return UserState(
       name: name ?? this.name,
@@ -129,6 +141,8 @@ class UserState {
       joinedCommunityIds: joinedCommunityIds ?? this.joinedCommunityIds,
       rsvpdEventIds: rsvpdEventIds ?? this.rsvpdEventIds,
       recentlyLeveledUp: recentlyLeveledUp ?? this.recentlyLeveledUp,
+      playStyle: playStyle ?? this.playStyle,
+      onboardingCompleted: onboardingCompleted ?? this.onboardingCompleted,
     );
   }
 
@@ -176,6 +190,8 @@ class UserState {
               .toList() ??
           [],
       recentlyLeveledUp: json['recentlyLeveledUp'] as bool? ?? false,
+      playStyle: json['playStyle'] as String? ?? 'Everything',
+      onboardingCompleted: (json['onboardingCompleted'] ?? json['onboarding_completed']) as bool? ?? false,
     );
   }
 
@@ -196,6 +212,8 @@ class UserState {
       'joinedCommunityIds': joinedCommunityIds,
       'rsvpdEventIds': rsvpdEventIds,
       'recentlyLeveledUp': recentlyLeveledUp,
+      'playStyle': playStyle,
+      'onboarding_completed': onboardingCompleted,
     };
   }
 }

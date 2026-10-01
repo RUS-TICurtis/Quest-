@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -14,6 +15,7 @@ abstract class AuthRepository {
     String name,
   );
   Future<AuthResponse?> signInWithGoogleNative();
+  Future<AuthResponse> signInAnonymously();
 }
 
 class SupabaseAuthRepository implements AuthRepository {
@@ -43,16 +45,58 @@ class SupabaseAuthRepository implements AuthRepository {
     return response.user;
   }
 
+  Future<String> _generateUniqueUsername(String name) async {
+    String base = name
+        .toLowerCase()
+        .replaceAll(RegExp(r'\s+'), '')
+        .replaceAll(RegExp(r'[^a-z0-9]'), '');
+
+    if (base.isEmpty) {
+      base = 'user${DateTime.now().millisecondsSinceEpoch}';
+    }
+
+    final random = Random();
+    final suggestions = [
+      base,
+      "$base${random.nextInt(99)}",
+      "$base${random.nextInt(999)}",
+      "${base}_${random.nextInt(9)}",
+      "$base${DateTime.now().millisecond}",
+    ];
+
+    for (String suggestion in suggestions) {
+      if (suggestion.trim().isEmpty) continue;
+
+      try {
+        final response = await _client
+            .from('profiles')
+            .select('username')
+            .eq('username', suggestion)
+            .maybeSingle();
+        if (response == null) {
+          return suggestion;
+        }
+      } catch (e) {
+        if (e.toString().contains('No URI/host specified')) {
+          rethrow;
+        }
+      }
+    }
+
+    return "$base${DateTime.now().millisecondsSinceEpoch}";
+  }
+
   @override
   Future<AuthResponse> signUpWithEmail(
     String email,
     String password,
     String name,
   ) async {
+    final generatedUsername = await _generateUniqueUsername(name);
     final response = await _client.auth.signUp(
       email: email,
       password: password,
-      data: {'name': name, 'full_name': name, 'display_name': name},
+      data: {'name': name, 'full_name': name, 'display_name': name, 'username': generatedUsername},
     );
     return response;
   }
@@ -112,5 +156,10 @@ class SupabaseAuthRepository implements AuthRepository {
     );
 
     return response;
+  }
+
+  @override
+  Future<AuthResponse> signInAnonymously() async {
+    return await _client.auth.signInAnonymously();
   }
 }

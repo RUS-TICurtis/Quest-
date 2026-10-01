@@ -1,4 +1,4 @@
-_Last Modified: 2026-09-18_
+_Last Modified: 2026-09-21_
 
 # 00. Platform Domain Model & Architectural Vision
 
@@ -59,6 +59,7 @@ Instead of standalone features, Quest is structured into six cohesive platform l
 ### 2.1. Identity Layer
 *The multidimensional representation of a member.*
 - **Profiles:** User avatars, titles, and public representation.
+- **Play Style:** The chosen orientation (Explore, Participate, Compete, Grow, Create, Everything) defining user onboarding.
 - **Reputation:** Multi-dimensional trust and participation scoring (Reliability, Professionalism, etc.).
 - **Levels & Badges:** Gamified progression based on XP.
 - **Genome:** AI-derived behavioral models and growth paths.

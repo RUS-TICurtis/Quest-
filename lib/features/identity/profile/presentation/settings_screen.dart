@@ -471,6 +471,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       ? 'Followers Only'
                       : 'Everyone';
                 });
+                ref.read(localStorageServiceProvider).setString(
+                      LocalStorageService.keyStoryPrivacy, _storyPrivacy);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text('Story privacy set to: $_storyPrivacy'),
@@ -480,7 +482,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               },
             ),
             _buildDivider(),
-            SwitchListTile(
+            SwitchListTile.adaptive(
               secondary: Icon(Icons.done_all, color: context.colors.questBlue),
               value: _readReceipts,
               title: Text(
@@ -494,8 +496,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'Let others know when you read their messages',
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
-              activeThumbColor: context.colors.questBlue,
-              onChanged: (val) => setState(() => _readReceipts = val),
+              activeColor: context.colors.questBlue,
+              onChanged: (val) {
+                setState(() => _readReceipts = val);
+                ref.read(localStorageServiceProvider).setBool(
+                      LocalStorageService.keyReadReceipts, val);
+              },
             ),
           ]),
 
@@ -599,7 +605,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ),
             ),
             _buildDivider(),
-            SwitchListTile(
+            SwitchListTile.adaptive(
               secondary: Icon(Icons.vibration, color: context.colors.questBlue),
               value: _hapticFeedback,
               title: Text(
@@ -613,7 +619,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'Vibrations on state transitions and haptic taps',
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
-              activeThumbColor: context.colors.questBlue,
+              activeColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _hapticFeedback = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -629,7 +635,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // ==========================================
           _buildSectionHeader('Notifications & Sounds'),
           _buildCard([
-            SwitchListTile(
+            SwitchListTile.adaptive(
               secondary: Icon(
                 Icons.chat_bubble_outline,
                 color: context.colors.questBlue,
@@ -642,7 +648,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              activeThumbColor: context.colors.questBlue,
+              activeColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _directMessages = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -650,7 +656,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               },
             ),
             _buildDivider(),
-            SwitchListTile(
+            SwitchListTile.adaptive(
               secondary: Icon(
                 Icons.groups_outlined,
                 color: context.colors.questBlue,
@@ -663,7 +669,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              activeThumbColor: context.colors.questBlue,
+              activeColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _groupMessages = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -671,7 +677,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               },
             ),
             _buildDivider(),
-            SwitchListTile(
+            SwitchListTile.adaptive(
               secondary: Icon(
                 Icons.event_available,
                 color: context.colors.questBlue,
@@ -688,7 +694,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '1 hour before scheduled events',
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
-              activeThumbColor: context.colors.questBlue,
+              activeColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _eventAlerts = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -696,7 +702,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               },
             ),
             _buildDivider(),
-            SwitchListTile(
+            SwitchListTile.adaptive(
               secondary: Icon(
                 Icons.military_tech_outlined,
                 color: context.colors.questBlue,
@@ -709,7 +715,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              activeThumbColor: context.colors.questBlue,
+              activeColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _questReminders = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -717,7 +723,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               },
             ),
             _buildDivider(),
-            SwitchListTile(
+            SwitchListTile.adaptive(
               secondary: Icon(
                 Icons.volume_up_outlined,
                 color: context.colors.questBlue,
@@ -730,8 +736,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              activeThumbColor: context.colors.questBlue,
-              onChanged: (val) => setState(() => _soundEnabled = val),
+              activeColor: context.colors.questBlue,
+              onChanged: (val) {
+                setState(() => _soundEnabled = val);
+                ref.read(localStorageServiceProvider).setBool(
+                      LocalStorageService.keySoundEnabled, val);
+              },
             ),
           ]),
 
@@ -742,7 +752,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           // ==========================================
           _buildSectionHeader('Data & Storage'),
           _buildCard([
-            SwitchListTile(
+            SwitchListTile.adaptive(
               secondary: Icon(Icons.wifi, color: context.colors.questBlue),
               value: _autoDownloadWifiOnly,
               title: Text(
@@ -756,8 +766,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'Saves cellular data when viewing feeds and stories',
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
-              activeThumbColor: context.colors.questBlue,
-              onChanged: (val) => setState(() => _autoDownloadWifiOnly = val),
+              activeColor: context.colors.questBlue,
+              onChanged: (val) {
+                setState(() => _autoDownloadWifiOnly = val);
+                ref.read(localStorageServiceProvider).setBool(
+                      LocalStorageService.keyWifiOnly, val);
+              },
             ),
             _buildDivider(),
             ListTile(

@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:quest/features/society/events/data/events_provider.dart';
 import 'package:quest/features/identity/profile/data/user_provider.dart';
 import 'widgets/level_up_dialog.dart';
-import 'widgets/stories_bar.dart';
+
 import 'package:quest/core/theme/app_colors_extension.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -56,10 +56,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            title: const Text(
-              'Home',
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-            ),
             backgroundColor: context.colors.background,
             floating: true,
             elevation: 0,
@@ -79,39 +75,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const StoriesBar(),
-                  const SizedBox(height: 16),
 
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: ElevatedButton.icon(
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        context.push('/feed');
-                      },
-                      icon: Icon(Icons.play_circle_fill, color: Colors.white),
-                      label: Text(
-                        'Watch Video Feed',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: context.colors.questBlue,
-                        minimumSize: Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        elevation: 2,
-                        shadowColor: context.colors.questBlue.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 16),
 
                   // XP Bar card
                   Padding(

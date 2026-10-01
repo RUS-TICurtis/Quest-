@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-07_
+_Last Modified: 2026-09-27_
 
 # 03. Engineering Overview
 
@@ -51,6 +51,7 @@ Unlike traditional apps organized by isolated features, Quest is evolving toward
 - **Canonical Vocabulary:** Always adhere to the definitions in `canonical_vocabulary.md` to prevent semantic drift.
 - **Zero Warnings:** All changes must pass `flutter analyze` with zero warnings/errors.
 - **Design System:** Strict adherence to the `app_colors.dart` design system and `DESIGN.md`. Uses fluid spring animations and haptic feedback.
+- **Agent Skills:** Agent behavior is actively customized via the `.agents/skills` folder. The `frontend-design` and `document-changes` skills have been specifically tailored to enforce Flutter constraints, Quest design systems, and the living documentation standards above. 
 - **Custom Scripts:** A PowerShell script (`build_apk.ps1`) is used for generating APKs, appending random numeric identifiers, and cleaning up previous builds automatically.
 
 ## 6. What Needs to be Covered / Next Steps Discussion Points

@@ -5,6 +5,23 @@
 -- Enable extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- 0. SEED AUTH USERS
+INSERT INTO auth.users (
+  id, 
+  aud, 
+  role, 
+  email, 
+  raw_app_meta_data, 
+  raw_user_meta_data, 
+  created_at, 
+  updated_at
+) VALUES 
+  ('11111111-1111-1111-1111-111111111111', 'authenticated', 'authenticated', 'curtis_mock@quest.app', '{"provider":"email","providers":["email"]}', '{"name":"curtis_quest"}', now(), now()),
+  ('22222222-2222-2222-2222-222222222222', 'authenticated', 'authenticated', 'jane_mock@quest.app', '{"provider":"email","providers":["email"]}', '{"name":"jane_doe"}', now(), now()),
+  ('33333333-3333-3333-3333-333333333333', 'authenticated', 'authenticated', 'john_mock@quest.app', '{"provider":"email","providers":["email"]}', '{"name":"john_smith"}', now(), now())
+ON CONFLICT (id) DO UPDATE SET
+  email = EXCLUDED.email;
+
 -- 1. SEED PROFILES & TRUST SCORES
 INSERT INTO public.profiles (id, name, username, avatar_url, bio, archetypes, level, "currentXp")
 VALUES 

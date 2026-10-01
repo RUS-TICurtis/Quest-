@@ -2,6 +2,8 @@ import 'package:quest/core/theme/app_colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:quest/core/storage/local_database_service.dart';
+import 'package:quest/core/storage/models/cached_story.dart';
 import 'stories_provider.dart';
 
 abstract class StoriesRepository {
@@ -92,12 +94,33 @@ class MockStoriesRepository implements StoriesRepository {
 
 class SupabaseStoriesRepository implements StoriesRepository {
   final SupabaseClient _client;
-  final List<StoryItem> _localStories = List.from(defaultSeedStories);
+  final LocalDatabaseService _localDb;
 
-  SupabaseStoriesRepository(this._client);
+  SupabaseStoriesRepository(this._client, this._localDb);
 
   @override
   Future<List<StoryItem>> getStories() async {
+    // 1. Instant cache hit from Hive
+    final cached = _localDb.getValidStories();
+    final localStories = cached.map((c) => StoryItem(
+      id: c.storyId,
+      authorName: c.authorName,
+      communityName: c.communityName ?? 'Community',
+      caption: c.caption ?? '',
+      authorAvatar: c.authorAvatar,
+      isSeen: c.isSeen,
+      createdAt: c.createdAt,
+      content: c.mediaUrl,
+      videoUrl: c.mediaUrl,
+      muxPlaybackId: c.muxPlaybackId,
+      isMe: _client.auth.currentUser?.id == c.userId,
+    )).toList();
+
+    if (localStories.isEmpty) {
+      localStories.addAll(defaultSeedStories);
+    }
+
+    // 2. Background refresh
     try {
       final data = await _client
           .from('stories')
@@ -114,21 +137,33 @@ class SupabaseStoriesRepository implements StoriesRepository {
                   now.difference(story.createdAt!).inHours < 24,
             )
             .toList();
-        // Clear local seed mock stories and populate with real stories from Supabase
-        _localStories.clear();
-        _localStories.addAll(remote);
+        
+        final cachedStories = remote.map((s) => CachedStory(
+          storyId: s.id,
+          authorName: s.authorName,
+          communityName: s.communityName,
+          caption: s.caption,
+          authorAvatar: s.authorAvatar,
+          mediaUrl: s.content ?? s.videoUrl,
+          muxPlaybackId: s.muxPlaybackId,
+          userId: s.isMe ? _client.auth.currentUser?.id : null,
+          isSeen: s.isSeen,
+          createdAt: s.createdAt ?? DateTime.now(),
+          expiresAt: (s.createdAt ?? DateTime.now()).add(const Duration(hours: 24)),
+          cachedAt: DateTime.now(),
+        )).toList();
+        
+        await _localDb.cacheStories(cachedStories);
+        return remote;
       }
     } catch (e) {
       debugPrint('[SupabaseStoriesRepository] getStories notice: $e');
     }
-    return List.from(_localStories);
+    return localStories;
   }
 
   @override
   Future<StoryItem> addStory(StoryItem story) async {
-    _localStories.removeWhere((s) => s.id == story.id);
-    _localStories.insert(0, story);
-
     try {
       final payload = story.toSupabase();
       if (_client.auth.currentUser != null) {
@@ -140,10 +175,23 @@ class SupabaseStoriesRepository implements StoriesRepository {
           .select()
           .single();
       final created = StoryItem.fromJson(res);
-      final idx = _localStories.indexWhere((s) => s.id == story.id);
-      if (idx != -1) {
-        _localStories[idx] = created;
-      }
+      
+      final cStory = CachedStory(
+        storyId: created.id,
+        authorName: created.authorName,
+        communityName: created.communityName,
+        caption: created.caption,
+        authorAvatar: created.authorAvatar,
+        mediaUrl: created.content ?? created.videoUrl,
+        muxPlaybackId: created.muxPlaybackId,
+        userId: _client.auth.currentUser?.id,
+        isSeen: created.isSeen,
+        createdAt: created.createdAt ?? DateTime.now(),
+        expiresAt: (created.createdAt ?? DateTime.now()).add(const Duration(hours: 24)),
+        cachedAt: DateTime.now(),
+      );
+      await _localDb.cacheStories([cStory]);
+
       return created;
     } catch (e) {
       debugPrint('[SupabaseStoriesRepository] addStory fallback notice: $e');
@@ -153,7 +201,7 @@ class SupabaseStoriesRepository implements StoriesRepository {
 
   @override
   Future<void> deleteStory(String storyId) async {
-    _localStories.removeWhere((s) => s.id == storyId);
+    await _localDb.deleteStoryFromCache(storyId);
     if (!storyId.startsWith('s_') && !storyId.startsWith('s')) {
       try {
         await _client.functions.invoke(
@@ -174,11 +222,7 @@ class SupabaseStoriesRepository implements StoriesRepository {
 
   @override
   Future<void> markAsSeen(String storyId) async {
-    final idx = _localStories.indexWhere((s) => s.id == storyId);
-    if (idx != -1) {
-      _localStories[idx] = _localStories[idx].copyWith(isSeen: true);
-    }
-    // Only update Supabase for real persisted database records
+    await _localDb.markStorySeen(storyId);
     if (!storyId.startsWith('s_') && !storyId.startsWith('s')) {
       try {
         await _client
@@ -191,5 +235,6 @@ class SupabaseStoriesRepository implements StoriesRepository {
 }
 
 final storiesRepositoryProvider = Provider<StoriesRepository>((ref) {
-  return SupabaseStoriesRepository(Supabase.instance.client);
+  final localDb = ref.watch(localDatabaseProvider);
+  return SupabaseStoriesRepository(Supabase.instance.client, localDb);
 });

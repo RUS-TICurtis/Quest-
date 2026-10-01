@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:quest/features/identity/auth/data/auth_provider.dart';
 import 'package:quest/features/identity/auth/presentation/landing_screen.dart';
 import 'package:quest/features/identity/auth/presentation/login_screen.dart';
+import 'package:quest/features/identity/auth/presentation/signup_screen.dart';
 import 'package:quest/features/identity/auth/presentation/oauth_consent_screen.dart';
 import 'package:quest/features/identity/auth/presentation/onboarding_screen.dart';
 import 'package:quest/features/identity/auth/presentation/splash_screen.dart';
@@ -65,9 +66,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isSplash = loc == '/';
       final isLanding = loc == '/landing';
       final isLogin = loc == '/login';
+      final isSignup = loc == '/signup';
       final isOnboarding = loc == '/onboarding';
       final isConsent = loc == '/oauth/consent';
-      final isAuthRoute = isSplash || isLanding || isLogin || isOnboarding;
+      final isAuthRoute = isSplash || isLanding || isLogin || isSignup || isOnboarding;
 
       // If user is not authenticated and attempts to access consent screen,
       // redirect to /login with target return parameter
@@ -82,7 +84,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       }
 
       // If authenticated and on landing or login, redirect to home or preserved redirect target
-      if (isAuth && (isLanding || isLogin)) {
+      if (isAuth && (isLanding || isLogin || isSignup)) {
         final redirectTarget = state.uri.queryParameters['redirect'];
         if (redirectTarget != null && redirectTarget.isNotEmpty) {
           return redirectTarget;
@@ -108,6 +110,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/login',
         name: 'login',
         builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/signup',
+        name: 'signup',
+        builder: (context, state) => const SignupScreen(),
       ),
       GoRoute(
         path: '/oauth/consent',

@@ -1,4 +1,4 @@
-_Last Modified: 2026-09-18_
+_Last Modified: 2026-09-21_
 
 # 10. External Services & APIs (Free-Tier Optimized)
 
@@ -76,6 +76,17 @@ For sending transactional emails (Event tickets, Guild invitations, Welcome emai
 * **Service**: Resend (Easily integrates with Supabase Auth & Edge Functions).
 * **Free Tier Limits**: 3,000 emails per month (100 per day).
 * **Future Upgrade Path**: $20/mo for 50,000 emails.
+
+## 8. Local Storage & Caching: Hive
+For offline resilience, fast initial render, and stale-while-revalidate patterns, structured data is cached locally via Hive.
+* **Service**: `LocalDatabaseService` utilizing `hive_flutter`.
+* **Boxes (Caches)**:
+  * `chat_rooms`: Chat room metadata (TypeAdapter 1).
+  * `chat_messages`: Messaging history outbox/inbox (TypeAdapter 2).
+  * `feed_video_cache`: Feed video dedup & 24h stale-while-revalidate (TypeAdapter 10).
+  * `memberProfilesBox` / `profile_cache`: Member profile caching avoiding redundant Supabase requests (TypeAdapter 11).
+  * `storiesBox` / `story_cache`: Stories 24-hour TTL caching for instantaneous viewing (TypeAdapter 12).
+* **Settings**: `LocalStorageService` utilizing `shared_preferences` for UI settings and scalar properties.
 
 ---
 

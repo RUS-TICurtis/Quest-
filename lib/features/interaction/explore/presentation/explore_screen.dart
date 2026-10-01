@@ -43,13 +43,7 @@ class ExploreScreen extends ConsumerWidget {
         slivers: [
           SliverAppBar(
             backgroundColor: context.colors.background,
-            title: Text(
-              'Explore',
-              style: TextStyle(
-                color: context.colors.textPrimary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+
             actions: [
               IconButton(
                 icon: Icon(Icons.search, color: context.colors.textPrimary),

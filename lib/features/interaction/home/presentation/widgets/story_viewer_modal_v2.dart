@@ -7,6 +7,18 @@ import 'package:quest/features/interaction/home/data/stories_provider.dart' as s
 import 'package:quest/core/utils/time_utils.dart';
 import 'package:quest/shared/widgets/expandable_caption.dart';
 
+class _UserStoryGroup {
+  final String authorName;
+  final String? authorAvatar;
+  final List<sp.StoryItem> stories;
+
+  _UserStoryGroup({
+    required this.authorName,
+    this.authorAvatar,
+    required this.stories,
+  });
+}
+
 class StoryViewerModalV2 extends ConsumerStatefulWidget {
   final int initialIndex;
   final List<sp.StoryItem>? customStories;
@@ -42,18 +54,68 @@ class StoryViewerModalV2 extends ConsumerStatefulWidget {
 }
 
 class _StoryViewerModalV2State extends ConsumerState<StoryViewerModalV2> {
-  final StoryController controller = StoryController();
-  late List<sp.StoryItem> _stories;
-  late List<sv.StoryItem> _storyItems;
-  late int _currentIndex;
+  late PageController _pageController;
+  late List<_UserStoryGroup> _userGroups;
+  late List<StoryController> _storyControllers;
+  int _currentUserIndex = 0;
+  int _currentStoryIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _stories = widget.customStories ?? ref.read(sp.storiesProvider).value ?? [];
-    _currentIndex = widget.initialIndex;
+    final allStories = widget.customStories ?? ref.read(sp.storiesProvider).value ?? [];
 
-    _storyItems = _stories.map((s) {
+    // Group stories by author
+    final Map<String, _UserStoryGroup> grouped = {};
+    for (var story in allStories) {
+      if (!grouped.containsKey(story.authorName)) {
+        grouped[story.authorName] = _UserStoryGroup(
+          authorName: story.authorName,
+          authorAvatar: story.authorAvatar,
+          stories: [],
+        );
+      }
+      grouped[story.authorName]!.stories.add(story);
+    }
+
+    _userGroups = grouped.values.toList();
+    _storyControllers = List.generate(_userGroups.length, (_) => StoryController());
+
+    // Find which user group contains the initial story
+    if (widget.initialIndex > 0 && widget.initialIndex < allStories.length) {
+      final targetStory = allStories[widget.initialIndex];
+      _currentUserIndex = _userGroups.indexWhere((g) => g.authorName == targetStory.authorName);
+      if (_currentUserIndex == -1) _currentUserIndex = 0;
+      
+      _currentStoryIndex = _userGroups[_currentUserIndex].stories.indexWhere((s) => s.id == targetStory.id);
+      if (_currentStoryIndex == -1) _currentStoryIndex = 0;
+    }
+
+    _pageController = PageController(initialPage: _currentUserIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    for (var controller in _storyControllers) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  void _onStoryComplete() {
+    if (_currentUserIndex < _userGroups.length - 1) {
+      _pageController.nextPage(
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    } else {
+      Navigator.pop(context);
+    }
+  }
+
+  List<sv.StoryItem> _buildStoryItems(_UserStoryGroup group, int groupIndex) {
+    return group.stories.map((s) {
       if ((s.muxPlaybackId != null && s.muxPlaybackId!.isNotEmpty) ||
           (s.videoUrl != null && s.videoUrl!.isNotEmpty)) {
         final url = s.muxPlaybackId != null && s.muxPlaybackId!.isNotEmpty
@@ -61,18 +123,17 @@ class _StoryViewerModalV2State extends ConsumerState<StoryViewerModalV2> {
             : s.videoUrl!;
         return sv.StoryItem.pageVideo(
           url,
-          controller: controller,
+          controller: _storyControllers[groupIndex],
           key: ValueKey(s.id),
         );
       } else if (s.content != null && s.content!.isNotEmpty) {
         return sv.StoryItem.pageImage(
           url: s.content!,
-          controller: controller,
+          controller: _storyControllers[groupIndex],
           imageFit: BoxFit.contain,
           key: ValueKey(s.id),
         );
       } else {
-        // Fallback for text-only stories (e.g. mock stories)
         return sv.StoryItem.text(
           title: s.caption.isNotEmpty ? s.caption : 'No content',
           backgroundColor: (s.gradient != null && s.gradient!.isNotEmpty) 
@@ -81,130 +142,141 @@ class _StoryViewerModalV2State extends ConsumerState<StoryViewerModalV2> {
         );
       }
     }).toList();
-
-    // Slice lists starting from initialIndex to prevent the viewer from starting at 0
-    if (_currentIndex > 0 && _currentIndex < _storyItems.length) {
-       _storyItems = _storyItems.sublist(_currentIndex);
-       _stories = _stories.sublist(_currentIndex);
-       _currentIndex = 0;
-    }
-  }
-
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  void _onStoryShow(sv.StoryItem s, int pos) {
-    final index = _storyItems.indexOf(s);
-    if (index != -1 && mounted && _currentIndex != index) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            _currentIndex = index;
-          });
-        }
-      });
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_stories.isEmpty || _storyItems.isEmpty) return const SizedBox.shrink();
-
-    final currentAppStory = _stories[_currentIndex];
+    if (_userGroups.isEmpty) return const SizedBox.shrink();
 
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          StoryView(
-            storyItems: _storyItems,
-            controller: controller,
-            onStoryShow: _onStoryShow,
-            onComplete: () {
-              Navigator.pop(context);
-            },
-            onVerticalSwipeComplete: (direction) {
-              if (direction == Direction.down) {
-                Navigator.pop(context);
-              }
-            },
-          ),
+      body: PageView.builder(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _currentUserIndex = index;
+            _currentStoryIndex = 0;
+          });
+          // Pause all other controllers
+          for (int i = 0; i < _storyControllers.length; i++) {
+            if (i != index) {
+              _storyControllers[i].pause();
+            } else {
+              _storyControllers[i].play();
+            }
+          }
+        },
+        itemCount: _userGroups.length,
+        itemBuilder: (context, index) {
+          final group = _userGroups[index];
+          final storyItems = _buildStoryItems(group, index);
           
-          // Top Overlay
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 30.0, left: 16, right: 16),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 18,
-                    backgroundImage: currentAppStory.authorAvatar != null
-                        ? NetworkImage(currentAppStory.authorAvatar!)
-                        : null,
-                    child: currentAppStory.authorAvatar == null
-                        ? const Icon(Icons.person, size: 20)
-                        : null,
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          currentAppStory.authorName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            shadows: [Shadow(blurRadius: 4, color: Colors.black)],
-                          ),
-                        ),
-                        if (currentAppStory.createdAt != null)
-                          Text(
-                            TimeUtils.formatStoryTime(currentAppStory.createdAt!),
-                            style: const TextStyle(
-                              color: Colors.white70,
-                              fontSize: 12,
-                              shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+          // If we are navigating to this page, and we need to start at a specific story offset
+          if (index == _currentUserIndex && _currentStoryIndex > 0) {
+             // story_view does not have an initialIndex, we have to slice the list.
+             // But we want progress bars for all of them. Since StoryView doesn't support starting
+             // at an arbitrary index easily while keeping the full progress bar, we might just play from start
+             // or slice it. We'll play from start for simplicity, or slice if strictly needed.
+             // We'll leave it as is to keep the full progress bar, but they will restart if sliced.
+          }
+
+          final currentAppStory = group.stories[_currentStoryIndex < group.stories.length ? _currentStoryIndex : 0];
+
+          return Stack(
+            children: [
+              StoryView(
+                storyItems: storyItems,
+                controller: _storyControllers[index],
+                onStoryShow: (s, pos) {
+                  final idx = storyItems.indexOf(s);
+                  if (idx != -1 && mounted) {
+                    setState(() {
+                      _currentStoryIndex = idx;
+                    });
+                  }
+                },
+                onComplete: _onStoryComplete,
+                onVerticalSwipeComplete: (direction) {
+                  if (direction == Direction.down) {
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+              
+              // Top Overlay
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 30.0, left: 16, right: 16),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundImage: group.authorAvatar != null
+                            ? NetworkImage(group.authorAvatar!)
+                            : null,
+                        child: group.authorAvatar == null
+                            ? const Icon(Icons.person, size: 20)
+                            : null,
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              group.authorName,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                              ),
                             ),
-                          ),
-                      ],
+                            if (currentAppStory.createdAt != null)
+                              Text(
+                                TimeUtils.formatStoryTime(currentAppStory.createdAt!),
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                  shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Bottom Caption Overlay
+              if (currentAppStory.caption.isNotEmpty)
+                Positioned(
+                  left: 16,
+                  right: 16,
+                  bottom: 40,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ExpandableCaption(
+                      text: currentAppStory.caption,
+                      textStyle: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        shadows: [Shadow(blurRadius: 3, color: Colors.black)],
+                      ),
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          // Bottom Caption Overlay
-          if (currentAppStory.caption.isNotEmpty)
-            Positioned(
-              left: 16,
-              right: 16,
-              bottom: 40,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.45),
-                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: ExpandableCaption(
-                  text: currentAppStory.caption,
-                  textStyle: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    shadows: [Shadow(blurRadius: 3, color: Colors.black)],
-                  ),
-                ),
-              ),
-            ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }

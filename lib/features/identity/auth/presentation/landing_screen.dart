@@ -4,46 +4,83 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/shared/widgets/quest_button.dart';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-class LandingScreen extends ConsumerWidget {
+class LandingScreen extends StatefulWidget {
   const LandingScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  State<LandingScreen> createState() => _LandingScreenState();
+}
+
+class _LandingScreenState extends State<LandingScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
+
+    _animation = Tween<double>(begin: -10.0, end: 10.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // Ambient glow backgrounds
-          Positioned(
-            top: MediaQuery.of(context).size.height * 0.1,
-            left: -100,
-            child: Container(
-              width: 350,
-              height: 350,
-              decoration: BoxDecoration(
-                color: AppColors.questBlue.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ),
-          Positioned(
-            bottom: MediaQuery.of(context).size.height * 0.1,
-            right: -80,
-            child: Container(
-              width: 300,
-              height: 300,
-              decoration: BoxDecoration(
-                color: AppColors.auroraPurple.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-            ),
+          // Ambient glow backgrounds with animation
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, child) {
+              return Stack(
+                children: [
+                  Positioned(
+                    top: MediaQuery.of(context).size.height * 0.1 +
+                        _animation.value,
+                    left: -100 - (_animation.value / 2),
+                    child: Container(
+                      width: 350,
+                      height: 350,
+                      decoration: BoxDecoration(
+                        color: AppColors.questBlue.withValues(alpha: 0.15),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: MediaQuery.of(context).size.height * 0.1 -
+                        _animation.value,
+                    right: -80 + (_animation.value / 2),
+                    child: Container(
+                      width: 300,
+                      height: 300,
+                      decoration: BoxDecoration(
+                        color: AppColors.auroraPurple.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
 
           SafeArea(
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 28, vertical: 20),
+              padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -63,14 +100,14 @@ class LandingScreen extends ConsumerWidget {
                             ),
                           ],
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.auto_awesome,
                           color: AppColors.textPrimary,
                           size: 20,
                         ),
                       ),
-                      SizedBox(width: 10),
-                      Text(
+                      const SizedBox(width: 10),
+                      const Text(
                         'Quest',
                         style: TextStyle(
                           fontSize: 22,
@@ -82,10 +119,10 @@ class LandingScreen extends ConsumerWidget {
                     ],
                   ),
 
-                  Spacer(),
+                  const Spacer(),
 
                   // Headline
-                  Text(
+                  const Text(
                     'The Social\nOperating System\nfor Real-World\nConnection.',
                     style: TextStyle(
                       fontSize: 38,
@@ -96,8 +133,8 @@ class LandingScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  SizedBox(height: 20),
-                  Text(
+                  const SizedBox(height: 20),
+                  const Text(
                     'Build communities. Discover events.\nLevel up your life.',
                     style: TextStyle(
                       fontSize: 16,
@@ -106,31 +143,19 @@ class LandingScreen extends ConsumerWidget {
                     ),
                   ),
 
-                  Spacer(),
+                  const Spacer(),
 
                   // Action Buttons
                   QuestButton(
-                    label: 'Create Account',
+                    label: 'Continue',
                     isFullWidth: true,
-                    icon: Icons.rocket_launch_outlined,
+                    icon: Icons.arrow_forward_rounded,
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       context.push('/login');
                     },
                   ),
-                  SizedBox(height: 12),
-
-                  QuestButton(
-                    label: 'Sign In to Existing Account',
-                    isFullWidth: true,
-                    variant: QuestButtonVariant.secondary,
-                    icon: Icons.login_rounded,
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      context.push('/login');
-                    },
-                  ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 24),
 
                   // Feature rows
                   Row(
@@ -142,7 +167,7 @@ class LandingScreen extends ConsumerWidget {
                     ],
                   ),
 
-                  SizedBox(height: 24),
+                  const SizedBox(height: 24),
                 ],
               ),
             ),
@@ -165,10 +190,10 @@ class LandingScreen extends ConsumerWidget {
           ),
           child: Icon(icon, color: AppColors.questBlue, size: 22),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 11,
             color: AppColors.textSecondary,
             fontWeight: FontWeight.w500,

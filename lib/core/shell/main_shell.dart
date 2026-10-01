@@ -37,6 +37,27 @@ class MainShell extends ConsumerWidget {
     }
   }
 
+  Widget _buildHomeIcon(BuildContext context, bool isActive) {
+    return GestureDetector(
+      onDoubleTap: () {
+        context.push('/feed');
+      },
+      onVerticalDragEnd: (details) {
+        // Swipe up to open feed
+        if (details.primaryVelocity != null && details.primaryVelocity! < -100) {
+          context.push('/feed');
+        }
+      },
+      onHorizontalDragEnd: (details) {
+        // Swipe side to open feed
+        if (details.primaryVelocity != null && details.primaryVelocity!.abs() > 100) {
+          context.push('/feed');
+        }
+      },
+      child: Icon(isActive ? Icons.home : Icons.home_outlined),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final idx = _selectedIndex(context);
@@ -157,12 +178,14 @@ class MainShell extends ConsumerWidget {
           type: BottomNavigationBarType.fixed,
           selectedItemColor: context.colors.questBlue,
           unselectedItemColor: context.colors.textMuted,
-          showSelectedLabels: false,
-          showUnselectedLabels: false,
+          showSelectedLabels: true,
+          showUnselectedLabels: true,
+          selectedLabelStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal, fontSize: 11),
           items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
+              icon: _buildHomeIcon(context, false),
+              activeIcon: _buildHomeIcon(context, true),
               label: 'Home',
             ),
             BottomNavigationBarItem(
@@ -171,8 +194,8 @@ class MainShell extends ConsumerWidget {
               label: 'Explore',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.add_circle_outline, size: 32),
-              activeIcon: Icon(Icons.add_circle, size: 32),
+              icon: Icon(Icons.add_circle_outline, size: 28),
+              activeIcon: Icon(Icons.add_circle, size: 28),
               label: 'Create',
             ),
             BottomNavigationBarItem(

@@ -5,6 +5,7 @@ import 'package:quest/shared/widgets/quest_button.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+import 'package:quest/features/identity/profile/data/user_provider.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -17,6 +18,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _step = 0;
   final TextEditingController _nameController = TextEditingController();
   final List<String> _selectedArchetypes = [];
+  bool _isSaving = false;
 
   final _archetypes = [
     {
@@ -361,12 +363,44 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         ),
         SizedBox(height: 48),
         QuestButton(
-          label: 'Enter Dashboard',
+          label: _isSaving ? 'Forging...' : 'Enter Dashboard',
           isFullWidth: true,
-          icon: Icons.arrow_forward,
-          onPressed: () {
+          icon: _isSaving ? null : Icons.arrow_forward,
+          onPressed: _isSaving ? null : () async {
             HapticFeedback.lightImpact();
-            context.go('/home');
+            setState(() => _isSaving = true);
+            
+            try {
+              final userNotifier = ref.read(userProvider.notifier);
+              final currentState = ref.read(userProvider).value;
+              
+              if (currentState != null) {
+                final split = _nameController.text.trim().split(' ');
+                String inits = 'Q';
+                if (split.isNotEmpty && split.first.isNotEmpty) {
+                  inits = split.first[0].toUpperCase();
+                  if (split.length > 1 && split.last.isNotEmpty) {
+                    inits += split.last[0].toUpperCase();
+                  }
+                }
+                
+                final updatedUser = currentState.copyWith(
+                  name: _nameController.text.trim(),
+                  initials: inits,
+                  playStyle: archetypeLabels,
+                  onboardingCompleted: true,
+                  archetypes: _selectedArchetypes,
+                );
+                
+                await userNotifier.updateProfile(updatedUser);
+              }
+              
+              if (mounted) context.go('/home');
+            } finally {
+              if (mounted) {
+                setState(() => _isSaving = false);
+              }
+            }
           },
         ),
       ],

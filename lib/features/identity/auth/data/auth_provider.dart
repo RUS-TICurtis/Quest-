@@ -104,6 +104,22 @@ class AuthNotifier extends Notifier<AuthState> {
       rethrow;
     }
   }
+
+  Future<AuthResponse> signInAnonymously() async {
+    state = state.copyWith(isLoading: true);
+    try {
+      final response = await _repository.signInAnonymously();
+      if (response.user != null) {
+        state = state.copyWith(user: response.user, isLoading: false);
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
+      return response;
+    } catch (e) {
+      state = state.copyWith(isLoading: false);
+      rethrow;
+    }
+  }
 }
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(() {

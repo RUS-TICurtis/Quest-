@@ -116,14 +116,36 @@ class _VideoFeedState<T> extends ConsumerState<VideoFeed<T>> {
                       } else {
                         controller.play();
                       }
+                      // Trigger a rebuild to show the play icon
+                      setState(() {});
                     },
-                    child: FittedBox(
-                      fit: BoxFit.cover,
-                      child: SizedBox(
-                        width: controller.value.size.width,
-                        height: controller.value.size.height,
-                        child: VideoPlayer(controller),
-                      ),
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: controller.value.size.width,
+                            height: controller.value.size.height,
+                            child: VideoPlayer(controller),
+                          ),
+                        ),
+                        if (!controller.value.isPlaying)
+                          Center(
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.black45,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.play_arrow,
+                                size: 64,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   )
                 else

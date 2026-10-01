@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "ui-skills": {
+      "serverUrl": "https://www.ui-skills.com/mcp"
+    },
+    "agentic-skills": {
+      "serverUrl": "https://agenticskills.io/mcp"
+    }
+  }
+}

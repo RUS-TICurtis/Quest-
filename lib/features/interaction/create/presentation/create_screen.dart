@@ -21,6 +21,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
   CameraController? _cameraController;
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
+  bool _isRecording = false;
 
   final TextEditingController _textController = TextEditingController();
 
@@ -170,17 +171,41 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                   onTap: () async {
                     HapticFeedback.heavyImpact();
                     if (!isTextMode && _isCameraInitialized) {
-                      try {
-                        final file = await _cameraController!.takePicture();
-                        if (!context.mounted) return;
-                        _disposeCamera();
-                        await context.push(
-                          '/share-experience',
-                          extra: file.path,
-                        );
-                        if (mounted) _initCamera();
-                      } catch (e) {
-                        debugPrint('Error taking picture: $e');
+                      if (_selectedOptionIndex == 2) {
+                        // Vlog mode
+                        if (_isRecording) {
+                          try {
+                            final file = await _cameraController!.stopVideoRecording();
+                            setState(() => _isRecording = false);
+                            if (!context.mounted) return;
+                            _disposeCamera();
+                            await context.push('/share-experience', extra: file.path);
+                            if (mounted) _initCamera();
+                          } catch (e) {
+                            debugPrint('Error stopping video recording: $e');
+                          }
+                        } else {
+                          try {
+                            await _cameraController!.startVideoRecording();
+                            setState(() => _isRecording = true);
+                          } catch (e) {
+                            debugPrint('Error starting video recording: $e');
+                          }
+                        }
+                      } else {
+                        // Image mode
+                        try {
+                          final file = await _cameraController!.takePicture();
+                          if (!context.mounted) return;
+                          _disposeCamera();
+                          await context.push(
+                            '/share-experience',
+                            extra: file.path,
+                          );
+                          if (mounted) _initCamera();
+                        } catch (e) {
+                          debugPrint('Error taking picture: $e');
+                        }
                       }
                     } else if (isTextMode) {
                       if (!context.mounted) return;
@@ -198,17 +223,18 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                       border: Border.all(color: Colors.white, width: 4),
                     ),
                     child: Center(
-                      child: Container(
-                        width: 56,
-                        height: 56,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: _isRecording ? 32 : 56,
+                        height: _isRecording ? 32 : 56,
                         decoration: BoxDecoration(
                           color: _selectedOptionIndex == 2
                               ? Colors.red
                               : Colors.white,
-                          shape: BoxShape.circle,
+                          borderRadius: BorderRadius.circular(_isRecording ? 8 : 28),
                         ),
                         child: isTextMode
-                            ? Icon(Icons.arrow_forward, color: Colors.black)
+                            ? const Icon(Icons.arrow_forward, color: Colors.black)
                             : null,
                       ),
                     ),

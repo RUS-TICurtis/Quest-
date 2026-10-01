@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 import 'package:quest/features/identity/auth/data/auth_provider.dart';
+import 'package:quest/features/identity/profile/data/user_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -43,18 +44,38 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _controller.forward();
 
-    // Navigate to landing or home based on real auth state
-    Future.delayed(const Duration(milliseconds: 2200), () {
+    _loadAndNavigate();
+  }
+
+  Future<void> _loadAndNavigate() async {
+    // 1. Min display timer for premium animation feel
+    final minDisplayFuture = Future.delayed(const Duration(milliseconds: 500));
+    
+    // 2. Auth state
+    final isAuth = ref.read(authProvider).isAuthenticated;
+    
+    if (isAuth) {
+      // 3. Preload user profile concurrently
+      final profileFuture = ref.read(userProvider.future);
+      
+      await Future.wait([minDisplayFuture, profileFuture]);
+      
       if (mounted && !_navigated) {
         _navigated = true;
-        final isAuth = ref.read(authProvider).isAuthenticated;
-        if (isAuth) {
+        final profile = ref.read(userProvider).value;
+        if (profile != null && profile.onboardingCompleted) {
           context.go('/home');
         } else {
-          context.go('/landing');
+          context.go('/onboarding');
         }
       }
-    });
+    } else {
+      await minDisplayFuture;
+      if (mounted && !_navigated) {
+        _navigated = true;
+        context.go('/landing');
+      }
+    }
   }
 
   @override
