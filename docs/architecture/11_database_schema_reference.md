@@ -25,3 +25,9 @@ Historically, `profiles` had both `avatarUrl` and `avatar_url`.
 
 ## Supabase Realtime
 - **Chat**: Channel name `chat_messages_for_$userId`, listening to `INSERT` on `chat_messages` in `public` schema.
+
+---
+## Foundation security migration (added 2026-10-05)
+_Last Modified: 2026-10-05_
+
+`20261005000000_foundation_security.sql`: own-row profile RLS, `protect_profile_columns` trigger (level/currentXp/xpToNextLevel/streak/badges/role/creator_status/ban flags are service-role only), unique `lower(username)` index, `profiles_username_format` CHECK (`^[a-z0-9_]{3,30}$`, NOT VALID), RPC `check_username_available(text)`, `is_guest()`, `is_chat_participant(uuid)` (fixes recursive chat policies). Live DB has NO `profiles.full_name` - never write it. Missing tables: event_rsvps, community_members, notifications, xp_events, achievements, challenges, places, presences.

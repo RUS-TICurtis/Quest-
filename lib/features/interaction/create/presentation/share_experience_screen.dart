@@ -14,6 +14,7 @@ import 'package:quest/core/services/app_notification_service.dart';
 import 'package:quest/features/interaction/home/data/stories_provider.dart';
 import 'package:quest/shared/models/creator_video.dart';
 import 'package:quest/features/interaction/feed/data/feed_provider.dart';
+import 'package:quest/features/society/communities/data/communities_provider.dart';
 
 class ShareExperienceScreen extends ConsumerStatefulWidget {
   final String? mediaPath;
@@ -28,6 +29,8 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
   bool _shareToStory = true;
   bool _shareToFeed = false;
   bool _shareToCommunities = false;
+  Community? _selectedCommunity;
+  final List<String> _taggedUsers = [];
   bool _isUploading = false;
   String _uploadStatus = 'Preparing…';
   bool _usedFallback = false;
@@ -70,11 +73,11 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
     super.dispose();
   }
 
-  void _showSelectionBottomSheet(
-    String title,
-    List<String> recents,
-    List<String> frequents,
-  ) {
+  void _showCommunityPicker() {
+    HapticFeedback.lightImpact();
+    final communitiesAsync = ref.read(communitiesProvider);
+    final communities = communitiesAsync.value?.communities ?? [];
+
     showModalBottomSheet(
       context: context,
       backgroundColor: context.colors.surface,
@@ -83,103 +86,297 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (ctx) {
-        return DefaultTabController(
-          length: 2,
-          child: Container(
-            height: MediaQuery.of(context).size.height * 0.7,
-            padding: const EdgeInsets.only(top: 16),
-            child: Column(
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: context.colors.border,
-                    borderRadius: BorderRadius.circular(2),
+        String query = '';
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            final filtered = communities.where((c) {
+              final q = query.toLowerCase();
+              return c.name.toLowerCase().contains(q) ||
+                  c.description.toLowerCase().contains(q) ||
+                  c.category.toLowerCase().contains(q);
+            }).toList();
+
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.65,
+              padding: const EdgeInsets.only(top: 16),
+              child: Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: context.colors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    title,
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Select Community',
+                          style: TextStyle(
+                            color: context.colors.textPrimary,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (_selectedCommunity != null)
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _selectedCommunity = null;
+                                _shareToCommunities = false;
+                              });
+                              Navigator.pop(context);
+                            },
+                            child: Text(
+                              'Clear',
+                              style: TextStyle(color: context.colors.crimson),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: TextField(
+                      style: TextStyle(color: context.colors.textPrimary),
+                      onChanged: (val) => setSheetState(() => query = val),
+                      decoration: InputDecoration(
+                        hintText: 'Search communities…',
+                        hintStyle: TextStyle(color: context.colors.textMuted),
+                        prefixIcon: Icon(
+                          Icons.search,
+                          color: context.colors.textMuted,
+                        ),
+                        filled: true,
+                        fillColor: context.colors.card,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: filtered.isEmpty
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(24),
+                              child: Text(
+                                communities.isEmpty
+                                    ? 'No communities available yet.'
+                                    : 'No communities match "$query".',
+                                style: TextStyle(
+                                  color: context.colors.textMuted,
+                                ),
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            itemCount: filtered.length,
+                            itemBuilder: (context, index) {
+                              final comm = filtered[index];
+                              final isSelected =
+                                  _selectedCommunity?.id == comm.id;
+                              return ListTile(
+                                leading: CircleAvatar(
+                                  backgroundColor: comm.accentColor
+                                      .withValues(alpha: 0.15),
+                                  child: Icon(comm.icon,
+                                      color: comm.accentColor, size: 20),
+                                ),
+                                title: Text(
+                                  comm.name,
+                                  style: TextStyle(
+                                    color: context.colors.textPrimary,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '${comm.category} • ${comm.memberCount} members',
+                                  style: TextStyle(
+                                    color: context.colors.textMuted,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                trailing: isSelected
+                                    ? Icon(Icons.check_circle,
+                                        color: context.colors.questBlue)
+                                    : null,
+                                onTap: () {
+                                  HapticFeedback.selectionClick();
+                                  setState(() {
+                                    _selectedCommunity = comm;
+                                    _shareToCommunities = true;
+                                  });
+                                  Navigator.pop(context);
+                                },
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showTagPeoplePicker() {
+    HapticFeedback.lightImpact();
+    final textController = TextEditingController();
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.colors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+                top: 16,
+                left: 16,
+                right: 16,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: context.colors.border,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Tag People',
                     style: TextStyle(
                       color: context.colors.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  child: TextField(
-                    style: TextStyle(color: context.colors.textPrimary),
-                    decoration: InputDecoration(
-                      hintText: 'Search...',
-                      hintStyle: TextStyle(color: context.colors.textMuted),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: context.colors.textMuted,
+                  const SizedBox(height: 12),
+                  if (_taggedUsers.isNotEmpty) ...[
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: _taggedUsers.map((tag) {
+                        return Chip(
+                          label: Text('@$tag'),
+                          backgroundColor: context.colors.questBlue
+                              .withValues(alpha: 0.15),
+                          labelStyle: TextStyle(
+                            color: context.colors.questBlue,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          deleteIcon: const Icon(Icons.close, size: 16),
+                          onDeleted: () {
+                            setSheetState(() {
+                              _taggedUsers.remove(tag);
+                            });
+                            setState(() {});
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: textController,
+                          style: TextStyle(color: context.colors.textPrimary),
+                          decoration: InputDecoration(
+                            hintText: 'Enter username (e.g. jules)',
+                            hintStyle:
+                                TextStyle(color: context.colors.textMuted),
+                            prefixText: '@',
+                            prefixStyle:
+                                TextStyle(color: context.colors.questBlue),
+                            filled: true,
+                            fillColor: context.colors.card,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                          ),
+                          onSubmitted: (val) {
+                            final trimmed =
+                                val.trim().replaceAll('@', '').toLowerCase();
+                            if (trimmed.isNotEmpty &&
+                                !_taggedUsers.contains(trimmed)) {
+                              setSheetState(() {
+                                _taggedUsers.add(trimmed);
+                                textController.clear();
+                              });
+                              setState(() {});
+                            }
+                          },
+                        ),
                       ),
-                      filled: true,
-                      fillColor: context.colors.card,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
+                      const SizedBox(width: 8),
+                      IconButton(
+                        style: IconButton.styleFrom(
+                          backgroundColor: context.colors.questBlue,
+                          foregroundColor: Colors.white,
+                        ),
+                        icon: const Icon(Icons.add),
+                        onPressed: () {
+                          final trimmed = textController.text
+                              .trim()
+                              .replaceAll('@', '')
+                              .toLowerCase();
+                          if (trimmed.isNotEmpty &&
+                              !_taggedUsers.contains(trimmed)) {
+                            setSheetState(() {
+                              _taggedUsers.add(trimmed);
+                              textController.clear();
+                            });
+                            setState(() {});
+                          }
+                        },
                       ),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: context.colors.questBlue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Done'),
                     ),
                   ),
-                ),
-                TabBar(
-                  labelColor: context.colors.questBlue,
-                  unselectedLabelColor: context.colors.textMuted,
-                  indicatorColor: context.colors.questBlue,
-                  tabs: const [
-                    Tab(text: 'Recents'),
-                    Tab(text: 'Frequent'),
-                  ],
-                ),
-                Expanded(
-                  child: TabBarView(
-                    children: [_buildList(recents), _buildList(frequents)],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildList(List<String> items) {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        return ListTile(
-          leading: CircleAvatar(
-            backgroundColor: context.colors.questBlue.withValues(alpha: 0.1),
-            child: Text(
-              items[index][0],
-              style: TextStyle(
-                color: context.colors.questBlue,
-                fontWeight: FontWeight.bold,
+                ],
               ),
-            ),
-          ),
-          title: Text(
-            items[index],
-            style: TextStyle(color: context.colors.textPrimary),
-          ),
-          trailing: Icon(
-            Icons.add_circle_outline,
-            color: context.colors.textMuted,
-          ),
-          onTap: () {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Selected: ${items[index]}')),
             );
           },
         );
@@ -305,32 +502,36 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              subtitle: Text(
+                _taggedUsers.isEmpty
+                    ? 'Tag people by username'
+                    : _taggedUsers.map((u) => '@$u').join(', '),
+                style: TextStyle(
+                  color: _taggedUsers.isEmpty
+                      ? context.colors.textMuted
+                      : context.colors.questBlue,
+                  fontSize: 12,
+                ),
+              ),
               trailing: Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
                 color: context.colors.textMuted,
               ),
-              onTap: () {
-                _showSelectionBottomSheet(
-                  'Tag People',
-                  [
-                    'Alex Rivera',
-                    'Elena Rostova',
-                    'Marcus Vance',
-                    'Sarah Jenkins',
-                  ],
-                  ['Alex Rivera', 'David Kim', 'Emma Watson'],
-                );
-              },
+              onTap: _showTagPeoplePicker,
             ),
             ListTile(
               leading: Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: context.colors.emerald.withValues(alpha: 0.1),
+                  color: (_selectedCommunity?.accentColor ?? context.colors.emerald)
+                      .withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(Icons.groups, color: context.colors.emerald),
+                child: Icon(
+                  _selectedCommunity?.icon ?? Icons.groups,
+                  color: _selectedCommunity?.accentColor ?? context.colors.emerald,
+                ),
               ),
               title: Text(
                 'Share to Communities',
@@ -339,18 +540,23 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
+              subtitle: Text(
+                _selectedCommunity != null
+                    ? '${_selectedCommunity!.name} • ${_selectedCommunity!.memberCount} members'
+                    : 'Tap to select a community destination',
+                style: TextStyle(
+                  color: _selectedCommunity != null
+                      ? context.colors.questBlue
+                      : context.colors.textMuted,
+                  fontSize: 12,
+                ),
+              ),
               trailing: Icon(
                 Icons.arrow_forward_ios,
                 size: 16,
                 color: context.colors.textMuted,
               ),
-              onTap: () {
-                _showSelectionBottomSheet(
-                  'Select Communities',
-                  ['Flutter Devs', 'Tech Enthusiasts', 'Local Runners'],
-                  ['Flutter Devs', 'Design Systems', 'AI Explorers'],
-                );
-              },
+              onTap: _showCommunityPicker,
             ),
 
             const SizedBox(height: 24),
@@ -383,6 +589,10 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                 'Main Feed',
                 style: TextStyle(color: context.colors.textPrimary),
               ),
+              subtitle: Text(
+                'Visible to all explorers in the feed',
+                style: TextStyle(color: context.colors.textMuted, fontSize: 12),
+              ),
               value: _shareToFeed,
               activeThumbColor: context.colors.questBlue,
               contentPadding: EdgeInsets.zero,
@@ -393,10 +603,26 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                 'Communities',
                 style: TextStyle(color: context.colors.textPrimary),
               ),
+              subtitle: Text(
+                _selectedCommunity != null
+                    ? 'Posting to ${_selectedCommunity!.name}'
+                    : 'Requires selecting a community',
+                style: TextStyle(
+                  color: _selectedCommunity != null
+                      ? context.colors.questBlue
+                      : context.colors.textMuted,
+                  fontSize: 12,
+                ),
+              ),
               value: _shareToCommunities,
               activeThumbColor: context.colors.questBlue,
               contentPadding: EdgeInsets.zero,
-              onChanged: (val) => setState(() => _shareToCommunities = val),
+              onChanged: (val) {
+                setState(() => _shareToCommunities = val);
+                if (val && _selectedCommunity == null) {
+                  _showCommunityPicker();
+                }
+              },
             ),
 
             const SizedBox(height: 40),
@@ -416,10 +642,44 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                 onPressed: _isUploading
                     ? null
                     : () async {
+                        final destinations = <String>[];
+                        if (_shareToFeed) destinations.add('feed');
+                        if (_shareToStory) destinations.add('story');
+                        if (_shareToCommunities) {
+                          if (_selectedCommunity != null) {
+                            destinations.add('community');
+                          } else {
+                            HapticFeedback.heavyImpact();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text(
+                                  'Please select a community to share with.',
+                                ),
+                                backgroundColor: context.colors.crimson,
+                              ),
+                            );
+                            _showCommunityPicker();
+                            return;
+                          }
+                        }
+
+                        if (destinations.isEmpty) {
+                          HapticFeedback.heavyImpact();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                'Please choose at least one destination (Story, Feed, or Community).',
+                              ),
+                              backgroundColor: context.colors.crimson,
+                            ),
+                          );
+                          return;
+                        }
+
                         HapticFeedback.heavyImpact();
                         setState(() {
                           _isUploading = true;
-                          _uploadStatus = 'Preparing…';
+                          _uploadStatus = 'Preparing media…';
                           _usedFallback = false;
                         });
 
@@ -428,14 +688,14 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                           AppNotificationService().showUploadProgress(msg);
                         }
 
-
                         try {
                           String? mediaUrl;
                           String? muxPlaybackId;
                           String? muxAssetId;
                           final supabase = Supabase.instance.client;
 
-                          if (widget.mediaPath != null) {
+                          if (widget.mediaPath != null &&
+                              widget.mediaPath!.isNotEmpty) {
                             if (kIsWeb) {
                               // Web platform: Read bytes from XFile or blob URL
                               Uint8List? bytes;
@@ -466,6 +726,7 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                                     }
                                   }
                                 } else {
+                                  updateStatus('Uploading image…');
                                   mediaUrl =
                                       await MediaServiceGateway.uploadImageBytes(
                                         bytes,
@@ -507,70 +768,76 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                                 mediaUrl = widget.mediaPath;
                               }
                             }
+
+                            if (mediaUrl == null && muxPlaybackId == null) {
+                              throw Exception(
+                                'Media upload failed. Please check network connection and try again.',
+                              );
+                            }
                           }
 
-                          final destinations = <String>[];
-                          if (_shareToFeed) destinations.add('feed');
-                          if (_shareToStory) destinations.add('story');
-                          if (_shareToCommunities) destinations.add('community');
+                          updateStatus('Publishing experience…');
+                          final res = await supabase.functions.invoke(
+                            'publish-experience',
+                            body: {
+                              'media_url': mediaUrl,
+                              'mux_playback_id': muxPlaybackId,
+                              'mux_asset_id': muxAssetId,
+                              'caption': _captionController.text.trim(),
+                              'destinations': destinations,
+                              'community_id':
+                                  _shareToCommunities
+                                      ? _selectedCommunity?.id
+                                      : null,
+                            },
+                          );
 
-                          if (destinations.isNotEmpty) {
-                            try {
-                              final res = await supabase.functions.invoke(
-                                'publish-experience',
-                                body: {
-                                  'media_url': mediaUrl,
-                                  'mux_playback_id': muxPlaybackId,
-                                  'mux_asset_id': muxAssetId,
-                                  'caption': _captionController.text,
-                                  'destinations': destinations,
-                                  'community_id': '1',
-                                },
+                          final data = res.data;
+                          if (res.status >= 400 ||
+                              (data != null && data['error'] != null)) {
+                            throw Exception(
+                              data?['error'] ??
+                                  'Server rejected experience publication (HTTP ${res.status})',
+                            );
+                          }
+
+                          if (data != null && data['success'] == true) {
+                            final List<dynamic> videosJson =
+                                data['videos'] ?? [];
+
+                            // Optimistic Updates
+                            if (_shareToFeed) {
+                              final feedVideoJson = videosJson.firstWhere(
+                                (v) => v['video_type'] == 'feed',
+                                orElse: () => null,
                               );
-                              
-                              final data = res.data;
-                              if (data != null && data['success'] == true) {
-                                final List<dynamic> videosJson = data['videos'] ?? [];
-                                
-                                // Optimistic Updates
-                                if (_shareToFeed) {
-                                  final feedVideoJson = videosJson.firstWhere(
-                                    (v) => v['video_type'] == 'feed', 
-                                    orElse: () => null
+                              if (feedVideoJson != null) {
+                                try {
+                                  final newFeedVideo = CreatorVideo.fromJson(
+                                    feedVideoJson,
                                   );
-                                  if (feedVideoJson != null) {
-                                    try {
-                                      // feedControllerProvider expects CreatorVideo
-                                      // We will add insertVideoTop to FeedController in the next step
-                                      final newFeedVideo = CreatorVideo.fromJson(feedVideoJson);
-                                      ref.read(feedControllerProvider).insertVideoTop(newFeedVideo);
-                                    } catch (_) {}
-                                  }
-                                }
-
-                                if (_shareToStory) {
-                                  final storyJson = videosJson.firstWhere(
-                                    (v) => v['video_type'] == 'story', 
-                                    orElse: () => null
-                                  );
-                                  if (storyJson != null) {
-                                    try {
-                                      final newStory = StoryItem.fromJson(storyJson);
-                                      ref.read(storiesProvider.notifier).addStoryLocally(newStory);
-                                    } catch (_) {}
-                                  }
-                                }
+                                  ref
+                                      .read(feedControllerProvider)
+                                      .insertVideoTop(newFeedVideo);
+                                } catch (_) {}
                               }
-                            } catch (e) {
-                              debugPrint('Publish experience edge function failed: $e');
-                              if (!context.mounted) return;
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Failed to publish experience: $e'),
-                                  backgroundColor: Colors.red,
-                                ),
+                            }
+
+                            if (_shareToStory) {
+                              final storyJson = videosJson.firstWhere(
+                                (v) => v['video_type'] == 'story',
+                                orElse: () => null,
                               );
-                              return;
+                              if (storyJson != null) {
+                                try {
+                                  final newStory = StoryItem.fromJson(
+                                    storyJson,
+                                  );
+                                  ref
+                                      .read(storiesProvider.notifier)
+                                      .addStoryLocally(newStory);
+                                } catch (_) {}
+                              }
                             }
                           }
 
@@ -595,7 +862,7 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
                           if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
-                              content: Text('Error sharing: $e'),
+                              content: Text('Error sharing experience: $e'),
                               backgroundColor: context.colors.crimson,
                             ),
                           );

@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:quest/core/env/env.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -65,12 +65,8 @@ class OAuthServerService {
   OAuthServerService({Dio? dio, SupabaseClient? supabase})
     : _dio = dio ?? Dio(),
       _supabase = supabase ?? Supabase.instance.client,
-      _baseUrl =
-          dotenv.env['SUPABASE_URL'] ??
-          'https://ipvsbunseucoheycxpeg.supabase.co',
-      _anonKey =
-          dotenv.env['SUPABASE_ANON_KEY'] ??
-          'sb_publishable_HG9KaCul4NDePDRYEruZfg_OUaQ42Y7';
+      _baseUrl = Env.supabaseUrl,
+      _anonKey = Env.supabaseAnonKey;
 
   Map<String, String> _buildHeaders() {
     final session = _supabase.auth.currentSession;

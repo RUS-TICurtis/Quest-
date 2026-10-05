@@ -39,3 +39,12 @@ The following modules strictly adhere to this `AsyncNotifier`/`StateNotifier` + 
 - **Global Search**: `GlobalSearchNotifier` (`globalSearchProvider`) -> `GlobalSearchRepository` (`globalSearchRepositoryProvider`)
 
 Each model (e.g. `User`, `ChatMessage`, `StageState`, `UserSearchResult`, `GlobalSearchResults`) implements `fromJson` and `toJson` serialization for seamless Supabase interoperability.
+
+---
+## Auth & Profile State (updated 2026-10-05)
+_Last Modified: 2026-10-05_
+
+- `authProvider` (`AuthNotifier`) is the single source of truth. `AuthState.accessLevel` = `unauthenticated | guest | member`. The auth stream also delivers refresh/expiry/revocation (user -> null) to the router.
+- `AuthNotifier.continueWithGoogle(GoogleIntent)` returns `GoogleAuthOutcome`; sign-in never creates, sign-up never duplicates (native flow).
+- `userProvider` watches `authProvider`. Server is authoritative; the SharedPreferences snapshot is an offline fallback only and is cleared on sign-out. Guests receive a transient non-persisted profile. Writes are optimistic with rollback and throw (`UsernameTakenException`, `ProfileSaveException`).
+- Temporary: locally earned XP/level is preserved when ahead of server (no server XP yet).

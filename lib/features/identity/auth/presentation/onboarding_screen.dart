@@ -1,11 +1,15 @@
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:quest/shared/widgets/quest_button.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+import 'dart:async';
 import 'package:quest/features/identity/profile/data/user_provider.dart';
+import 'package:quest/features/identity/profile/data/user_repository.dart';
+import 'package:quest/features/identity/profile/domain/username_rules.dart';
+
+enum _UsernameStatus { empty, invalid, checking, available, taken, error }
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -17,8 +21,13 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _step = 0;
   final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final List<String> _selectedArchetypes = [];
   bool _isSaving = false;
+  _UsernameStatus _usernameStatus = _UsernameStatus.empty;
+  String? _usernameMessage;
+  Timer? _usernameDebounce;
+  int _usernameCheckSeq = 0;
 
   final _archetypes = [
     {
@@ -49,8 +58,54 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   void dispose() {
+    _usernameDebounce?.cancel();
     _nameController.dispose();
+    _usernameController.dispose();
     super.dispose();
+  }
+
+  void _onUsernameChanged(String value) {
+    _usernameDebounce?.cancel();
+    final error = UsernameRules.validate(value);
+    if (value.trim().isEmpty) {
+      setState(() {
+        _usernameStatus = _UsernameStatus.empty;
+        _usernameMessage = null;
+      });
+      return;
+    }
+    if (error != null) {
+      setState(() {
+        _usernameStatus = _UsernameStatus.invalid;
+        _usernameMessage = error;
+      });
+      return;
+    }
+    setState(() {
+      _usernameStatus = _UsernameStatus.checking;
+      _usernameMessage = 'Checking availability…';
+    });
+    final seq = ++_usernameCheckSeq;
+    _usernameDebounce = Timer(const Duration(milliseconds: 450), () async {
+      try {
+        final ok = await ref
+            .read(userRepositoryProvider)
+            .isUsernameAvailable(value);
+        // Ignore results for stale input (user kept typing).
+        if (!mounted || seq != _usernameCheckSeq) return;
+        setState(() {
+          _usernameStatus =
+              ok ? _UsernameStatus.available : _UsernameStatus.taken;
+          _usernameMessage = ok ? 'Username is available' : 'Already taken';
+        });
+      } catch (_) {
+        if (!mounted || seq != _usernameCheckSeq) return;
+        setState(() {
+          _usernameStatus = _UsernameStatus.error;
+          _usernameMessage = "Couldn't check right now — try again";
+        });
+      }
+    });
   }
 
   void _nextStep() => setState(() => _step = (_step + 1).clamp(0, 2));
@@ -154,11 +209,36 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           decoration: InputDecoration(hintText: 'Display name...'),
           onChanged: (_) => setState(() {}),
         ),
+        SizedBox(height: 16),
+        TextField(
+          controller: _usernameController,
+          autocorrect: false,
+          maxLength: UsernameRules.maxLength,
+          style: TextStyle(color: context.colors.textPrimary, fontSize: 16),
+          decoration: InputDecoration(
+            hintText: 'username',
+            prefixText: '@',
+            counterText: '',
+            helperText: _usernameMessage,
+            helperStyle: TextStyle(
+              color: switch (_usernameStatus) {
+                _UsernameStatus.available => context.colors.emerald,
+                _UsernameStatus.checking => context.colors.textMuted,
+                _UsernameStatus.empty => context.colors.textMuted,
+                _ => context.colors.crimson,
+              },
+            ),
+          ),
+          onChanged: _onUsernameChanged,
+        ),
         Spacer(),
         QuestButton(
           label: 'Continue',
           isFullWidth: true,
-          onPressed: _nameController.text.trim().isEmpty ? null : _nextStep,
+          onPressed: _nameController.text.trim().isEmpty ||
+                  _usernameStatus != _UsernameStatus.available
+              ? null
+              : _nextStep,
         ),
       ],
     );
@@ -386,16 +466,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 
                 final updatedUser = currentState.copyWith(
                   name: _nameController.text.trim(),
+                  username: UsernameRules.normalize(_usernameController.text),
                   initials: inits,
                   playStyle: archetypeLabels,
                   onboardingCompleted: true,
                   archetypes: _selectedArchetypes,
                 );
                 
+                // Throws on failure; the notifier rolls state back so the router
+                // will not advance past onboarding unless the save succeeded.
                 await userNotifier.updateProfile(updatedUser);
               }
-              
-              if (mounted) context.go('/home');
+              // Navigation is owned by the router redirect (onboarding done → home).
+            } on UsernameTakenException {
+              if (mounted) {
+                // Lost a race for the username: send the user back to pick another.
+                setState(() {
+                  _step = 0;
+                  _usernameStatus = _UsernameStatus.taken;
+                  _usernameMessage = 'Someone just took that username';
+                });
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      e is ProfileSaveException
+                          ? e.message
+                          : "Couldn't save your profile. Check your connection and try again.",
+                    ),
+                    backgroundColor: context.colors.crimson,
+                  ),
+                );
+              }
             } finally {
               if (mounted) {
                 setState(() => _isSaving = false);

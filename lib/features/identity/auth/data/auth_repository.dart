@@ -1,6 +1,6 @@
 import 'dart:math';
 import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:quest/core/env/env.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -16,6 +16,9 @@ abstract class AuthRepository {
   );
   Future<AuthResponse?> signInWithGoogleNative();
   Future<AuthResponse> signInAnonymously();
+
+  /// Whether a Quest profile exists for [userId] with onboarding finished.
+  Future<bool> hasCompletedProfile(String userId);
 }
 
 class SupabaseAuthRepository implements AuthRepository {
@@ -34,6 +37,22 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     await _client.auth.signOut();
+    try {
+      // Clear the cached Google account so the chooser is shown next time.
+      await GoogleSignIn().signOut();
+    } catch (_) {
+      // Not signed in with Google on this device — nothing to clear.
+    }
+  }
+
+  @override
+  Future<bool> hasCompletedProfile(String userId) async {
+    final row = await _client
+        .from('profiles')
+        .select('onboarding_completed')
+        .eq('id', userId)
+        .maybeSingle();
+    return row != null && row['onboarding_completed'] == true;
   }
 
   @override
@@ -103,8 +122,8 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<AuthResponse?> signInWithGoogleNative() async {
-    final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'];
-    final iosClientId = dotenv.env['GOOGLE_IOS_CLIENT_ID'];
+    final webClientId = Env.googleWebClientId;
+    final iosClientId = Env.googleIosClientId;
 
     if (webClientId == null || webClientId.trim().isEmpty) {
       throw const AuthException(

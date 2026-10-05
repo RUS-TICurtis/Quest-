@@ -1,4 +1,4 @@
-_Last Modified: 2026-09-21_
+_Last Modified: 2026-10-05_
 
 # 10. External Services & APIs (Free-Tier Optimized)
 
@@ -12,11 +12,15 @@ Supabase serves as our primary unified backend, replacing the need for separate 
   * **Realtime**: WebSockets for live chat messages and presence (Online/Offline status).
   * **Storage**: Avatars, community banners, event images.
   * **Edge Functions**: Executing server-side logic and managing atomic operations:
+    * `sign-media-upload`: Authenticated delegation of upload credentials and signing (Mux direct uploads, Cloudinary HMAC, ImageKit HMAC) without client secrets.
     * `publish-experience`: Secure, centralized creation of posts across feed, story, and community destinations.
     * `interact-video`: Atomic handling of likes and comments with automatic calculation of creator engagement scores.
     * `send-message`: Chat message transmission with simultaneous updates to thread metadata (`lastMessageText`, `lastMessageTime`).
     * `update-profile`: Sanitized profile mutation preventing modification of protected properties like `trust_score`.
     * `delete-experience`: Cascading removal of stories and videos across unified and legacy tables with creator authorization checks.
+* **Security & Secret Segregation**:
+  * Privileged keys (`SUPABASE_SERVICE_ROLE_KEY`, `MUX_TOKEN_SECRET`, `CLOUDINARY_API_SECRET`, `IMAGEKIT_PRIVATE_KEY`) reside exclusively in Supabase backend environments / Edge Functions.
+  * The Flutter client bundle NEVER contains private keys or service role tokens.
 * **Free Tier Limits**:
   * 50,000 Monthly Active Users (MAU).
   * 500 MB Database space & 1 GB File Storage.
@@ -52,14 +56,22 @@ For out-of-app alerts (e.g., direct messages, event reminders).
 * **Use Case**: Tracking fatal/non-fatal app crashes and tracking screen views.
 * **Free Tier Limits**: 100% Free indefinitely.
 
-## 6. Video Streaming: Mux + Cloudinary Fallback
-* **Primary**: Mux direct-upload → adaptive HLS streaming via `stream.mux.com/<id>.m3u8`.
-  * Fixed polling: polls `/video/v1/uploads/$uploadId` first to resolve `asset_id` before polling `/video/v1/assets/$assetId`.
-  * Throws `MuxQuotaException` on HTTP 402/429 for clean gateway fallback.
-* **Fallback**: Cloudinary (`CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` in `.env`).
-  * `MediaServiceGateway` automatically routes to Cloudinary when Mux fails, is null, or quota is exceeded.
-  * `MediaUploadResult.usedFallback == true` signals the caller (share screen, notification) that Cloudinary was used.
-* **Callback**: `UploadStatusCallback` in `MediaServiceGateway` feeds human-readable stage messages to the UI.
+## 6. Video & Media Streaming: Server-Delegated Uploads (Mux + Cloudinary + ImageKit)
+* **Zero Client Secrets**:
+  * No `MUX_TOKEN_SECRET`, `CLOUDINARY_API_SECRET`, or `IMAGEKIT_PRIVATE_KEY` are packaged or loaded in Flutter.
+  * Client requests signed upload credentials via the `sign-media-upload` Edge Function.
+* **Primary Video (Mux)**:
+  * Client calls `sign-media-upload` to generate a temporary direct upload URL with public playback policy.
+  * Client streams video bytes directly to the pre-signed Mux CDN URL via standard HTTP `PUT`.
+  * Asset status polling or webhook ingestion (`mux-webhook`) transitions the video into `ready` state.
+  * Throws `MuxQuotaException` on HTTP 402/429 for gateway fallback.
+* **Fallback Video & Chat Media (Cloudinary)**:
+  * Client requests an upload signature from `sign-media-upload` with server-side HMAC hashing.
+  * Client performs multipart POST directly to Cloudinary using the signature.
+* **Image Media (ImageKit)**:
+  * Client requests authentication parameters (`token`, `expire`, `signature`) from `sign-media-upload`.
+  * Uploads directly to ImageKit using the public key and server signature.
+* **Progress & UI Feedback**: `UploadStatusCallback` in `MediaServiceGateway` feeds human-readable stage messages to the UI.
 
 ## 7. Device Notifications: `flutter_local_notifications`
 * **Package**: `flutter_local_notifications: ^18.0.1`

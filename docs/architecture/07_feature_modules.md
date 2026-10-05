@@ -1,4 +1,4 @@
-_Last Modified: 2026-09-27_
+_Last Modified: 2026-10-05_
 
 # 7. Feature Modules
 
@@ -9,8 +9,8 @@ _Last Modified: 2026-09-27_
 | **Auth & OAuth 2.1** | `lib/features/identity/auth/` | Identity | ✅ Complete | Supabase Auth + Google Native + OAuth 2.1 Server |
 | **Profile / XP** | `lib/features/identity/profile/` | Identity | ✅ Complete | `profiles`, `daily_quests` tables |
 | **Leaderboard** | `lib/features/identity/leaderboard/` | Identity | ✅ Complete | `leaderboard` table & season rankings |
-| **Home (Mission Control)** | `lib/features/interaction/home/` | Interaction | ✅ Complete | XP Bar, Quests, Gamification Cockpit |
-| **Video Feed** | `lib/features/interaction/feed/` | Interaction | ✅ Complete | `videos` table, `FeedVideoPool`, TikTok scroll |
+| **Home (Mission Control)** | `lib/features/interaction/home/` | Interaction | ✅ Complete | XP Bar, Quests, Gamification Cockpit, Feed Spotlight |
+| **Video Feed** | `lib/features/interaction/feed/` | Interaction | ✅ Complete | Live `videos` table fallback, `FeedVideoPool`, TikTok scroll, Guest Intercepts |
 | **Explore & Global Search** | `lib/features/interaction/explore/` | Interaction | ✅ Complete | Multi-entity repository & Glassmorphic UI |
 | **Connect & Social** | `lib/features/interaction/connect/` | Interaction | ✅ Complete | Search, Stories, Chats, Communities |
 | **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Camera, Mux, Cloudinary, gateway upload |

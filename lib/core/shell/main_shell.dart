@@ -37,26 +37,7 @@ class MainShell extends ConsumerWidget {
     }
   }
 
-  Widget _buildHomeIcon(BuildContext context, bool isActive) {
-    return GestureDetector(
-      onDoubleTap: () {
-        context.push('/feed');
-      },
-      onVerticalDragEnd: (details) {
-        // Swipe up to open feed
-        if (details.primaryVelocity != null && details.primaryVelocity! < -100) {
-          context.push('/feed');
-        }
-      },
-      onHorizontalDragEnd: (details) {
-        // Swipe side to open feed
-        if (details.primaryVelocity != null && details.primaryVelocity!.abs() > 100) {
-          context.push('/feed');
-        }
-      },
-      child: Icon(isActive ? Icons.home : Icons.home_outlined),
-    );
-  }
+
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -184,8 +165,8 @@ class MainShell extends ConsumerWidget {
           unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal, fontSize: 11),
           items: [
             BottomNavigationBarItem(
-              icon: _buildHomeIcon(context, false),
-              activeIcon: _buildHomeIcon(context, true),
+              icon: Icon(Icons.home_outlined),
+              activeIcon: Icon(Icons.home),
               label: 'Home',
             ),
             BottomNavigationBarItem(

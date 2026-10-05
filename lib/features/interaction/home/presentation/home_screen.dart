@@ -132,7 +132,123 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 32),
+                  const SizedBox(height: 20),
+
+                  // Experience Video Feed Banner
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(16),
+                      onTap: () {
+                        HapticFeedback.lightImpact();
+                        context.push('/feed');
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              context.colors.questBlue.withValues(alpha: 0.15),
+                              context.colors.skyBlue.withValues(alpha: 0.08),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: context.colors.questBlue.withValues(alpha: 0.3),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: context.colors.questBlue,
+                                borderRadius: BorderRadius.circular(12),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: context.colors.questBlue.withValues(alpha: 0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.play_arrow_rounded,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'EXPERIENCE FEED',
+                                        style: TextStyle(
+                                          color: context.colors.questBlue,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 11,
+                                          letterSpacing: 0.8,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 1,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: context.colors.questBlue.withValues(alpha: 0.2),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          'WATCH',
+                                          style: TextStyle(
+                                            color: context.colors.questBlue,
+                                            fontWeight: FontWeight.w800,
+                                            fontSize: 9,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Community Video Stream',
+                                    style: TextStyle(
+                                      color: context.colors.textPrimary,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 15,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Watch full-screen vlogs, updates & stories',
+                                    style: TextStyle(
+                                      color: context.colors.textSecondary,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              color: context.colors.textMuted,
+                              size: 14,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
 
                   // AI Coach Card
                   Padding(
@@ -196,7 +312,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           SizedBox(height: 10),
                           Text(
-                            'Three people nearby share your interests.',
+                            'Not sure where to start?',
                             style: TextStyle(
                               color: context.colors.textPrimary,
                               fontWeight: FontWeight.w700,
@@ -205,7 +321,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                           SizedBox(height: 6),
                           Text(
-                            'They are attending the Tech Startup Mixer tonight.',
+                            'Ask the Quest Guide what to do next.',
                             style: TextStyle(
                               color: context.colors.textSecondary,
                               fontSize: 13,
@@ -227,10 +343,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             ),
                             onPressed: () {
                               HapticFeedback.lightImpact();
-                              context.push('/events/1');
+                              context.push('/connect/ai_coach');
                             },
                             child: Text(
-                              'View Event',
+                              'Open Guide',
                               style: TextStyle(
                                 fontWeight: FontWeight.w700,
                                 fontSize: 13,
@@ -258,7 +374,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           ),
                         ),
                         Text(
-                          'Resets in 8h',
+                          _resetsInLabel(),
                           style: TextStyle(
                             color: context.colors.textMuted,
                             fontSize: 12,
@@ -375,6 +491,17 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ],
       ),
     );
+  }
+
+  /// Time until local midnight (daily quest rollover is a backend concern;
+  /// this only labels the calendar day boundary honestly).
+  String _resetsInLabel() {
+    final now = DateTime.now();
+    final midnight = DateTime(now.year, now.month, now.day + 1);
+    final left = midnight.difference(now);
+    final h = left.inHours;
+    final m = left.inMinutes % 60;
+    return h > 0 ? 'Resets in ${h}h' : 'Resets in ${m}m';
   }
 
   Widget _questTile(BuildContext context, QuestItem quest) {
@@ -572,6 +699,32 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               SizedBox(height: 16),
+              ListTile(
+                leading: Container(
+                  padding: EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: context.colors.questBlue.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.play_circle_outline, color: context.colors.questBlue),
+                ),
+                title: Text(
+                  'Watch Video Feed',
+                  style: TextStyle(
+                    color: context.colors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  'Explore vertical video clips and creator updates',
+                  style: TextStyle(color: context.colors.textMuted),
+                ),
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.pop(context);
+                  context.push('/feed');
+                },
+              ),
               ListTile(
                 leading: Container(
                   padding: EdgeInsets.all(10),

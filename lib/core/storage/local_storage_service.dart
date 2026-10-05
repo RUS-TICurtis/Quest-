@@ -75,6 +75,19 @@ class LocalStorageService {
     };
   }
 
+  Future<void> clearProfile() async {
+    for (final k in [
+      keyProfileName,
+      keyProfileAvatarUrl,
+      keyProfileXp,
+      keyProfileLevel,
+      keyProfileUsername,
+      keyProfileBio,
+    ]) {
+      await _prefs.remove(k);
+    }
+  }
+
   // ── Typed generic accessors ───────────────────────────────────────────────
 
   bool getBool(String key, {bool defaultValue = true}) =>

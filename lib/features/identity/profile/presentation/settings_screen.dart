@@ -496,7 +496,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'Let others know when you read their messages',
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
-              activeColor: context.colors.questBlue,
+              activeTrackColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _readReceipts = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -619,7 +619,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'Vibrations on state transitions and haptic taps',
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
-              activeColor: context.colors.questBlue,
+              activeTrackColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _hapticFeedback = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -648,7 +648,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              activeColor: context.colors.questBlue,
+              activeTrackColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _directMessages = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -669,7 +669,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              activeColor: context.colors.questBlue,
+              activeTrackColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _groupMessages = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -694,7 +694,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 '1 hour before scheduled events',
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
-              activeColor: context.colors.questBlue,
+              activeTrackColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _eventAlerts = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -715,7 +715,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              activeColor: context.colors.questBlue,
+              activeTrackColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _questReminders = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -736,7 +736,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              activeColor: context.colors.questBlue,
+              activeTrackColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _soundEnabled = val);
                 ref.read(localStorageServiceProvider).setBool(
@@ -766,7 +766,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 'Saves cellular data when viewing feeds and stories',
                 style: TextStyle(color: context.colors.textMuted, fontSize: 12),
               ),
-              activeColor: context.colors.questBlue,
+              activeTrackColor: context.colors.questBlue,
               onChanged: (val) {
                 setState(() => _autoDownloadWifiOnly = val);
                 ref.read(localStorageServiceProvider).setBool(

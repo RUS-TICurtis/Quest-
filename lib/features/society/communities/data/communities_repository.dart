@@ -101,15 +101,6 @@ class SupabaseCommunitiesRepository implements CommunitiesRepository {
   @override
   Future<List<Community>> getCommunities() async {
     final data = await _client.from('communities').select();
-    if (data.isEmpty) {
-      // Seed with mock data
-      final mockRepo = MockCommunitiesRepository();
-      final mocks = await mockRepo.getCommunities();
-      for (final m in mocks) {
-        await _client.from('communities').insert(m.toJson());
-      }
-      return mocks;
-    }
     return data.map((json) => Community.fromJson(json)).toList();
   }
 

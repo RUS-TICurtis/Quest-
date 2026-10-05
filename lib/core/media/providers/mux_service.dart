@@ -1,8 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'package:dio/dio.dart';
-import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide Headers;
 import '../media_upload_result.dart';
 
 /// Exception thrown when Mux signals quota exhaustion (HTTP 402 / 429).
@@ -13,72 +12,52 @@ class MuxQuotaException implements Exception {
   String toString() => 'MuxQuotaException: $message';
 }
 
+/// Manages direct video uploads to Mux via Supabase Edge Function delegation.
+///
+/// NOTE: The client NEVER holds Mux API tokens (`MUX_TOKEN_ID`, `MUX_TOKEN_SECRET`).
+/// The server signs and provisions direct upload URLs through `sign-media-upload`.
 class MuxService {
-  final Dio _dio = Dio();
+  final Dio _dio;
+  final SupabaseClient _supabase;
 
-  /// Uploads video bytes to Mux via a direct upload URL.
-  ///
-  /// Fixed polling strategy:
-  /// 1. Create direct upload → receive `upload_id`.
-  /// 2. PUT bytes to the signed upload URL.
-  /// 3. Poll `GET /video/v1/uploads/$uploadId` until `status == 'asset_created'`
-  ///    and `asset_id` is populated (asset_id is null until file processing begins).
-  /// 4. Poll `GET /video/v1/assets/$assetId` until `status == 'ready'`.
-  ///
-  /// Throws [MuxQuotaException] on HTTP 402/429 so the gateway can fallback.
+  MuxService({Dio? dio, SupabaseClient? supabase})
+      : _dio = dio ?? Dio(),
+        _supabase = supabase ?? Supabase.instance.client;
+
+  /// Uploads video bytes to Mux via a server-generated direct upload URL.
   Future<MediaUploadResult?> uploadVideoBytes(Uint8List bytes) async {
-    final tokenId = dotenv.env['MUX_TOKEN_ID'];
-    final tokenSecret = dotenv.env['MUX_TOKEN_SECRET'];
-
-    if (tokenId == null ||
-        tokenSecret == null ||
-        tokenId.isEmpty ||
-        tokenSecret == 'dummy_secret') {
-      debugPrint('[MuxService] Missing credentials – returning mock result.');
-      await Future.delayed(const Duration(seconds: 1));
-      return MediaUploadResult(
-        url: 'qxb01i6T202018G65yG9JeaB2b01O00021qGz8Rk02n86J8tI',
-      );
-    }
-
-    final basicAuth = base64Encode(utf8.encode('$tokenId:$tokenSecret'));
-
-    // ── Step 1: Create Direct Upload ──────────────────────────────────────
-    late String uploadId;
+    // ── Step 1: Request Direct Upload URL from Edge Function ──────────────────
     late String uploadUrl;
+    late String uploadId;
 
     try {
-      final createResponse = await _dio.post(
-        'https://api.mux.com/video/v1/uploads',
-        options: Options(
-          headers: {
-            'Authorization': 'Basic $basicAuth',
-            'Content-Type': 'application/json',
-          },
-        ),
-        data: {
-          'new_asset_settings': {
-            'playback_policy': ['public'],
-          },
-          'cors_origin': '*',
-        },
+      final response = await _supabase.functions.invoke(
+        'sign-media-upload',
+        body: {'provider': 'mux'},
       );
 
-      uploadId = createResponse.data['data']['id'] as String;
-      uploadUrl = createResponse.data['data']['url'] as String;
-      debugPrint('[MuxService] Direct upload created. upload_id=$uploadId');
-    } on DioException catch (e) {
-      final statusCode = e.response?.statusCode ?? 0;
-      if (statusCode == 402 || statusCode == 429) {
-        throw MuxQuotaException(
-          'Mux quota limit reached (HTTP $statusCode). Falling back to Cloudinary.',
-        );
+      if (response.status != 200 || response.data == null) {
+        final errorMsg = response.data is Map ? response.data['error'] : 'Unknown error';
+        debugPrint('[MuxService] Failed to obtain direct upload URL: $errorMsg');
+        return null;
       }
-      debugPrint('[MuxService] Error creating upload: $e');
+
+      final data = response.data as Map<String, dynamic>;
+      uploadUrl = data['upload_url'] as String;
+      uploadId = data['upload_id'] as String;
+      debugPrint('[MuxService] Direct upload URL obtained (upload_id: $uploadId)');
+    } on FunctionException catch (e) {
+      if (e.status == 402 || e.status == 429) {
+        throw MuxQuotaException('Mux quota limit reached (${e.status}).');
+      }
+      debugPrint('[MuxService] Edge function error: $e');
+      return null;
+    } catch (e) {
+      debugPrint('[MuxService] Error obtaining Mux upload URL: $e');
       return null;
     }
 
-    // ── Step 2: PUT bytes to the Direct Upload URL ────────────────────────
+    // ── Step 2: PUT bytes directly to Mux CDN ──────────────────────────────
     try {
       await _dio.put(
         uploadUrl,
@@ -96,78 +75,49 @@ class MuxService {
       );
       debugPrint('[MuxService] Bytes uploaded to Mux CDN.');
     } on DioException catch (e) {
-      debugPrint('[MuxService] Error uploading bytes: $e');
+      final statusCode = e.response?.statusCode ?? 0;
+      if (statusCode == 402 || statusCode == 429) {
+        throw MuxQuotaException('Mux quota limit reached during upload ($statusCode).');
+      }
+      debugPrint('[MuxService] Error uploading bytes to Mux: $e');
       return null;
     }
 
-    // ── Step 3: Poll /uploads/$uploadId until asset_id is available ───────
-    String? assetId;
-    debugPrint('[MuxService] Polling upload status for upload_id=$uploadId …');
+    // ── Step 3: Poll Edge Function until asset is ready ─────────────────────
+    debugPrint('[MuxService] Polling asset readiness for upload_id=$uploadId …');
     for (int i = 0; i < 20; i++) {
       await Future.delayed(const Duration(seconds: 3));
       try {
-        final uploadResp = await _dio.get(
-          'https://api.mux.com/video/v1/uploads/$uploadId',
-          options: Options(headers: {'Authorization': 'Basic $basicAuth'}),
+        final pollResp = await _supabase.functions.invoke(
+          'sign-media-upload',
+          body: {
+            'provider': 'mux',
+            'action': 'check_mux',
+            'upload_id': uploadId,
+          },
         );
-        final uploadData = uploadResp.data['data'];
-        final status = uploadData['status'] as String? ?? '';
-        debugPrint('[MuxService] Upload status[$i]: $status');
 
-        if (status == 'asset_created') {
-          assetId = uploadData['asset_id'] as String?;
-          if (assetId != null && assetId.isNotEmpty) {
-            debugPrint('[MuxService] Asset created. asset_id=$assetId');
-            break;
+        if (pollResp.status == 200 && pollResp.data is Map) {
+          final data = pollResp.data as Map<String, dynamic>;
+          final status = data['status'] as String? ?? '';
+          debugPrint('[MuxService] Asset readiness poll[$i]: $status');
+
+          if (status == 'ready' && data['playback_id'] != null) {
+            final playbackId = data['playback_id'] as String;
+            final assetId = data['asset_id'] as String?;
+            debugPrint('[MuxService] Video ready! playback_id=$playbackId');
+            return MediaUploadResult(url: playbackId, assetId: assetId);
+          } else if (status == 'errored') {
+            debugPrint('[MuxService] Mux asset processing failed.');
+            return null;
           }
-        } else if (status == 'errored') {
-          debugPrint('[MuxService] Mux upload errored. Triggering fallback.');
-          return null;
         }
-      } on DioException catch (e) {
-        debugPrint('[MuxService] Poll upload error[$i]: $e');
+      } catch (e) {
+        debugPrint('[MuxService] Poll error[$i]: $e');
       }
     }
 
-    if (assetId == null) {
-      debugPrint('[MuxService] Timed out waiting for asset_id. Returning null.');
-      return null;
-    }
-
-    // ── Step 4: Poll /assets/$assetId until status == 'ready' ────────────
-    debugPrint('[MuxService] Polling asset for asset_id=$assetId …');
-    for (int i = 0; i < 20; i++) {
-      await Future.delayed(const Duration(seconds: 3));
-      try {
-        final assetResp = await _dio.get(
-          'https://api.mux.com/video/v1/assets/$assetId',
-          options: Options(headers: {'Authorization': 'Basic $basicAuth'}),
-        );
-        final assetData = assetResp.data['data'];
-        final status = assetData['status'] as String? ?? '';
-        debugPrint('[MuxService] Asset status[$i]: $status');
-
-        if (status == 'ready' && assetData['playback_ids'] != null) {
-          final playbackId =
-              assetData['playback_ids'][0]['id'] as String;
-          debugPrint('[MuxService] Video ready! playback_id=$playbackId');
-          return MediaUploadResult(url: playbackId, assetId: assetId);
-        } else if (status == 'errored') {
-          debugPrint('[MuxService] Asset processing failed.');
-          return null;
-        }
-      } on DioException catch (e) {
-        final statusCode = e.response?.statusCode ?? 0;
-        if (statusCode == 402 || statusCode == 429) {
-          throw MuxQuotaException(
-            'Mux quota reached during asset poll (HTTP $statusCode).',
-          );
-        }
-        debugPrint('[MuxService] Poll asset error[$i]: $e');
-      }
-    }
-
-    debugPrint('[MuxService] Asset not ready after polling. Returning null.');
+    debugPrint('[MuxService] Asset not ready after polling timeout.');
     return null;
   }
 
@@ -178,7 +128,7 @@ class MuxService {
       return await uploadVideoBytes(bytes);
     } catch (e) {
       debugPrint('[MuxService] uploadVideo error: $e');
-      rethrow; // Let the gateway handle MuxQuotaException
+      rethrow;
     }
   }
 }

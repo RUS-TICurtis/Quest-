@@ -130,44 +130,42 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Future<void> _handleGoogleSignIn() async {
     HapticFeedback.lightImpact();
     final messenger = ScaffoldMessenger.of(context);
-    final router = GoRouter.of(context);
     final colors = context.colors;
-    final redirectParam = GoRouterState.of(
-      context,
-    ).uri.queryParameters['redirect'];
 
     try {
       if (kIsWeb) {
+        // Web uses a full-page OAuth redirect, so intent cannot be evaluated
+        // after the handshake. Known limitation (see audit report).
         await Supabase.instance.client.auth
             .signInWithOAuth(OAuthProvider.google);
       } else {
-        final res = await ref
+        final outcome = await ref
             .read(authProvider.notifier)
-            .signInWithGoogleNative();
-        if (res != null) {
-          if (!mounted) return;
-          messenger.showSnackBar(
-            SnackBar(
-              content: const Text('Signed in with Google!'),
-              backgroundColor: colors.emerald,
-            ),
-          );
-          if (redirectParam != null && redirectParam.isNotEmpty) {
-            router.go(redirectParam);
-          } else {
-            final createdAt = DateTime.tryParse(res.user?.createdAt ?? '');
-            final lastSignIn = DateTime.tryParse(res.user?.lastSignInAt ?? '');
-            bool isNewUser = false;
-            if (createdAt != null && lastSignIn != null) {
-              isNewUser = lastSignIn.difference(createdAt).inSeconds.abs() < 5;
-            }
-            
-            if (isNewUser) {
-              router.go('/onboarding');
-            } else {
-              router.go('/home');
-            }
-          }
+            .continueWithGoogle(GoogleIntent.signUp);
+        if (!mounted) return;
+        // On success the router redirect sends new accounts to onboarding.
+        switch (outcome) {
+          case GoogleAuthOutcome.accountExists:
+            messenger.showSnackBar(
+              SnackBar(
+                content: const Text(
+                  'A Quest account already exists for this Google account. '
+                  'Please sign in instead.',
+                ),
+                backgroundColor: colors.crimson,
+                duration: const Duration(seconds: 5),
+                action: SnackBarAction(
+                  label: 'Sign In',
+                  textColor: Colors.white,
+                  onPressed: () => GoRouter.of(context).go('/login'),
+                ),
+              ),
+            );
+          case GoogleAuthOutcome.signedIn:
+          case GoogleAuthOutcome.createdAccount:
+          case GoogleAuthOutcome.cancelled:
+          case GoogleAuthOutcome.noAccount:
+            break;
         }
       }
     } on AuthException catch (e) {

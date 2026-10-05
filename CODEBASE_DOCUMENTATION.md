@@ -1,7 +1,7 @@
 # Quest Codebase Architecture & Technical Documentation
 > **Living Technical Specification & Architectural Reference**  
 > *Version: 1.0.0 | Status: Production Prototype | Ecosystem: Flutter Multiplatform (Android, iOS, Web, Windows, macOS, Linux)*
-> *Last Modified: 2026-09-21*
+> *Last Modified: 2026-10-05*
 
 ---
 
@@ -38,6 +38,8 @@ The codebase documentation is being actively transitioned to the new Platform Ar
 12. [Quest Resource Engine](docs/architecture/12_resource_engine.md) — FastApi backend architecture.
 
 ### Essential References
+* [Roadmap & Execution Guide (Phases 3–7)](docs/JULES_HANDOFF_PHASES_3_TO_7.md) — Comprehensive implementation roadmap, live schema truth, and action items for Jules and core engineers.
+* [Codebase Audit — 2026-10-05](docs/AUDIT_2026-10-05.md) — Truthful audit of current features, database tables, and security findings.
 * [Canonical Vocabulary Registry](docs/architecture/canonical_vocabulary.md) — The single source of truth for platform terminology.
 * [Agent Onboarding & System Audit Brief](CODEBASE_STATE_PROMPT.md) — Self-contained prompt for AI agents and onboarding engineers detailing full codebase state.
 

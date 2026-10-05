@@ -227,45 +227,101 @@ class UserNotifier extends AsyncNotifier<UserState> {
     // Watch authProvider so the user profile re-fetches when authentication state changes
     final authState = ref.watch(authProvider);
     final userId = authState.user?.id ?? '';
-    var baseState = await _repository.getUser(userId);
 
-    // Apply local offline storage if available
-    final localStorage = ref.read(localStorageServiceProvider);
-    final localProfile = localStorage.getProfile();
-
-    if (localProfile != null) {
-      int localLevel = localProfile['level'] as int;
-
-      // Rough needed XP calculation based on current logic (base 100 * 1.25 per level)
-      int needed = 100;
-      for (int i = 1; i < localLevel; i++) {
-        needed = (needed * 1.25).toInt();
-      }
-
-      baseState = baseState.copyWith(
-        name: localProfile['name'] as String,
-        currentXp: localProfile['xp'] as int,
-        level: localLevel,
-        xpToNextLevel: needed,
+    // Guests have no persisted profile; give them a transient identity so the
+    // UI never has to special-case a null profile. Nothing is written for them.
+    if (authState.isGuest) {
+      return UserState.initial().copyWith(
+        name: 'Guest',
+        initials: 'G',
+        onboardingCompleted: true,
       );
     }
 
-    return baseState;
+    final localStorage = ref.read(localStorageServiceProvider);
+    try {
+      // Backend is the source of truth.
+      var fresh = await _repository.getUser(userId);
+      if (userId.isNotEmpty && fresh.onboardingCompleted) {
+        // TEMPORARY (backend dependency): the server does not persist XP/level
+        // yet (needs an award_xp RPC), so locally earned progression is kept
+        // when it is ahead of the server's. Everything else comes from server.
+        final cachedProgress = localStorage.getProfile();
+        if (cachedProgress != null) {
+          final cLevel = cachedProgress['level'] as int;
+          final cXp = cachedProgress['xp'] as int;
+          if (cLevel > fresh.level ||
+              (cLevel == fresh.level && cXp > fresh.currentXp)) {
+            var needed = 100;
+            for (var i = 1; i < cLevel; i++) {
+              needed = (needed * 1.25).toInt();
+            }
+            fresh = fresh.copyWith(
+              level: cLevel,
+              currentXp: cXp,
+              xpToNextLevel: needed,
+            );
+          }
+        }
+        await localStorage.saveProfile(
+          name: fresh.name,
+          avatarUrl: fresh.avatarUrl ?? '',
+          xp: fresh.currentXp,
+          level: fresh.level,
+          username: fresh.username,
+          bio: fresh.bio,
+        );
+      }
+      return fresh;
+    } catch (_) {
+      // Offline/backend failure: fall back to the last known snapshot if one
+      // exists, otherwise surface the error (AsyncError) instead of faking data.
+      final cached = localStorage.getProfile();
+      if (cached == null || userId.isEmpty) rethrow;
+      final cachedName = cached['name'] as String;
+      final cachedLevel = cached['level'] as int;
+      var needed = 100;
+      for (var i = 1; i < cachedLevel; i++) {
+        needed = (needed * 1.25).toInt();
+      }
+      final cachedAvatar = cached['avatarUrl'] as String;
+      return UserState.initial().copyWith(
+        name: cachedName,
+        initials: cachedName.isNotEmpty ? cachedName[0].toUpperCase() : 'Q',
+        avatarUrl: cachedAvatar.isEmpty ? null : cachedAvatar,
+        username: cached['username'] as String?,
+        bio: cached['bio'] as String?,
+        currentXp: cached['xp'] as int,
+        level: cachedLevel,
+        xpToNextLevel: needed,
+        // The cache is only written after a successful server load.
+        onboardingCompleted: true,
+      );
+    }
   }
 
   Future<void> _updateState(UserState newState) async {
+    final previous = state.value;
     state = AsyncData(newState);
 
-    // Save locally for offline persistence
+    try {
+      await _repository.updateUser(newState);
+    } catch (_) {
+      // Roll back the optimistic update so the UI never claims a save the
+      // backend rejected, then let the caller present the error.
+      if (previous != null) state = AsyncData(previous);
+      rethrow;
+    }
+
     final localStorage = ref.read(localStorageServiceProvider);
     await localStorage.saveProfile(
       name: newState.name,
       avatarUrl: newState.avatarUrl ?? '',
       xp: newState.currentXp,
       level: newState.level,
+      username: newState.username,
+      bio: newState.bio,
     );
-
-    await _repository.updateUser(newState);
   }
 
   Future<void> updateProfile(UserState newState) async {

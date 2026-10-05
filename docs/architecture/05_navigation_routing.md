@@ -58,3 +58,15 @@ else → null (no redirect)
 Navigation destinations: Home, Explore, Create, Connect, Profile.
 There is no global `AppBar` on mobile; the app relies on the `BottomNavigationBar` and custom app bars within individual screens (like the transparent `AppBar` in `ProfileScreen` for Leaderboard and Settings). Sub-routes (e.g., Chat, Search) use `parentNavigatorKey` to push above the shell and hide the navigation bar.
 - **Mission Control Gestures**: The Home tab serves as Mission Control. The Home icon on the navigation bar is wrapped in a `GestureDetector` that routes to the full-screen Experience Feed (`/feed`) on double-tap or swipe gestures.
+
+---
+## Redirect Contract (updated 2026-10-05)
+_Last Modified: 2026-10-05_
+
+`appRouterProvider` redirect is the **only** navigation authority (the splash screen no longer navigates). It is re-evaluated when `authProvider` or the relevant fields of `userProvider` (loading/value/error/`onboardingCompleted`) change.
+
+| AccessLevel | Behaviour |
+|---|---|
+| `unauthenticated` | only `/landing`, `/login`, `/signup`; everything else -> `/landing`; `/oauth/consent` -> `/login?redirect=` |
+| `guest` (anonymous session) | splash/landing/onboarding -> `/home`; login/signup allowed (upgrade); `/create`, `/connect*`, `/edit-profile`, `/organization`, `/create-story`, `/share-experience` -> `/login?redirect=<target>` |
+| `member` | profile not loaded -> hold on `/` (splash shows loading / retry); onboarding incomplete -> `/onboarding`; complete + on entry/onboarding route -> `redirect` param (same-app absolute paths only) or `/home` |

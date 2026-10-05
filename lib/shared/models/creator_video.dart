@@ -44,9 +44,10 @@ class CreatorVideo {
   });
 
   factory CreatorVideo.fromJson(Map<String, dynamic> json) {
+    final profile = json['profiles'] as Map<String, dynamic>?;
     return CreatorVideo(
       id: json['id'] as String? ?? '',
-      creatorId: json['creator_id'] as String? ?? '',
+      creatorId: (json['creator_id'] ?? json['user_id']) as String? ?? '',
       videoUrl: json['video_url'] as String? ?? '',
       thumbnailUrl: json['thumbnail_url'] as String? ?? '',
       title: json['title'] as String? ?? '',
@@ -63,8 +64,10 @@ class CreatorVideo {
       durationSeconds: json['duration_seconds'] as int? ?? 0,
       muxPlaybackId: json['mux_playback_id'] as String?,
       muxStatus: json['mux_status'] as String?,
-      creatorUsername: json['creator_username'] as String?,
-      creatorAvatarUrl: json['creator_avatar_url'] as String?,
+      creatorUsername: json['creator_username'] as String? ??
+          profile?['username'] as String?,
+      creatorAvatarUrl: json['creator_avatar_url'] as String? ??
+          profile?['avatar_url'] as String?,
     );
   }
 

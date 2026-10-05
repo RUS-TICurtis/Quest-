@@ -22,8 +22,19 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
   List<CameraDescription>? _cameras;
   bool _isCameraInitialized = false;
   bool _isRecording = false;
+  String? _cameraErrorMessage;
 
   final TextEditingController _textController = TextEditingController();
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -47,26 +58,59 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
   }
 
   Future<void> _initCamera() async {
+    setState(() {
+      _cameraErrorMessage = null;
+    });
     try {
       _cameras = await availableCameras();
-      if (_cameras != null && _cameras!.isNotEmpty) {
-        final controller = CameraController(
-          _cameras![0],
-          ResolutionPreset.high,
-          enableAudio: true,
-        );
-        await controller.initialize();
-        if (!mounted) {
-          controller.dispose();
-          return;
-        }
-        _cameraController = controller;
+      if (_cameras == null || _cameras!.isEmpty) {
+        if (!mounted) return;
         setState(() {
-          _isCameraInitialized = true;
+          _isCameraInitialized = false;
+          _cameraErrorMessage = 'No camera detected on this device.';
         });
+        return;
       }
+      final controller = CameraController(
+        _cameras![0],
+        ResolutionPreset.high,
+        enableAudio: true,
+      );
+      await controller.initialize();
+      if (!mounted) {
+        controller.dispose();
+        return;
+      }
+      _cameraController = controller;
+      setState(() {
+        _isCameraInitialized = true;
+        _cameraErrorMessage = null;
+      });
+    } on CameraException catch (e) {
+      debugPrint('CameraException: ${e.code} - ${e.description}');
+      if (!mounted) return;
+      setState(() {
+        _isCameraInitialized = false;
+        if (e.code == 'CameraAccessDenied' ||
+            e.code == 'CameraAccessDeniedWithoutPrompt' ||
+            e.code == 'CameraAccessRestricted') {
+          _cameraErrorMessage =
+              'Camera access was denied. Please allow camera permissions in device settings.';
+        } else if (e.code == 'AudioAccessDenied') {
+          _cameraErrorMessage =
+              'Microphone access was denied. Please allow microphone permissions to record videos.';
+        } else {
+          _cameraErrorMessage =
+              'Camera error: ${e.description ?? e.code}';
+        }
+      });
     } catch (e) {
       debugPrint('Error initializing camera: $e');
+      if (!mounted) return;
+      setState(() {
+        _isCameraInitialized = false;
+        _cameraErrorMessage = 'Unable to initialize camera ($e).';
+      });
     }
   }
 
@@ -170,7 +214,11 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                 GestureDetector(
                   onTap: () async {
                     HapticFeedback.heavyImpact();
-                    if (!isTextMode && _isCameraInitialized) {
+                    if (!isTextMode) {
+                      if (!_isCameraInitialized || _cameraController == null) {
+                        _showError(_cameraErrorMessage ?? 'Camera is not ready. Try switching to text or picking from gallery.');
+                        return;
+                      }
                       if (_selectedOptionIndex == 2) {
                         // Vlog mode
                         if (_isRecording) {
@@ -183,6 +231,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                             if (mounted) _initCamera();
                           } catch (e) {
                             debugPrint('Error stopping video recording: $e');
+                            _showError('Failed to save recorded video: $e');
                           }
                         } else {
                           try {
@@ -190,6 +239,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                             setState(() => _isRecording = true);
                           } catch (e) {
                             debugPrint('Error starting video recording: $e');
+                            _showError('Failed to start video recording: $e');
                           }
                         }
                       } else {
@@ -205,13 +255,19 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
                           if (mounted) _initCamera();
                         } catch (e) {
                           debugPrint('Error taking picture: $e');
+                          _showError('Failed to capture photo: $e');
                         }
                       }
                     } else if (isTextMode) {
+                      final text = _textController.text.trim();
+                      if (text.isEmpty) {
+                        _showError('Please write something before proceeding.');
+                        return;
+                      }
                       if (!context.mounted) return;
                       context.push(
                         '/share-experience',
-                        extra: _textController.text,
+                        extra: text,
                       );
                     }
                   },
@@ -249,7 +305,7 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
               left: 24,
               bottom: 50,
               child: IconButton(
-                icon: Icon(Icons.photo_library, color: Colors.white, size: 32),
+                icon: const Icon(Icons.photo_library, color: Colors.white, size: 32),
                 onPressed: _pickFromGallery,
               ),
             ),
@@ -259,14 +315,96 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
   }
 
   Widget _buildCameraMode() {
-    if (!_isCameraInitialized || _cameraController == null) {
-      return Center(child: CircularProgressIndicator(color: Colors.white));
+    if (_cameraErrorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: context.colors.surface,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.videocam_off_outlined,
+                  size: 48,
+                  color: context.colors.questBlue,
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Camera Access Needed',
+                style: TextStyle(
+                  color: context.colors.textPrimary,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _cameraErrorMessage!,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: context.colors.textMuted,
+                  fontSize: 14,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: context.colors.textPrimary,
+                      side: BorderSide(color: context.colors.border),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    onPressed: () {
+                      HapticFeedback.lightImpact();
+                      _initCamera();
+                    },
+                    icon: const Icon(Icons.refresh, size: 18),
+                    label: const Text('Try Again'),
+                  ),
+                  ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: context.colors.questBlue,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                    ),
+                    onPressed: _pickFromGallery,
+                    icon: const Icon(Icons.photo_library, size: 18),
+                    label: const Text('Open Gallery'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
-    // Scale the camera preview to fill the screen
-    return Transform.scale(
-      scale: 1.0,
-      child: Center(child: CameraPreview(_cameraController!)),
+    if (!_isCameraInitialized || _cameraController == null) {
+      return const Center(child: CircularProgressIndicator(color: Colors.white));
+    }
+
+    return Center(
+      child: AspectRatio(
+        aspectRatio: _cameraController!.value.aspectRatio,
+        child: CameraPreview(_cameraController!),
+      ),
     );
   }
 

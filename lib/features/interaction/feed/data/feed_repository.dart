@@ -68,19 +68,30 @@ class FeedRepository {
     } catch (e) {
       debugPrint('[FeedRepository] get-feed edge function notice: $e');
 
-      // Fallback 1: Try direct DB query on feed_videos (fallback table)
+      // Fallback 1: Try direct DB query on unified 'videos' table with profile join
       try {
         final dbVideos = await _supabase
-            .from('feed_videos')
-            .select()
+            .from('videos')
+            .select('*, profiles(username, avatar_url)')
+            .eq('video_type', 'feed')
             .order('created_at', ascending: false)
             .limit(limit);
+
         if (dbVideos.isNotEmpty) {
-          final list = dbVideos.map((v) => CreatorVideo.fromJson(v)).toList();
+          final list = (dbVideos as List)
+              .map((v) => CreatorVideo.fromJson(v as Map<String, dynamic>))
+              .toList();
+
+          // Cache to local database for offline resilience
+          final toCache = (dbVideos as List)
+              .map((v) => CachedFeedVideo.fromJson(v as Map<String, dynamic>))
+              .toList();
+          unawaited(_localDb.cacheFeedVideos(toCache));
+
           return (videos: list, nextCursor: null);
         }
       } catch (dbErr) {
-        debugPrint('[FeedRepository] DB fallback notice: $dbErr');
+        debugPrint('[FeedRepository] Videos table fallback notice: $dbErr');
       }
 
       // Fallback 2: Return Hive-cached videos from previous sessions
@@ -109,111 +120,12 @@ class FeedRepository {
           }).toList();
           return (videos: list, nextCursor: null);
         }
-      } catch (_) {}
+      } catch (cacheErr) {
+        debugPrint('[FeedRepository] Cache fallback notice: $cacheErr');
+      }
 
-      // Fallback 3: Static sample videos — at least 5 so PageView is always scrollable
-      return (
-        videos: [
-          CreatorVideo(
-            id: 'v_sample_1',
-            creatorId: 'c1',
-            videoUrl: 'https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8',
-            thumbnailUrl:
-                'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400',
-            title: 'Big Buck Bunny (HLS)',
-            description: 'Open-source HLS stream via Mux test CDN.',
-            viewCount: 142,
-            likeCount: 38,
-            commentCount: 5,
-            shareCount: 12,
-            createdAt: DateTime.now(),
-            engagementScore: 0.95,
-            durationSeconds: 60,
-            creatorUsername: 'quest_team',
-            creatorAvatarUrl:
-                'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
-          ),
-          CreatorVideo(
-            id: 'v_sample_2',
-            creatorId: 'c2',
-            videoUrl:
-                'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
-            thumbnailUrl:
-                'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400',
-            title: 'Big Buck Bunny',
-            description: 'Classic open-source animation — MP4 direct.',
-            viewCount: 3200,
-            likeCount: 890,
-            commentCount: 41,
-            shareCount: 120,
-            createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-            engagementScore: 0.87,
-            durationSeconds: 596,
-            creatorUsername: 'blender_foundation',
-            creatorAvatarUrl:
-                'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200',
-          ),
-          CreatorVideo(
-            id: 'v_sample_3',
-            creatorId: 'c3',
-            videoUrl:
-                'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
-            thumbnailUrl:
-                'https://images.unsplash.com/photo-1551884170-09fb70a3a2ed?w=400',
-            title: 'Elephants Dream',
-            description: 'First open-movie project by the Blender community.',
-            viewCount: 1820,
-            likeCount: 430,
-            commentCount: 22,
-            shareCount: 67,
-            createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-            engagementScore: 0.78,
-            durationSeconds: 654,
-            creatorUsername: 'blender_org',
-            creatorAvatarUrl:
-                'https://images.unsplash.com/photo-1527980965255-d3b416303d12?w=200',
-          ),
-          CreatorVideo(
-            id: 'v_sample_4',
-            creatorId: 'c4',
-            videoUrl: 'https://test-streams.mux.dev/test_1/stream.m3u8',
-            thumbnailUrl:
-                'https://images.unsplash.com/photo-1519817650390-64a93db51149?w=400',
-            title: 'For Bigger Blazes',
-            description: 'Sample video for bigger displays.',
-            viewCount: 560,
-            likeCount: 112,
-            commentCount: 8,
-            shareCount: 30,
-            createdAt: DateTime.now().subtract(const Duration(hours: 8)),
-            engagementScore: 0.70,
-            durationSeconds: 15,
-            creatorUsername: 'google_samples',
-            creatorAvatarUrl:
-                'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200',
-          ),
-          CreatorVideo(
-            id: 'v_sample_5',
-            creatorId: 'c5',
-            videoUrl: 'https://test-streams.mux.dev/pts_time/master.m3u8',
-            thumbnailUrl:
-                'https://images.unsplash.com/photo-1484821582734-6c6c9f99a672?w=400',
-            title: 'Subaru Outback',
-            description: 'On street and dirt — sample outdoor video.',
-            viewCount: 920,
-            likeCount: 205,
-            commentCount: 14,
-            shareCount: 45,
-            createdAt: DateTime.now().subtract(const Duration(days: 1)),
-            engagementScore: 0.65,
-            durationSeconds: 60,
-            creatorUsername: 'car_life',
-            creatorAvatarUrl:
-                'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200',
-          ),
-        ],
-        nextCursor: null,
-      );
+      // No mock/sample fallback: Return truthful empty list when no videos exist
+      return (videos: <CreatorVideo>[], nextCursor: null);
     }
   }
 

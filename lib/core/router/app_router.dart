@@ -32,6 +32,7 @@ import 'package:quest/features/interaction/create/presentation/create_screen.dar
 import 'package:quest/features/interaction/create/presentation/share_experience_screen.dart';
 import 'package:quest/features/interaction/notifications/presentation/notifications_screen.dart';
 import 'package:quest/core/shell/main_shell.dart';
+import 'package:quest/features/identity/profile/data/user_provider.dart';
 
 /// A [ChangeNotifier] that wraps Riverpod's [Ref] so [GoRouter] can
 /// listen to auth-state changes and re-evaluate its redirect guard.
@@ -39,7 +40,33 @@ class _RouterNotifier extends ChangeNotifier {
   _RouterNotifier(Ref ref) {
     // Whenever authProvider emits a new value, notify GoRouter to refresh.
     ref.listen<AuthState>(authProvider, (prev, next) => notifyListeners());
+    // Profile load state decides splash/onboarding/home. Only the fields the
+    // redirect reads are compared so XP ticks don't re-run redirects.
+    ref.listen<AsyncValue<UserState>>(userProvider, (prev, next) {
+      String key(AsyncValue<UserState>? v) =>
+          '${v?.isLoading}-${v?.hasValue}-${v?.hasError}-${v?.value?.onboardingCompleted}';
+      if (key(prev) != key(next)) notifyListeners();
+    });
   }
+}
+
+/// Routes a guest (anonymous session) may NOT open. They get an upgrade
+/// prompt (sign in / sign up) and return here afterwards. Server-side RLS and
+/// edge functions enforce the same rule independently.
+const _guestRestrictedPrefixes = <String>[
+  '/create',
+  '/connect',
+  '/edit-profile',
+  '/organization',
+  '/create-story',
+  '/share-experience',
+];
+
+/// Only same-app absolute paths are accepted as post-login targets.
+String? _safeRedirect(String? raw) {
+  if (raw == null || raw.isEmpty) return null;
+  if (!raw.startsWith('/') || raw.startsWith('//')) return null;
+  return raw;
 }
 
 final _routerNotifierProvider = Provider<_RouterNotifier>((ref) {
@@ -58,10 +85,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     // including spontaneous session expiry and sign-out, without recreating the router.
     refreshListenable: notifier,
     redirect: (context, state) {
-      final authState = ref.read(authProvider);
-      if (authState.isLoading) return null;
-
-      final isAuth = authState.isAuthenticated;
+      final auth = ref.read(authProvider);
       final loc = state.matchedLocation;
       final isSplash = loc == '/';
       final isLanding = loc == '/landing';
@@ -69,30 +93,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isSignup = loc == '/signup';
       final isOnboarding = loc == '/onboarding';
       final isConsent = loc == '/oauth/consent';
-      final isAuthRoute = isSplash || isLanding || isLogin || isSignup || isOnboarding;
+      final isEntryRoute = isSplash || isLanding || isLogin || isSignup;
+      final target = _safeRedirect(state.uri.queryParameters['redirect']);
 
-      // If user is not authenticated and attempts to access consent screen,
-      // redirect to /login with target return parameter
-      if (!isAuth && isConsent) {
-        final target = Uri.encodeComponent(state.uri.toString());
-        return '/login?redirect=$target';
+      switch (auth.accessLevel) {
+        case AccessLevel.unauthenticated:
+          if (isConsent) {
+            final back = Uri.encodeComponent(state.uri.toString());
+            return '/login?redirect=$back';
+          }
+          if (isLanding || isLogin || isSignup) return null;
+          return '/landing';
+
+        case AccessLevel.guest:
+          if (isSplash || isLanding || isOnboarding) return '/home';
+          if (isLogin || isSignup) return null; // upgrade path
+          if (_guestRestrictedPrefixes.any(loc.startsWith)) {
+            return '/login?redirect=${Uri.encodeComponent(state.uri.toString())}';
+          }
+          return null;
+
+        case AccessLevel.member:
+          final profile = ref.read(userProvider);
+          // Destination depends on the profile: hold at the splash until the
+          // backend has answered (loading or failed — splash renders retry).
+          if (!profile.hasValue) return isSplash ? null : '/';
+          final done = profile.requireValue.onboardingCompleted;
+          if (!done) return isOnboarding ? null : '/onboarding';
+          if (isEntryRoute || isOnboarding) return target ?? '/home';
+          return null;
       }
-
-      // If user is not authenticated and attempts to access protected routes, redirect to /landing
-      if (!isAuth && !isAuthRoute) {
-        return '/landing';
-      }
-
-      // If authenticated and on landing or login, redirect to home or preserved redirect target
-      if (isAuth && (isLanding || isLogin || isSignup)) {
-        final redirectTarget = state.uri.queryParameters['redirect'];
-        if (redirectTarget != null && redirectTarget.isNotEmpty) {
-          return redirectTarget;
-        }
-        return '/home';
-      }
-
-      return null;
     },
     routes: [
       // Auth flow — no nav shell
