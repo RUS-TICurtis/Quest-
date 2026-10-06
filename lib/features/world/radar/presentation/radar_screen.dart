@@ -68,7 +68,6 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                     icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
                     onPressed: () {
                       HapticFeedback.lightImpact();
-                      HapticFeedback.lightImpact();
                       if (context.canPop()) {
                         context.pop();
                       } else {
@@ -250,7 +249,6 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                           top: (constraints.maxHeight - size) / 2 + y,
                           child: GestureDetector(
                             onTap: () {
-                              HapticFeedback.lightImpact();
                               HapticFeedback.selectionClick();
                               setState(() {
                                 _selectedMember = isSelected ? null : member;
@@ -397,7 +395,6 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                 ),
                 onPressed: () {
                   HapticFeedback.lightImpact();
-                  HapticFeedback.lightImpact();
                   setState(() {
                     _selectedMember = null;
                   });
@@ -442,7 +439,6 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                   ),
                   onPressed: () {
                     HapticFeedback.lightImpact();
-                    HapticFeedback.lightImpact();
                     context.push('/messages/t1');
                   },
                 ),
@@ -461,7 +457,6 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                   icon: Icon(Icons.person_outline, size: 16),
                   label: Text('View Matrix', style: TextStyle(fontSize: 12)),
                   onPressed: () {
-                    HapticFeedback.lightImpact();
                     HapticFeedback.lightImpact();
                     context.push('/profile/${member.id}');
                   },

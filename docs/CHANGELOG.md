@@ -2,6 +2,23 @@
 
 _Last Modified: 2026-10-05_
 
+### 2026-10-05
+* **Compliance:**
+  * Installed App Store / Google Play Compliance Skill playbook securely.
+  * Generated initial compliance audit in `docs/COMPLIANCE.md`.
+
+## 2026-10-05 — Polish
+
+* **UX Polish:**
+  * Cleaned up haptic feedback across radar, community, and event screens to remove double-firing of light impacts.
+
+## 2026-10-05 — Advanced Participation & Relational Integrity
+
+* **Advanced Participation & Relational Integrity:**
+  * Created migrations (`event_rsvps`, `community_members`, `notifications`) to migrate from arrays in `profiles` to properly normalized tables.
+  * Setup `award_xp` RPC for secure server-side XP scaling.
+  * Verified RLS policies protect events and community memberships correctly.
+
 ## 2026-10-05 — Foundation stabilization (audit Phase 1)
 
 **Why:** audit found broken profile persistence, guest treated as member, two competing navigation authorities, indistinguishable Google sign-in/up, and open profile RLS. See [AUDIT_2026-10-05.md](AUDIT_2026-10-05.md).
