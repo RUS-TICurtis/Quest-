@@ -36,6 +36,7 @@ The codebase documentation is being actively transitioned to the new Platform Ar
 09. [AI Systems](#) *(Planned)*
 10. [Deployment](docs/architecture/08_platform_notes.md) *(Refactoring from Platform Notes)*
 12. [Quest Resource Engine](docs/architecture/12_resource_engine.md) — FastApi backend architecture.
+13. [Brand Strategy & Naming Architecture (QWST.RUN)](docs/architecture/13_brand_positioning_qwst_run.md) — Multi-tier brand architecture, options, alternatives, action language taxonomy, and onboarding progression.
 
 ### Essential References
 * [Roadmap & Execution Guide (Phases 3–7)](docs/JULES_HANDOFF_PHASES_3_TO_7.md) — Comprehensive implementation roadmap, live schema truth, and action items for Jules and core engineers.

@@ -1,10 +1,10 @@
-_Last Modified: 2026-08-07_
+_Last Modified: 2026-10-06_
 
 # 02. Product Overview & UX Philosophy
 
-Quest is built on a fundamental philosophy: **Optimization for participation, not attention.** 
+Quest (positioned as **QWST.RUN** — see [Brand Strategy](13_brand_positioning_qwst_run.md)) is built on a fundamental philosophy: **Optimization for participation, not attention.** *(“Life isn't a feed. It's something you run.”)*
 
-If the home screen is an endless, passive content feed, Quest risks becoming another generic social media app. To prevent this, Quest physically separates **Action** from **Discovery**.
+If the home screen is an endless, passive content feed, the platform risks becoming another generic social media app. To prevent this, QWST physically separates **Action** from **Discovery**.
 
 ## 1. The Core UX Divide
 
