@@ -27,6 +27,10 @@ _Last Modified: 2026-10-06_
 - **Automated Test Suite**: Created `test/phase4_to_7_stabilization_test.dart` validating empty search models, JSON parsing with trust scores, hub locations, and empty radar states. All 14 tests in the test suite pass with 100% success.
 - **Analysis Verification**: `flutter analyze` completed with **0 warnings, 0 errors**.
 
+### Supabase Backend & Edge Functions Deployment
+- **Database Migrations Pushed**: Executed `supabase db push --yes` synchronizing all 14 database migrations to the linked remote project (`ipvsbunseucoheycxpeg`). Live tables `event_rsvps`, `community_members`, `notifications`, and server-side RPC `award_xp` are active in production Postgres with RLS policies enabled.
+- **Edge Functions Deployed**: Deployed `update-profile` (whitelisting profile update parameters, `name`, and `onboarding_completed`) and `sign-media-upload` (securing Mux direct uploads, polling, and Cloudinary/ImageKit HMAC signing without client secret exposure) to `ipvsbunseucoheycxpeg`. Verified both functions are `ACTIVE`.
+
 ### 2026-10-05
 * **Compliance:**
   * Installed App Store / Google Play Compliance Skill playbook securely.
