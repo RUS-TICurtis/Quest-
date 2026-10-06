@@ -213,35 +213,49 @@ class EventDetailScreen extends ConsumerWidget {
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             HapticFeedback.lightImpact();
-                            if (!isRsvpd) {
-                              HapticFeedback.heavyImpact();
-                              ref.read(userProvider.notifier).addXp(30);
-                            } else {
-                              HapticFeedback.mediumImpact();
-                            }
-                            ref
-                                .read(userProvider.notifier)
-                                .toggleRsvpEvent(event.id);
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: AppColors.surface,
-                                content: Text(
-                                  isRsvpd
-                                      ? 'RSVP Cancelled'
-                                      : 'RSVP Confirmed! +30 XP Earned!',
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.bold,
+                            try {
+                              await ref
+                                  .read(userProvider.notifier)
+                                  .toggleRsvpEvent(event.id);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppColors.surface,
+                                    content: Text(
+                                      isRsvpd
+                                          ? 'RSVP Cancelled'
+                                          : 'RSVP Confirmed! +30 XP Earned!',
+                                      style: TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
+                                );
+                              }
+                            } catch (_) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppColors.surface,
+                                    content: Text(
+                                      'Could not update RSVP. Please try again.',
+                                      style: TextStyle(
+                                        color: AppColors.crimson,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
                           },
                           child: Text(
-                            isRsvpd ? 'RSVP\'d âœ“' : 'RSVP Now',
+                            isRsvpd ? 'RSVP\'d \u2713' : 'RSVP Now',
                             style: TextStyle(
                               fontWeight: FontWeight.w800,
                               fontSize: 13,

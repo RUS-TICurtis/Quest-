@@ -395,31 +395,75 @@ class UserNotifier extends AsyncNotifier<UserState> {
 
   Future<void> toggleJoinCommunity(String communityId) async {
     final currentState = state.value;
+    final userId = ref.read(authProvider).user?.id;
     if (currentState == null) return;
 
     final list = List<String>.from(currentState.joinedCommunityIds);
-    if (list.contains(communityId)) {
-      list.remove(communityId);
-      await _updateState(currentState.copyWith(joinedCommunityIds: list));
-    } else {
+    final isJoining = !list.contains(communityId);
+
+    if (isJoining) {
       list.add(communityId);
       state = AsyncData(currentState.copyWith(joinedCommunityIds: list));
-      await addXp(25);
+      if (userId != null && userId.isNotEmpty) {
+        try {
+          await _repository.joinCommunity(userId, communityId);
+          await _repository.awardXp(userId, 25, 'Joined community');
+          await addXp(25);
+        } catch (e) {
+          list.remove(communityId);
+          state = AsyncData(currentState.copyWith(joinedCommunityIds: list));
+          rethrow;
+        }
+      }
+    } else {
+      list.remove(communityId);
+      state = AsyncData(currentState.copyWith(joinedCommunityIds: list));
+      if (userId != null && userId.isNotEmpty) {
+        try {
+          await _repository.leaveCommunity(userId, communityId);
+        } catch (e) {
+          list.add(communityId);
+          state = AsyncData(currentState.copyWith(joinedCommunityIds: list));
+          rethrow;
+        }
+      }
     }
   }
 
   Future<void> toggleRsvpEvent(String eventId) async {
     final currentState = state.value;
+    final userId = ref.read(authProvider).user?.id;
     if (currentState == null) return;
 
     final list = List<String>.from(currentState.rsvpdEventIds);
-    if (list.contains(eventId)) {
-      list.remove(eventId);
-      await _updateState(currentState.copyWith(rsvpdEventIds: list));
-    } else {
+    final isRsvping = !list.contains(eventId);
+
+    if (isRsvping) {
       list.add(eventId);
       state = AsyncData(currentState.copyWith(rsvpdEventIds: list));
-      await addXp(30);
+      if (userId != null && userId.isNotEmpty) {
+        try {
+          await _repository.rsvpEvent(userId, eventId);
+          await _repository.awardXp(userId, 30, 'RSVP event');
+          await addXp(30);
+        } catch (e) {
+          list.remove(eventId);
+          state = AsyncData(currentState.copyWith(rsvpdEventIds: list));
+          rethrow;
+        }
+      }
+    } else {
+      list.remove(eventId);
+      state = AsyncData(currentState.copyWith(rsvpdEventIds: list));
+      if (userId != null && userId.isNotEmpty) {
+        try {
+          await _repository.cancelRsvpEvent(userId, eventId);
+        } catch (e) {
+          list.add(eventId);
+          state = AsyncData(currentState.copyWith(rsvpdEventIds: list));
+          rethrow;
+        }
+      }
     }
   }
 

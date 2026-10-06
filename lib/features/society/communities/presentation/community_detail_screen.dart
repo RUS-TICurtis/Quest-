@@ -111,29 +111,49 @@ class CommunityDetailScreen extends ConsumerWidget {
                               vertical: 10,
                             ),
                           ),
-                          onPressed: () {
+                          onPressed: () async {
                             HapticFeedback.lightImpact();
-                            ref
-                                .read(userProvider.notifier)
-                                .toggleJoinCommunity(community.id);
-                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                backgroundColor: AppColors.surface,
-                                content: Text(
-                                  isJoined
-                                      ? 'Left ${community.name}'
-                                      : 'Joined ${community.name}! +25 XP',
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.bold,
+                            try {
+                              await ref
+                                  .read(userProvider.notifier)
+                                  .toggleJoinCommunity(community.id);
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppColors.surface,
+                                    content: Text(
+                                      isJoined
+                                          ? 'Left ${community.name}'
+                                          : 'Joined ${community.name}! +25 XP',
+                                      style: TextStyle(
+                                        color: AppColors.textPrimary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            );
+                                );
+                              }
+                            } catch (_) {
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    backgroundColor: AppColors.surface,
+                                    content: Text(
+                                      'Could not update membership. Please try again.',
+                                      style: TextStyle(
+                                        color: AppColors.crimson,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }
+                            }
                           },
                           child: Text(
-                            isJoined ? 'Joined âœ“' : 'Join Community',
+                            isJoined ? 'Joined \u2713' : 'Join Community',
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 13,

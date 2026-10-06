@@ -126,9 +126,13 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                         Icon(Icons.radar, color: AppColors.questBlue, size: 16),
                         SizedBox(width: 6),
                         Text(
-                          '${radarState.nearbyMembers.length} Active',
+                          radarState.nearbyMembers.isEmpty
+                              ? '0 Active'
+                              : '${radarState.nearbyMembers.length} Active',
                           style: TextStyle(
-                            color: AppColors.textPrimary,
+                            color: radarState.nearbyMembers.isEmpty
+                                ? AppColors.textMuted
+                                : AppColors.textPrimary,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -285,6 +289,32 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                           ),
                         );
                       }),
+                      if (radarState.nearbyMembers.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 40),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.radar_rounded,
+                                  size: 40,
+                                  color: AppColors.textMuted.withValues(alpha: 0.6),
+                                ),
+                                const SizedBox(height: 10),
+                                Text(
+                                  'No builders active on radar right now',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: AppColors.textMuted,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
                   );
                 },

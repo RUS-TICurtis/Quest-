@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:quest/features/identity/profile/domain/username_rules.dart';
@@ -25,6 +26,12 @@ abstract class UserRepository {
   /// Backend-authoritative availability check. Advisory only: the unique index
   /// decides at write time, so callers must still handle [UsernameTakenException].
   Future<bool> isUsernameAvailable(String username);
+
+  Future<void> joinCommunity(String userId, String communityId);
+  Future<void> leaveCommunity(String userId, String communityId);
+  Future<void> rsvpEvent(String userId, String eventId, {String status = 'going'});
+  Future<void> cancelRsvpEvent(String userId, String eventId);
+  Future<void> awardXp(String userId, int amount, String reason);
 }
 
 class SupabaseUserRepository implements UserRepository {
@@ -67,17 +74,45 @@ class SupabaseUserRepository implements UserRepository {
       return defaultProfile;
     }
 
-    // Fetch daily quests separately
-    final dailyQuestsResponse = await _supabase
-        .from('daily_quests')
-        .select()
-        .eq('userId', userId);
+    // Fetch daily quests, community memberships, and event RSVPs in parallel
+    final results = await Future.wait([
+      _supabase
+          .from('daily_quests')
+          .select()
+          .eq('userId', userId)
+          .then((res) => res as List<dynamic>)
+          .catchError((_) => <dynamic>[]),
+      _supabase
+          .from('community_members')
+          .select('community_id')
+          .eq('user_id', userId)
+          .then((res) => res as List<dynamic>)
+          .catchError((_) => <dynamic>[]),
+      _supabase
+          .from('event_rsvps')
+          .select('event_id')
+          .eq('user_id', userId)
+          .then((res) => res as List<dynamic>)
+          .catchError((_) => <dynamic>[]),
+    ]);
 
-    final List<QuestItem> dailyQuests = (dailyQuestsResponse as List<dynamic>)
+    final List<QuestItem> dailyQuests = results[0]
         .map((q) => QuestItem.fromJson(q as Map<String, dynamic>))
         .toList();
 
-    return UserState.fromJson(response).copyWith(dailyQuests: dailyQuests);
+    final List<String> joinedCommunityIds = results[1]
+        .map((m) => m['community_id'].toString())
+        .toList();
+
+    final List<String> rsvpdEventIds = results[2]
+        .map((r) => r['event_id'].toString())
+        .toList();
+
+    return UserState.fromJson(response).copyWith(
+      dailyQuests: dailyQuests,
+      joinedCommunityIds: joinedCommunityIds,
+      rsvpdEventIds: rsvpdEventIds,
+    );
   }
 
   @override
@@ -108,15 +143,11 @@ class SupabaseUserRepository implements UserRepository {
       throw ProfileSaveException(message ?? 'Could not save your profile.');
     }
 
-    // Upsert daily quests. Server generates UUID if quest has a non-UUID id
-    // by omitting the id field on insert. On subsequent saves, the server-
-    // returned UUID is used for upsert, preventing orphaned row accumulation.
+    // Upsert daily quests.
     for (final quest in user.dailyQuests) {
       final questData = quest.toJson();
       questData['userId'] = userId;
 
-      // Determine if the quest has a real server UUID or a client-side
-      // placeholder (e.g. '1', '2'). A real UUID is 36 chars with dashes.
       final bool hasServerUuid = RegExp(
         r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
         caseSensitive: false,
@@ -125,10 +156,62 @@ class SupabaseUserRepository implements UserRepository {
       if (hasServerUuid) {
         await _supabase.from('daily_quests').upsert(questData);
       } else {
-        // Remove client placeholder — let Postgres generate a UUID.
         questData.remove('id');
         await _supabase.from('daily_quests').insert(questData);
       }
+    }
+  }
+
+  @override
+  Future<void> joinCommunity(String userId, String communityId) async {
+    await _supabase.from('community_members').upsert({
+      'community_id': communityId,
+      'user_id': userId,
+      'role': 'member',
+    }, onConflict: 'community_id,user_id');
+  }
+
+  @override
+  Future<void> leaveCommunity(String userId, String communityId) async {
+    await _supabase
+        .from('community_members')
+        .delete()
+        .eq('community_id', communityId)
+        .eq('user_id', userId);
+  }
+
+  @override
+  Future<void> rsvpEvent(
+    String userId,
+    String eventId, {
+    String status = 'going',
+  }) async {
+    await _supabase.from('event_rsvps').upsert({
+      'event_id': eventId,
+      'user_id': userId,
+      'status': status,
+    }, onConflict: 'event_id,user_id');
+  }
+
+  @override
+  Future<void> cancelRsvpEvent(String userId, String eventId) async {
+    await _supabase
+        .from('event_rsvps')
+        .delete()
+        .eq('event_id', eventId)
+        .eq('user_id', userId);
+  }
+
+  @override
+  Future<void> awardXp(String userId, int amount, String reason) async {
+    try {
+      await _supabase.rpc('award_xp', params: {
+        'p_user_id': userId,
+        'p_amount': amount,
+        'p_reason': reason,
+      });
+    } catch (e) {
+      debugPrint('[SupabaseUserRepository] awardXp notice: $e');
     }
   }
 }

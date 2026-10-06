@@ -1,14 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:quest/core/theme/app_colors_extension.dart';
+import 'package:quest/features/interaction/messaging/data/chat_provider.dart';
 import 'package:quest/features/interaction/messaging/presentation/messages_screen.dart';
+import 'package:quest/features/society/communities/presentation/communities_screen.dart';
+import 'package:quest/features/society/events/presentation/events_screen.dart';
+import 'package:quest/features/world/radar/presentation/radar_screen.dart';
 import 'package:quest/features/interaction/home/presentation/widgets/stories_bar.dart';
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:quest/core/theme/app_colors_extension.dart';
-import 'package:go_router/go_router.dart';
-import 'package:flutter/services.dart';
-
 class ConnectScreen extends ConsumerStatefulWidget {
-  const ConnectScreen({super.key});
+  final String? initialTab;
+
+  const ConnectScreen({super.key, this.initialTab});
 
   @override
   ConsumerState<ConnectScreen> createState() => _ConnectScreenState();
@@ -17,21 +22,51 @@ class ConnectScreen extends ConsumerStatefulWidget {
 class _ConnectScreenState extends ConsumerState<ConnectScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final List<String> _categories = [
-    'All',
-    'Direct',
-    'Groups',
-    'Channels',
-    'Bots',
+
+  final List<_ConnectTabItem> _tabs = const [
+    _ConnectTabItem(title: 'Messages', icon: Icons.chat_bubble_outline_rounded),
+    _ConnectTabItem(title: 'Communities', icon: Icons.groups_outlined),
+    _ConnectTabItem(title: 'Events', icon: Icons.event_outlined),
+    _ConnectTabItem(title: 'Radar', icon: Icons.radar_rounded),
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 5, vsync: this);
+    final initialIndex = _resolveInitialIndex(widget.initialTab);
+    _tabController = TabController(
+      length: _tabs.length,
+      vsync: this,
+      initialIndex: initialIndex,
+    );
     _tabController.addListener(() {
-      setState(() {});
+      if (mounted) setState(() {});
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant ConnectScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialTab != oldWidget.initialTab && widget.initialTab != null) {
+      final newIndex = _resolveInitialIndex(widget.initialTab);
+      if (newIndex != _tabController.index) {
+        _tabController.animateTo(newIndex);
+      }
+    }
+  }
+
+  int _resolveInitialIndex(String? tabName) {
+    switch (tabName?.toLowerCase()) {
+      case 'communities':
+        return 1;
+      case 'events':
+        return 2;
+      case 'radar':
+        return 3;
+      case 'messages':
+      default:
+        return 0;
+    }
   }
 
   @override
@@ -42,6 +77,10 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen>
 
   @override
   Widget build(BuildContext context) {
+    final chatState = ref.watch(chatProvider).value;
+    final unreadMessages =
+        chatState?.threads.fold<int>(0, (sum, t) => sum + t.unreadCount) ?? 0;
+
     return Scaffold(
       backgroundColor: context.colors.background,
       floatingActionButton: _tabController.index == 0
@@ -62,7 +101,7 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen>
                     context.push('/connect/ai_coach');
                   },
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
                 FloatingActionButton(
                   heroTag: 'new_message',
                   backgroundColor: context.colors.questBlue,
@@ -85,72 +124,99 @@ class _ConnectScreenState extends ConsumerState<ConnectScreen>
         backgroundColor: context.colors.background,
         elevation: 0,
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 8),
-          const StoriesBar(),
-          SizedBox(
-            height: 38,
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              scrollDirection: Axis.horizontal,
-              itemCount: _categories.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, i) {
-                final isSelected = _tabController.index == i;
-                return GestureDetector(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    _tabController.animateTo(i);
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const StoriesBar(),
+            const SizedBox(height: 6),
+            // Segmented Connect Hub Tabs
+            Container(
+              height: 42,
+              margin: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: context.colors.border),
+              ),
+              child: TabBar(
+                controller: _tabController,
+                indicatorSize: TabBarIndicatorSize.tab,
+                dividerColor: Colors.transparent,
+                indicator: BoxDecoration(
+                  color: context.colors.questBlue,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                labelColor: Colors.white,
+                unselectedLabelColor: context.colors.textMuted,
+                labelStyle: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                ),
+                unselectedLabelStyle: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w500,
+                ),
+                onTap: (_) => HapticFeedback.selectionClick(),
+                tabs: List.generate(_tabs.length, (i) {
+                  final tab = _tabs[i];
+                  final hasUnread = i == 0 && unreadMessages > 0;
+                  return Tab(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(tab.icon, size: 16),
+                        const SizedBox(width: 5),
+                        Text(tab.title),
+                        if (hasUnread) ...[
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: context.colors.crimson,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              '$unreadMessages',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? context.colors.questBlue
-                          : context.colors.surface,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: isSelected
-                            ? context.colors.questBlue
-                            : context.colors.border,
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        _categories[i],
-                        style: TextStyle(
-                          color: isSelected ? Colors.white : context.colors.textMuted,
-                          fontSize: 13,
-                          fontWeight: isSelected
-                              ? FontWeight.bold
-                              : FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+                  );
+                }),
+              ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: const [
-                MessagesScreen(categoryIndex: 0),
-                MessagesScreen(categoryIndex: 1),
-                MessagesScreen(categoryIndex: 2),
-                MessagesScreen(categoryIndex: 3),
-                MessagesScreen(categoryIndex: 4),
-              ],
+            const SizedBox(height: 8),
+            // Hub Content View
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                physics: const NeverScrollableScrollPhysics(), // stable inner tabs
+                children: const [
+                  MessagesScreen(),
+                  CommunitiesScreen(),
+                  EventsScreen(),
+                  RadarScreen(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+}
+
+class _ConnectTabItem {
+  final String title;
+  final IconData icon;
+  const _ConnectTabItem({required this.title, required this.icon});
 }

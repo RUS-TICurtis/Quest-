@@ -10,9 +10,7 @@ import 'package:quest/features/identity/auth/presentation/onboarding_screen.dart
 import 'package:quest/features/identity/auth/presentation/splash_screen.dart';
 import 'package:quest/features/interaction/home/presentation/home_screen.dart';
 import 'package:quest/features/interaction/home/presentation/story_creator/story_creator_screen.dart';
-import 'package:quest/features/society/communities/presentation/communities_screen.dart';
 import 'package:quest/features/society/communities/presentation/community_detail_screen.dart';
-import 'package:quest/features/society/events/presentation/events_screen.dart';
 import 'package:quest/features/society/events/presentation/event_detail_screen.dart';
 import 'package:quest/features/interaction/connect/presentation/connect_screen.dart';
 import 'package:quest/features/interaction/connect/presentation/user_discovery_screen.dart';
@@ -23,7 +21,6 @@ import 'package:quest/features/identity/profile/presentation/edit_profile_screen
 import 'package:quest/features/identity/profile/presentation/member_profile_screen.dart';
 import 'package:quest/features/identity/profile/presentation/settings_screen.dart';
 import 'package:quest/features/interaction/stage/presentation/stage_screen.dart';
-import 'package:quest/features/world/radar/presentation/radar_screen.dart';
 import 'package:quest/features/identity/leaderboard/presentation/leaderboard_screen.dart';
 import 'package:quest/features/interaction/explore/presentation/explore_screen.dart';
 import 'package:quest/features/interaction/explore/presentation/user_search_screen.dart';
@@ -194,7 +191,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/connect',
             name: 'connect',
-            builder: (context, state) => ConnectScreen(),
+            builder: (context, state) => ConnectScreen(
+              initialTab: state.uri.queryParameters['tab'],
+            ),
             routes: [
               GoRoute(
                 path: 'user_discovery',
@@ -231,7 +230,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/communities',
         name: 'communities',
-        builder: (context, state) => CommunitiesScreen(),
+        redirect: (context, state) => '/connect?tab=communities',
         routes: [
           GoRoute(
             path: ':id',
@@ -245,7 +244,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/events',
         name: 'events',
-        builder: (context, state) => EventsScreen(),
+        redirect: (context, state) => '/connect?tab=events',
         routes: [
           GoRoute(
             path: ':id',
@@ -279,7 +278,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/radar',
         name: 'radar',
-        builder: (context, state) => RadarScreen(),
+        redirect: (context, state) => '/connect?tab=radar',
       ),
       GoRoute(
         path: '/create-story',

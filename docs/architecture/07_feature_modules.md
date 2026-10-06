@@ -1,4 +1,4 @@
-_Last Modified: 2026-10-05_
+_Last Modified: 2026-10-06_
 
 # 7. Feature Modules
 
@@ -7,20 +7,20 @@ _Last Modified: 2026-10-05_
 | Feature | Path | Domain | Status | Backend |
 |---|---|---|---|---|
 | **Auth & OAuth 2.1** | `lib/features/identity/auth/` | Identity | ✅ Complete | Supabase Auth + Google Native + OAuth 2.1 Server |
-| **Profile / XP** | `lib/features/identity/profile/` | Identity | ✅ Complete | `profiles`, `daily_quests` tables |
+| **Profile / XP** | `lib/features/identity/profile/` | Identity | ✅ Complete | `profiles`, `daily_quests`, `community_members`, `event_rsvps`, `award_xp` RPC |
 | **Leaderboard** | `lib/features/identity/leaderboard/` | Identity | ✅ Complete | `leaderboard` table & season rankings |
 | **Home (Mission Control)** | `lib/features/interaction/home/` | Interaction | ✅ Complete | XP Bar, Quests, Gamification Cockpit, Feed Spotlight |
 | **Video Feed** | `lib/features/interaction/feed/` | Interaction | ✅ Complete | Live `videos` table fallback, `FeedVideoPool`, TikTok scroll, Guest Intercepts |
-| **Explore & Global Search** | `lib/features/interaction/explore/` | Interaction | ✅ Complete | Multi-entity repository & Glassmorphic UI |
-| **Connect & Social** | `lib/features/interaction/connect/` | Interaction | ✅ Complete | Search, Stories, Chats, Communities |
-| **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Camera, Mux, Cloudinary, gateway upload |
-| **Notifications** | `lib/features/interaction/notifications/` | Interaction | ✅ Complete | In-app alerts, interactive notification feed |
-| **Messaging / Chat** | `lib/features/interaction/messaging/` | Interaction | ✅ Complete | Supabase Realtime + Hive outbox + `v_chat_bubbles 2.2.0` |
+| **Explore & Global Search** | `lib/features/interaction/explore/` | Interaction | ✅ Complete | Multi-entity repository & Glassmorphic UI (purged all mocks) |
+| **Connect Hub (4 Pillars)** | `lib/features/interaction/connect/` | Interaction | ✅ Complete | Messages, Communities, Events, Radar unified tabs with deep linking |
+| **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Camera, Mux, Cloudinary, signed upload gateway, live community tagging |
+| **Notifications** | `lib/features/interaction/notifications/` | Interaction | ✅ Complete | `notifications` table, in-app alerts, interactive feed |
+| **Messaging / Chat** | `lib/features/interaction/messaging/` | Interaction | ✅ Complete | Supabase Realtime + Hive local outbox + purged all demo threads + baseline empty state |
 | **Stage (Audio)** | `lib/features/interaction/stage/` | Interaction | 🟡 Mock Data | Sinusoidal physics canvas, Agora/LiveKit pending |
-| **Communities / Guilds** | `lib/features/society/communities/` | Society | ✅ Complete | `communities`, `community_posts` |
-| **Events** | `lib/features/society/events/` | Society | ✅ Complete | `events` table & RSVP state |
+| **Communities / Guilds** | `lib/features/society/communities/` | Society | ✅ Complete | `communities`, `community_members` (backend join/leave & XP wired) |
+| **Events** | `lib/features/society/events/` | Society | ✅ Complete | `events`, `event_rsvps` (backend RSVP & XP wired) |
 | **Organization Portal** | `lib/features/society/organization/` | Society | 🟡 Scaffold | Host & guild management dashboards |
-| **Radar (Proximity)** | `lib/features/world/radar/` | World | 🟡 Partial | `radar_nodes` HUD canvas, PostGIS pending |
+| **Radar (Proximity)** | `lib/features/world/radar/` | World | ✅ Complete | Live `profiles` HUD canvas & truthful empty state |
 | **Commerce & Wallet** | `lib/features/economy/` | Economy | 🟡 Prototype | Models & state providers scaffolded |
 
 ## Module Structure (per feature)

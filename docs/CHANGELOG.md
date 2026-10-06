@@ -1,6 +1,31 @@
 # Changelog
 
-_Last Modified: 2026-10-05_
+_Last Modified: 2026-10-06_
+
+## 2026-10-06 — Phases 4 to 7 Stabilization (Connect Hub, Search, Participation Engine, Truthful Presence)
+
+### Phase 4: Connect Hub & Navigation Restructure
+- **Purged Mock Threads**: Deleted `_generateTelegramDemoThreads()` and in-memory demo broadcast streams in `lib/features/interaction/messaging/data/chat_repository.dart`. New and guest accounts now yield an honest empty list `[]` instead of 10+ fake conversations.
+- **Baseline-UI Empty State**: Upgraded `lib/features/interaction/messaging/presentation/messages_screen.dart` with an accessible empty state adhering to `ibelick/baseline-ui`, featuring an explicit "Find People" action button routing to `/connect/user_discovery` and unified theme colors (`context.colors`).
+- **Unified Connect Hub**: Rebuilt `lib/features/interaction/connect/presentation/connect_screen.dart` as the central Social Hub with 4 primary tabs: **Messages** (with live unread badge), **Communities**, **Events**, and **Radar**. Added support for deep-linking via query parameters (`/connect?tab=communities`, etc.).
+- **Shell Navigation Hardening**: Updated `lib/core/router/app_router.dart` to route legacy top-level `/communities`, `/events`, and `/radar` into the Connect Hub within `MainShell`, preserving the persistent bottom navigation bar while keeping `/communities/:id` and `/events/:id` detail routes intact.
+
+### Phase 5: Global Search & Explore Stabilization
+- **Purged Search Mocks**: Completely eliminated `_getMockUsers()`, `_getMockQuests()`, `_getMockEvents()`, `_getMockCommunities()`, and `_getFallbackSearchResults()` from `lib/features/interaction/explore/data/global_search_repository.dart`.
+- **Honest Empty Search Results**: Added `GlobalSearchResults.empty()`. Searches with no matches return empty lists without silently falling back to fake seed users or events.
+- **Verified Explore & Search UI**: Verified that `user_search_screen.dart` displays explicit empty state feedback ("No matches found for '[query]'") across all tabs without throwing exceptions.
+
+### Phase 6: Participation Wiring (Backend Engine Integration)
+- **Supabase Participation Methods**: Added `joinCommunity`, `leaveCommunity`, `rsvpEvent`, `cancelRsvpEvent`, and `awardXp` to `UserRepository` and implemented them in `SupabaseUserRepository` targeting `community_members`, `event_rsvps`, and `award_xp` RPC.
+- **Persistent Membership & RSVP State**: Updated `getUser` in `user_repository.dart` to fetch real community memberships and event RSVPs in parallel on profile load.
+- **Optimistic State & Rollback**: Wired `toggleJoinCommunity` and `toggleRsvpEvent` in `user_provider.dart` to execute backend database operations, award server-side XP, and roll back state on network or constraint errors.
+- **UI Interaction & UTF-8 Polish**: Fixed corrupted UTF-8 checkmark characters in `community_detail_screen.dart` and `event_detail_screen.dart`, eliminated accidental double XP awarding on RSVP, and added error snackbar alerts on failure.
+
+### Phase 7: Truthful Presence & Final Codebase Polish
+- **Real Radar Members**: Replaced hardcoded mock radar members ("Jordan Reed", "Maya Lin") in `lib/features/world/radar/data/radar_repository.dart` with genuine profiles queried from Supabase.
+- **Truthful Radar HUD**: Updated `lib/features/world/radar/presentation/radar_screen.dart` to display "0 Active" and an honest empty radar state ("No builders active on radar right now") when no nearby creators are detected.
+- **Automated Test Suite**: Created `test/phase4_to_7_stabilization_test.dart` validating empty search models, JSON parsing with trust scores, hub locations, and empty radar states. All 14 tests in the test suite pass with 100% success.
+- **Analysis Verification**: `flutter analyze` completed with **0 warnings, 0 errors**.
 
 ### 2026-10-05
 * **Compliance:**

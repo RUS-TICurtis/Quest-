@@ -83,6 +83,12 @@ class GlobalSearchResults {
     this.communities = const [],
   });
 
+  const GlobalSearchResults.empty()
+      : users = const [],
+        quests = const [],
+        events = const [],
+        communities = const [];
+
   bool get isEmpty =>
       users.isEmpty && quests.isEmpty && events.isEmpty && communities.isEmpty;
 
@@ -119,7 +125,7 @@ class GlobalSearchRepository {
       );
     } catch (e) {
       debugPrint('[GlobalSearchRepository] searchAll error: $e');
-      return _getFallbackSearchResults(trimmed, archetypeFilter);
+      return const GlobalSearchResults.empty();
     }
   }
 
@@ -144,18 +150,7 @@ class GlobalSearchRepository {
       return list;
     } catch (e) {
       debugPrint('[GlobalSearchRepository] searchUsers notice: $e');
-      return _getMockUsers()
-          .where((u) {
-            final matchesQuery = u.name.toLowerCase().contains(query.toLowerCase()) ||
-                (u.username?.toLowerCase().contains(query.toLowerCase()) ?? false) ||
-                (u.bio?.toLowerCase().contains(query.toLowerCase()) ?? false);
-            final matchesArchetype = archetype == null ||
-                archetype.isEmpty ||
-                archetype == 'All' ||
-                u.archetypes.contains(archetype);
-            return matchesQuery && matchesArchetype;
-          })
-          .toList();
+      return const [];
     }
   }
 
@@ -172,9 +167,7 @@ class GlobalSearchRepository {
           .toList();
     } catch (e) {
       debugPrint('[GlobalSearchRepository] searchQuests notice: $e');
-      return _getMockQuests()
-          .where((q) => q.title.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      return const [];
     }
   }
 
@@ -191,12 +184,7 @@ class GlobalSearchRepository {
           .toList();
     } catch (e) {
       debugPrint('[GlobalSearchRepository] searchEvents notice: $e');
-      return _getMockEvents()
-          .where((e) =>
-              e.title.toLowerCase().contains(query.toLowerCase()) ||
-              e.description.toLowerCase().contains(query.toLowerCase()) ||
-              e.location.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      return const [];
     }
   }
 
@@ -213,12 +201,7 @@ class GlobalSearchRepository {
           .toList();
     } catch (e) {
       debugPrint('[GlobalSearchRepository] searchCommunities notice: $e');
-      return _getMockCommunities()
-          .where((c) =>
-              c.name.toLowerCase().contains(query.toLowerCase()) ||
-              c.description.toLowerCase().contains(query.toLowerCase()) ||
-              c.category.toLowerCase().contains(query.toLowerCase()))
-          .toList();
+      return const [];
     }
   }
 
@@ -246,149 +229,14 @@ class GlobalSearchRepository {
           .toList();
 
       return GlobalSearchResults(
-        users: users.isNotEmpty ? users : _getMockUsers(),
-        events: events.isNotEmpty ? events : _getMockEvents(),
-        communities: communities.isNotEmpty ? communities : _getMockCommunities(),
-        quests: quests.isNotEmpty ? quests : _getMockQuests(),
+        users: users,
+        events: events,
+        communities: communities,
+        quests: quests,
       );
     } catch (e) {
-      debugPrint('[GlobalSearchRepository] getTrending fallback: $e');
-      return GlobalSearchResults(
-        users: _getMockUsers(),
-        events: _getMockEvents(),
-        communities: _getMockCommunities(),
-        quests: _getMockQuests(),
-      );
+      debugPrint('[GlobalSearchRepository] getTrending notice: $e');
+      return const GlobalSearchResults.empty();
     }
-  }
-
-  GlobalSearchResults _getFallbackSearchResults(String query, String? archetype) {
-    return GlobalSearchResults(
-      users: _getMockUsers()
-          .where((u) {
-            final matchesQuery = u.name.toLowerCase().contains(query.toLowerCase()) ||
-                (u.username?.toLowerCase().contains(query.toLowerCase()) ?? false);
-            final matchesArchetype = archetype == null ||
-                archetype.isEmpty ||
-                archetype == 'All' ||
-                u.archetypes.contains(archetype);
-            return matchesQuery && matchesArchetype;
-          })
-          .toList(),
-      quests: _getMockQuests()
-          .where((q) => q.title.toLowerCase().contains(query.toLowerCase()))
-          .toList(),
-      events: _getMockEvents()
-          .where((e) =>
-              e.title.toLowerCase().contains(query.toLowerCase()) ||
-              e.location.toLowerCase().contains(query.toLowerCase()))
-          .toList(),
-      communities: _getMockCommunities()
-          .where((c) =>
-              c.name.toLowerCase().contains(query.toLowerCase()) ||
-              c.category.toLowerCase().contains(query.toLowerCase()))
-          .toList(),
-    );
-  }
-
-  List<UserSearchResult> _getMockUsers() {
-    return [
-      UserSearchResult(
-        id: '11111111-1111-1111-1111-111111111111',
-        name: 'Curtis',
-        username: 'curtis_quest',
-        avatarUrl: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
-        bio: 'Explorer of digital realms and community builder.',
-        archetypes: ['Adventurer', 'Creator'],
-        level: 12,
-        trustScore: 95.5,
-        trustLevel: 'Platinum',
-      ),
-      UserSearchResult(
-        id: '22222222-2222-2222-2222-222222222222',
-        name: 'Jane Doe',
-        username: 'jane_doe',
-        avatarUrl: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200',
-        bio: 'Building vibrant open communities and design systems.',
-        archetypes: ['Leader', 'Connector'],
-        level: 9,
-        trustScore: 88.0,
-        trustLevel: 'Gold',
-      ),
-      UserSearchResult(
-        id: '33333333-3333-3333-3333-333333333333',
-        name: 'John Smith',
-        username: 'john_smith',
-        avatarUrl: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=200',
-        bio: 'Organizing epic local events, marathons, and coding quests.',
-        archetypes: ['Organizer', 'Strategist'],
-        level: 15,
-        trustScore: 75.0,
-        trustLevel: 'Silver',
-      ),
-    ];
-  }
-
-  List<QuestItem> _getMockQuests() {
-    return [
-      QuestItem(id: 'q1', title: 'Complete 1 Community Discussion', xp: 100, isDone: false),
-      QuestItem(id: 'q2', title: 'RSVP to an Upcoming Event', xp: 150, isDone: true),
-      QuestItem(id: 'q3', title: 'Explore 3 Video Creator Feeds', xp: 75, isDone: false),
-      QuestItem(id: 'q4', title: 'Invite a Friend to Your Guild', xp: 200, isDone: false),
-    ];
-  }
-
-  List<Event> _getMockEvents() {
-    return [
-      Event(
-        id: '77777777-7777-7777-7777-777777777777',
-        communityId: '44444444-4444-4444-4444-444444444444',
-        title: 'AI Developers Meetup',
-        host: 'Curtis',
-        date: 'Tomorrow',
-        time: '6:00 PM',
-        location: 'San Francisco Innovation Hub',
-        attendeesCount: 45,
-        imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?w=600',
-        category: 'Tech',
-        description: 'Hands-on demos of local LLMs and agent frameworks.',
-        xpReward: 250,
-      ),
-      Event(
-        id: '88888888-8888-8888-8888-888888888888',
-        communityId: '55555555-5555-5555-5555-555555555555',
-        title: 'Sunset Park 5K',
-        host: 'John Smith',
-        date: 'Saturday',
-        time: '7:00 AM',
-        location: 'Golden Gate Park',
-        attendeesCount: 32,
-        imageUrl: 'https://images.unsplash.com/photo-1552674605-db6ffd4facb5?w=600',
-        category: 'Fitness',
-        description: 'Scenic morning run followed by coffee and stretch.',
-        xpReward: 150,
-      ),
-    ];
-  }
-
-  List<Community> _getMockCommunities() {
-    return [
-      Community(
-        id: '44444444-4444-4444-4444-444444444444',
-        name: 'Tech Innovators',
-        description: 'A place for exploring emerging technology, AI agents, and next-gen tools.',
-        category: 'Tech',
-        memberCount: 245,
-        tags: ['AI', 'Code', 'Web3'],
-      ),
-      Community(
-        id: '55555555-5555-5555-5555-555555555555',
-        name: 'Local Runners & Hikers',
-        description: 'Weekly group runs, trail exploration, and fitness milestones.',
-        category: 'Fitness',
-        memberCount: 128,
-        tags: ['Running', 'Outdoors', 'Health'],
-      ),
-    ];
   }
 }

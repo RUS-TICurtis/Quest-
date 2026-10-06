@@ -3,11 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/features/interaction/messaging/data/chat_provider.dart';
+import 'package:quest/core/theme/app_colors_extension.dart';
 
 class MessagesScreen extends ConsumerStatefulWidget {
   final int categoryIndex;
 
-  const MessagesScreen({super.key, required this.categoryIndex});
+  const MessagesScreen({super.key, this.categoryIndex = 0});
 
   @override
   ConsumerState<MessagesScreen> createState() => _MessagesScreenState();
@@ -22,10 +23,10 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
     final chatState = chatStateAsync.value;
 
     if (chatState == null) {
-      return const Scaffold(
-        backgroundColor: Color(0xFF0E1621),
+      return Scaffold(
+        backgroundColor: context.colors.background,
         body: Center(
-          child: CircularProgressIndicator(color: Color(0xFF2AABEE)),
+          child: CircularProgressIndicator(color: context.colors.questBlue),
         ),
       );
     }
@@ -63,58 +64,51 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
     });
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0E1621),
-
+      backgroundColor: context.colors.background,
       body: Column(
         children: [
-          // Telegram Search Bar
+          // Search Bar
           Padding(
             padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
             child: Container(
-              height: 40,
+              height: 42,
               decoration: BoxDecoration(
-                color: const Color(0xFF17212B),
-                borderRadius: BorderRadius.circular(20),
+                color: context.colors.surface,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: context.colors.border),
               ),
               child: TextField(
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                cursorColor: const Color(0xFF2AABEE),
+                style: TextStyle(color: context.colors.textPrimary, fontSize: 14),
+                cursorColor: context.colors.questBlue,
                 onChanged: (val) {
                   setState(() {
                     _searchQuery = val;
                   });
                 },
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   hintText: 'Search chats, channels and messages...',
-                  hintStyle: TextStyle(color: Colors.white38, fontSize: 14),
+                  hintStyle: TextStyle(color: context.colors.textMuted, fontSize: 13),
                   prefixIcon: Icon(
                     Icons.search,
-                    color: Colors.white38,
+                    color: context.colors.textMuted,
                     size: 20,
                   ),
                   border: InputBorder.none,
-                  contentPadding: EdgeInsets.symmetric(vertical: 10),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 ),
               ),
             ),
           ),
 
-
-
-          // Chat List
+          // Chat List or Baseline Empty State
           Expanded(
             child: filteredThreads.isEmpty
-                ? const Center(
-                    child: Text(
-                      'No chats found',
-                      style: TextStyle(color: Colors.white38, fontSize: 15),
-                    ),
-                  )
+                ? _buildEmptyState(context)
                 : ListView.separated(
                     padding: const EdgeInsets.symmetric(vertical: 4),
                     itemCount: filteredThreads.length,
-                    separatorBuilder: (_, _) => const Divider(
-                      color: Color(0xFF17212B),
+                    separatorBuilder: (_, _) => Divider(
+                      color: context.colors.border,
                       height: 1,
                       indent: 74,
                     ),
@@ -129,11 +123,83 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
     );
   }
 
+  Widget _buildEmptyState(BuildContext context) {
+    final isSearching = _searchQuery.isNotEmpty;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                color: context.colors.questBlue.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isSearching
+                    ? Icons.search_off_rounded
+                    : Icons.chat_bubble_outline_rounded,
+                size: 36,
+                color: context.colors.questBlue,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              isSearching ? 'No Matching Conversations' : 'No Conversations Yet',
+              style: TextStyle(
+                color: context.colors.textPrimary,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isSearching
+                  ? 'Try searching with a different term or username.'
+                  : 'Connect with local builders, join active communities, or scan the radar to initiate direct connections.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: context.colors.textMuted,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            if (!isSearching)
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.colors.questBlue,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  context.push('/connect/user_discovery');
+                },
+                icon: const Icon(Icons.person_search_rounded, size: 18),
+                label: const Text(
+                  'Find People',
+                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _chatTile(BuildContext context, ChatThread thread) {
     final isUnread = thread.unreadCount > 0;
     final isAi = thread.isAiGuide;
     final avatarColor = isAi
-        ? const Color(0xFF2AABEE)
+        ? context.colors.questBlue
         : const Color(0xFF6C5CE7);
 
     // Determine if last message was sent by me
@@ -188,11 +254,11 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                       height: 13,
                       decoration: BoxDecoration(
                         color: isAi
-                            ? const Color(0xFF2AABEE)
+                            ? context.colors.questBlue
                             : const Color(0xFF00C853),
                         shape: BoxShape.circle,
                         border: Border.all(
-                          color: const Color(0xFF0E1621),
+                          color: context.colors.background,
                           width: 2,
                         ),
                       ),
@@ -215,7 +281,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                         child: Text(
                           thread.name,
                           style: TextStyle(
-                            color: Colors.white,
+                            color: context.colors.textPrimary,
                             fontSize: 15.5,
                             fontWeight: isUnread
                                 ? FontWeight.w700
@@ -227,17 +293,17 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                       ),
                       if (isAi || thread.isChannel) ...[
                         const SizedBox(width: 4),
-                        const Icon(
+                        Icon(
                           Icons.verified,
-                          color: Color(0xFF2AABEE),
+                          color: context.colors.questBlue,
                           size: 14,
                         ),
                       ],
                       if (thread.isMuted) ...[
                         const SizedBox(width: 4),
-                        const Icon(
+                        Icon(
                           Icons.volume_off_rounded,
-                          color: Colors.white38,
+                          color: context.colors.textMuted,
                           size: 14,
                         ),
                       ],
@@ -246,8 +312,8 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                         thread.time,
                         style: TextStyle(
                           color: isUnread
-                              ? const Color(0xFF2AABEE)
-                              : Colors.white38,
+                              ? context.colors.questBlue
+                              : context.colors.textMuted,
                           fontSize: 12,
                           fontWeight: isUnread
                               ? FontWeight.w600
@@ -263,9 +329,9 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                   Row(
                     children: [
                       if (isOutgoing) ...[
-                        const Icon(
+                        Icon(
                           Icons.done_all,
-                          color: Color(0xFF2AABEE),
+                          color: context.colors.questBlue,
                           size: 16,
                         ),
                         const SizedBox(width: 4),
@@ -276,7 +342,9 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: isUnread ? Colors.white : Colors.white54,
+                            color: isUnread
+                                ? context.colors.textPrimary
+                                : context.colors.textMuted,
                             fontSize: 13.5,
                             fontWeight: isUnread
                                 ? FontWeight.w500
@@ -292,7 +360,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF2AABEE),
+                            color: context.colors.questBlue,
                             borderRadius: BorderRadius.circular(10),
                           ),
                           child: Text(
@@ -306,9 +374,9 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                         ),
                       ] else if (thread.isPinned) ...[
                         const SizedBox(width: 8),
-                        const Icon(
+                        Icon(
                           Icons.push_pin,
-                          color: Colors.white38,
+                          color: context.colors.textMuted,
                           size: 16,
                         ),
                       ],
@@ -326,7 +394,7 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
   void _showThreadOptions(BuildContext context, ChatThread thread) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF17212B),
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -336,13 +404,13 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.push_pin_outlined,
-                  color: Colors.white70,
+                  color: context.colors.textPrimary,
                 ),
                 title: Text(
                   thread.isPinned ? 'Unpin from top' : 'Pin to top',
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.colors.textPrimary),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -354,13 +422,13 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.volume_off_rounded,
-                  color: Colors.white70,
+                  color: context.colors.textPrimary,
                 ),
                 title: Text(
                   thread.isMuted ? 'Unmute' : 'Mute notifications',
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.colors.textPrimary),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -372,13 +440,13 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.mark_chat_read_outlined,
-                  color: Colors.white70,
+                  color: context.colors.textPrimary,
                 ),
-                title: const Text(
+                title: Text(
                   'Mark as read',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: context.colors.textPrimary),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
@@ -386,13 +454,13 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
                 },
               ),
               ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.delete_outline_rounded,
-                  color: Colors.redAccent,
+                  color: context.colors.crimson,
                 ),
-                title: const Text(
+                title: Text(
                   'Delete chat',
-                  style: TextStyle(color: Colors.redAccent),
+                  style: TextStyle(color: context.colors.crimson),
                 ),
                 onTap: () {
                   Navigator.pop(ctx);
