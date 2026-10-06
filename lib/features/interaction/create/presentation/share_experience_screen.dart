@@ -59,9 +59,12 @@ class _ShareExperienceScreenState extends ConsumerState<ShareExperienceScreen> {
         );
       }
       _videoPlayerController!.initialize().then((_) {
+        if (!mounted) return;
         setState(() {});
-        _videoPlayerController!.setLooping(true);
-        _videoPlayerController!.play();
+        _videoPlayerController?.setLooping(true);
+        _videoPlayerController?.play();
+      }).catchError((e) {
+        debugPrint('VideoPlayerController init error: $e');
       });
     }
   }

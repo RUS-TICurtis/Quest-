@@ -2,6 +2,16 @@
 
 _Last Modified: 2026-10-06_
 
+## 2026-10-06 — Secondary Audit & System-Wide Bug Squashing
+- **GoRouter Detail Interception Fix**: Fixed critical routing bug where `/communities/:id` and `/events/:id` were intercepted by parent `/communities` and `/events` redirects. Separated detail screens into top-level `GoRoute`s, restoring navigation into community and event detail views.
+- **RLS Sequential Insertion**: Fixed race condition in `SupabaseChatRepository.createChatRoom` by inserting current user membership before adding the other participant, ensuring the `is_chat_participant` RLS security policy always passes.
+- **Model Serialization Resilience**:
+  - Hardened `Community.fromJson` and `Event.fromJson` against nulls, type mismatches, and snake_case column names (`community_id`, `member_count`, `attendees_count`, `xp_reward`, etc.).
+  - Hardened `UserState.fromJson` and `CreatorVideo.fromJson` numeric type casting (converting `num` to `int` safely to avoid `double` runtime cast errors) and adding snake_case fallbacks for `current_xp` and `xp_to_next_level`.
+- **Media Player Lifecycle Safety**: Added `mounted` check and `.catchError` to `VideoPlayerController.initialize()` in `ShareExperienceScreen` to prevent unmounted `setState()` crashes during quick pops.
+- **Radar Back Navigation**: Updated `RadarScreen` back button fallback from deprecated `/events` route to `/connect`.
+- **Expanded Test Suite**: Added 4 new automated test cases covering model serialization robustness; total passing tests increased from 14 to 18 (100% passing).
+
 ## 2026-10-06 — Phases 4 to 7 Stabilization (Connect Hub, Search, Participation Engine, Truthful Presence)
 
 ### Phase 4: Connect Hub & Navigation Restructure

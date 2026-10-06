@@ -52,16 +52,16 @@ class CreatorVideo {
       thumbnailUrl: json['thumbnail_url'] as String? ?? '',
       title: json['title'] as String? ?? '',
       description: json['description'] as String? ?? '',
-      viewCount: json['view_count'] as int? ?? 0,
-      likeCount: json['like_count'] as int? ?? 0,
-      commentCount: json['comment_count'] as int? ?? 0,
-      shareCount: json['share_count'] as int? ?? 0,
+      viewCount: (json['view_count'] as num?)?.toInt() ?? 0,
+      likeCount: (json['like_count'] as num?)?.toInt() ?? 0,
+      commentCount: (json['comment_count'] as num?)?.toInt() ?? 0,
+      shareCount: (json['share_count'] as num?)?.toInt() ?? 0,
       createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'])
+          ? DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now()
           : DateTime.now(),
       engagementScore: (json['engagement_score'] as num?)?.toDouble() ?? 0.0,
       isLiked: json['is_liked'] as bool? ?? false,
-      durationSeconds: json['duration_seconds'] as int? ?? 0,
+      durationSeconds: (json['duration_seconds'] as num?)?.toInt() ?? 0,
       muxPlaybackId: json['mux_playback_id'] as String?,
       muxStatus: json['mux_status'] as String?,
       creatorUsername: json['creator_username'] as String? ??

@@ -52,19 +52,21 @@ class Community {
 
   factory Community.fromJson(Map<String, dynamic> json) {
     return Community(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      description: json['description'] as String,
-      category: json['category'] as String,
-      memberCount: json['memberCount'] as int? ?? 1,
+      id: json['id']?.toString() ?? '',
+      name: json['name'] as String? ?? 'Community',
+      description: json['description'] as String? ?? '',
+      category: json['category'] as String? ?? 'General',
+      memberCount:
+          (json['memberCount'] ?? json['member_count'] as num?)?.toInt() ?? 1,
       accentColor: Color(
-        json['accentColor'] as int? ?? AppColors.questBlue.toARGB32(),
+        (json['accentColor'] ?? json['accent_color'] as num?)?.toInt() ??
+            AppColors.questBlue.toARGB32(),
       ),
-      icon: _getCommunityIcon(json['icon'] as int?),
+      icon: _getCommunityIcon((json['icon'] as num?)?.toInt()),
       tags:
-          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
+          (json['tags'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
           ['General'],
-      bannerUrl: json['bannerUrl'] as String?,
+      bannerUrl: (json['bannerUrl'] ?? json['banner_url']) as String?,
     );
   }
 

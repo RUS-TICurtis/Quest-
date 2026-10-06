@@ -160,10 +160,14 @@ class UserState {
       avatarUrl: rawAvatar,
       bio: json['bio'] as String?,
       initials: rawInitials,
-      level: json['level'] as int? ?? 1,
-      currentXp: json['currentXp'] as int? ?? 0,
-      xpToNextLevel: json['xpToNextLevel'] as int? ?? 100,
-      streak: json['streak'] as int? ?? 0,
+      level: (json['level'] as num?)?.toInt() ?? 1,
+      currentXp: (json['currentXp'] as num?)?.toInt() ??
+          (json['current_xp'] as num?)?.toInt() ??
+          0,
+      xpToNextLevel: (json['xpToNextLevel'] as num?)?.toInt() ??
+          (json['xp_to_next_level'] as num?)?.toInt() ??
+          100,
+      streak: (json['streak'] as num?)?.toInt() ?? 0,
       archetypes:
           (json['archetypes'] as List<dynamic>?)
               ?.map((e) => e.toString())

@@ -367,16 +367,20 @@ class SupabaseChatRepository implements ChatRepository {
           .select('roomId')
           .eq('userId', userId);
 
-      final existingRoomIds =
-          (existing as List).map((e) => e['roomId'] as String).toSet();
+      final existingRoomIds = (existing as List<dynamic>)
+          .map((e) => e['roomId']?.toString())
+          .whereType<String>()
+          .toSet();
 
       final otherRooms = await _supabase
           .from('chat_participants')
           .select('roomId')
           .eq('userId', otherUserId);
 
-      final otherRoomIds =
-          (otherRooms as List).map((e) => e['roomId'] as String).toSet();
+      final otherRoomIds = (otherRooms as List<dynamic>)
+          .map((e) => e['roomId']?.toString())
+          .whereType<String>()
+          .toSet();
 
       final sharedRoomId =
           existingRoomIds.intersection(otherRoomIds).firstOrNull;
@@ -409,13 +413,19 @@ class SupabaseChatRepository implements ChatRepository {
 
       final newRoomId = roomInsert['id'] as String;
 
-      // 3. Add both participants
-      await _supabase.from('chat_participants').insert([
-        {'roomId': newRoomId, 'userId': userId},
-        {'roomId': newRoomId, 'userId': otherUserId},
-      ]);
+      // 3. Add current user first to establish room membership for RLS
+      await _supabase.from('chat_participants').insert({
+        'roomId': newRoomId,
+        'userId': userId,
+      });
 
-      // 4. Persist to Hive
+      // 4. Add other participant (authorized via is_chat_participant policy)
+      await _supabase.from('chat_participants').insert({
+        'roomId': newRoomId,
+        'userId': otherUserId,
+      });
+
+      // 5. Persist to Hive
       await _localDb.chatRoomsBox.put(
         newRoomId,
         LocalChatRoom(

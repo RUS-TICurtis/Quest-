@@ -71,7 +71,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                       if (context.canPop()) {
                         context.pop();
                       } else {
-                        context.go('/events');
+                        context.go('/connect');
                       }
                     },
                   ),

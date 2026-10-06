@@ -82,26 +82,30 @@ class Event {
 
   factory Event.fromJson(Map<String, dynamic> json) {
     return Event(
-      id: json['id'] as String,
-      communityId: json['communityId'] as String,
-      title: json['title'] as String,
+      id: json['id']?.toString() ?? '',
+      communityId:
+          (json['communityId'] ?? json['community_id'])?.toString() ?? '',
+      title: json['title'] as String? ?? 'Event',
       host: json['host'] as String? ?? 'Quest Guild',
-      date: json['date'] as String,
-      time: json['time'] as String,
-      location: json['location'] as String,
-      attendeesCount: json['attendeesCount'] as int? ?? 0,
-      imageUrl:
-          json['imageUrl'] as String? ??
+      date: json['date'] as String? ?? 'Upcoming',
+      time: json['time'] as String? ?? 'TBD',
+      location: json['location'] as String? ?? 'Virtual',
+      attendeesCount:
+          (json['attendeesCount'] ?? json['attendees_count'] as num?)?.toInt() ??
+              0,
+      imageUrl: (json['imageUrl'] ?? json['image_url']) as String? ??
           'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
-      category: json['category'] as String,
+      category: json['category'] as String? ?? 'General',
       accentColor: Color(
-        json['accentColor'] as int? ?? AppColors.questBlue.toARGB32(),
+        (json['accentColor'] ?? json['accent_color'] as num?)?.toInt() ??
+            AppColors.questBlue.toARGB32(),
       ),
-      description: json['description'] as String,
-      xpReward: json['xpReward'] as int? ?? 150,
-      isRsvpd: json['isRsvpd'] as bool? ?? false,
-      muxPlaybackId: json['muxPlaybackId'] as String?,
-      videoUrl: json['videoUrl'] as String?,
+      description: json['description'] as String? ?? '',
+      xpReward: (json['xpReward'] ?? json['xp_reward'] as num?)?.toInt() ?? 150,
+      isRsvpd: (json['isRsvpd'] ?? json['is_rsvpd']) as bool? ?? false,
+      muxPlaybackId:
+          (json['muxPlaybackId'] ?? json['mux_playback_id']) as String?,
+      videoUrl: (json['videoUrl'] ?? json['video_url']) as String?,
     );
   }
 

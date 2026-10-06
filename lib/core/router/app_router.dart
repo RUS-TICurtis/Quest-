@@ -231,28 +231,24 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/communities',
         name: 'communities',
         redirect: (context, state) => '/connect?tab=communities',
-        routes: [
-          GoRoute(
-            path: ':id',
-            name: 'community_detail',
-            builder: (context, state) => CommunityDetailScreen(
-              communityId: state.pathParameters['id'] ?? '1',
-            ),
-          ),
-        ],
+      ),
+      GoRoute(
+        path: '/communities/:id',
+        name: 'community_detail',
+        builder: (context, state) => CommunityDetailScreen(
+          communityId: state.pathParameters['id'] ?? '1',
+        ),
       ),
       GoRoute(
         path: '/events',
         name: 'events',
         redirect: (context, state) => '/connect?tab=events',
-        routes: [
-          GoRoute(
-            path: ':id',
-            name: 'event_detail',
-            builder: (context, state) =>
-                EventDetailScreen(eventId: state.pathParameters['id'] ?? '1'),
-          ),
-        ],
+      ),
+      GoRoute(
+        path: '/events/:id',
+        name: 'event_detail',
+        builder: (context, state) =>
+            EventDetailScreen(eventId: state.pathParameters['id'] ?? '1'),
       ),
       GoRoute(
         path: '/organization',
