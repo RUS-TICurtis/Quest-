@@ -1,4 +1,4 @@
-_Last Modified: 2026-09-13_
+_Last Modified: 2026-10-09_
 
 # 5. Navigation & Routing
 
@@ -10,7 +10,7 @@ GoRouter is initialized via `appRouterProvider` in `lib/core/router/app_router.d
 
 - **`refreshListenable` & Singleton Router**: A `_RouterNotifier extends ChangeNotifier` wraps Riverpod's `authProvider` and calls `notifyListeners()` on auth changes. `appRouterProvider` uses `ref.read` (never `ref.watch(authProvider)`), preventing GoRouter from being recreated and resetting back to `/` (splash) whenever auth state changes.
 - **Auth Guard**: The `redirect` function checks `authState.isAuthenticated` to enforce protected/unprotected routes.
-- **Shell Route**: `ShellRoute` wraps main app screens with `MainShell` (persistent bottom nav / navigation rail).
+- **Shell Route**: `ShellRoute` wraps main app screens with `MainShell` (persistent bottom nav / navigation rail). On the Create tab (`/create`), the bottom navigation bar is suppressed dynamically to ensure an edge-to-edge camera viewfinder without navigation collisions.
 
 ## Route Catalog
 
@@ -22,6 +22,7 @@ GoRouter is initialized via `appRouterProvider` in `lib/core/router/app_router.d
 | `/onboarding` | `onboarding` | `OnboardingScreen` | No |
 | `/home` | `home` | `HomeScreen` | Yes (Shell) |
 | `/feed` | `feed` | `FeedScreen` | Yes (Shell) |
+| `/create` | `create` | `CreateScreen` | Yes (Shell, bottom nav bar suppressed) |
 | `/communities` | `communities` | `CommunitiesScreen` | Yes (Shell) |
 | `/communities/:id` | `community_detail` | `CommunityDetailScreen` | Yes (Shell) |
 | `/events` | `events` | `EventsScreen` | Yes (Shell) |
@@ -38,7 +39,7 @@ GoRouter is initialized via `appRouterProvider` in `lib/core/router/app_router.d
 | `/radar` | `radar` | `RadarScreen` | Yes (no Shell) |
 | `/create-story` | `create_story` | `StoryCreatorScreen` | Yes (no Shell) |
 | `/leaderboard` | `leaderboard` | `LeaderboardScreen` | Yes (no Shell) |
-| `/share-experience` | `share_experience` | `ShareExperienceScreen` | Yes (no Shell) |
+| `/share-experience` | `share_experience` | `ShareExperienceScreen(payload)` | Yes (no Shell, accepts `CreateSubmissionPayload`) |
 
 ## Auth Redirect Logic
 

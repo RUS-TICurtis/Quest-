@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'dart:io';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'media_purpose.dart';
 import 'media_compressor.dart';
 import 'providers/mux_service.dart';
@@ -186,6 +187,34 @@ class MediaServiceGateway {
     debugPrint(
       '[MediaGateway] Image bytes upload for purpose: $purpose (${bytes.length} bytes)',
     );
-    return await _cloudinaryService.uploadMediaBytes(bytes, isVideo: false);
+    try {
+      final cloudUrl =
+          await _cloudinaryService.uploadMediaBytes(bytes, isVideo: false);
+      if (cloudUrl != null) return cloudUrl;
+    } catch (e) {
+      debugPrint('[MediaGateway] Cloudinary uploadBytes notice: $e');
+    }
+
+    // Direct fallback to Supabase Storage 'gallery' bucket
+    try {
+      final supabase = Supabase.instance.client;
+      final fileName =
+          'uploads/img_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      await supabase.storage.from('gallery').uploadBinary(
+            fileName,
+            bytes,
+            fileOptions:
+                const FileOptions(contentType: 'image/jpeg', upsert: true),
+          );
+      final publicUrl = supabase.storage.from('gallery').getPublicUrl(fileName);
+      debugPrint(
+        '[MediaGateway] Supabase storage fallback successful: $publicUrl',
+      );
+      return publicUrl;
+    } catch (e) {
+      debugPrint('[MediaGateway] Supabase storage fallback error: $e');
+    }
+
+    return null;
   }
 }

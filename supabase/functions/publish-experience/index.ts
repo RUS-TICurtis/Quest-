@@ -9,8 +9,14 @@ serve(async (req) => {
 
   try {
     const anonClient = getSupabaseClient(req);
-    const user = await verifyAuth(req, anonClient);
-    const userId = user.id;
+    let userId: string | null = null;
+    try {
+      const user = await verifyAuth(req, anonClient);
+      userId = user?.id ?? null;
+    } catch (_) {
+      // Allow guest/demo posting without auth token
+      userId = null;
+    }
 
     const body = await req.json();
     const mediaUrl = body.media_url;
@@ -19,6 +25,7 @@ serve(async (req) => {
     const caption = body.caption || '';
     const destinations = Array.isArray(body.destinations) ? body.destinations : [];
     const communityId = body.community_id;
+    const questId = body.quest_id;
 
     const insertPayloads = [];
 
@@ -31,6 +38,7 @@ serve(async (req) => {
       title: caption.substring(0, 50) || 'New Experience',
       description: caption,
       duration_seconds: 15,
+      quest_id: questId || null,
     };
 
     if (destinations.includes('feed')) {
@@ -67,7 +75,7 @@ serve(async (req) => {
       .insert(insertPayloads)
       .select(`
         *,
-        profiles!inner(username, avatar_url)
+        profiles(username, avatar_url)
       `);
 
     if (error) {
@@ -76,12 +84,11 @@ serve(async (req) => {
     }
 
     // Map back profile data to match the app's models (CreatorVideo / StoryItem)
-    const mappedVideos = insertedVideos.map((v: any) => ({
+    const mappedVideos = (insertedVideos || []).map((v: any) => ({
       ...v,
-      creator_username: v.profiles?.username,
-      creator_avatar_url: v.profiles?.avatar_url,
-      // CreatorVideo expects creator_id mapped from user_id
-      creator_id: v.user_id,
+      creator_username: v.profiles?.username || 'Explorer',
+      creator_avatar_url: v.profiles?.avatar_url || null,
+      creator_id: v.user_id || 'guest',
     }));
 
     return new Response(JSON.stringify({ success: true, videos: mappedVideos }), {

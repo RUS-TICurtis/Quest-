@@ -95,13 +95,13 @@ class ExploreScreen extends ConsumerWidget {
                       DiscoverHorizontalCard(
                         title: 'Flutter Builders',
                         subtitle: 'Technology',
-                        imageUrl: 'https://images.unsplash.com/photo-1617042375876-a13e36732a30?auto=format&fit=crop&w=400&q=80',
+                        imageUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=400&q=80',
                         onTap: () => context.push('/communities/1'),
                       ),
                       DiscoverHorizontalCard(
                         title: 'Startup Founders',
                         subtitle: 'Business',
-                        imageUrl: 'https://images.unsplash.com/photo-1556761175-5973dc0f32d7?auto=format&fit=crop&w=400&q=80',
+                        imageUrl: 'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=400&q=80',
                         onTap: () => context.push('/communities/2'),
                       ),
                       DiscoverHorizontalCard(

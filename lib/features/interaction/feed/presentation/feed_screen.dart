@@ -133,26 +133,171 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     );
   }
 
+  void _showShareSheet(CreatorVideo video) {
+    HapticFeedback.lightImpact();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: context.colors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: context.colors.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor:
+                          context.colors.questBlue.withValues(alpha: 0.2),
+                      backgroundImage: video.creatorAvatarUrl != null
+                          ? NetworkImage(video.creatorAvatarUrl!)
+                          : null,
+                      child: video.creatorAvatarUrl == null
+                          ? const Icon(Icons.person, color: Colors.white, size: 20)
+                          : null,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Share @${video.creatorUsername ?? "creator"}\'s experience',
+                            style: TextStyle(
+                              color: context.colors.textPrimary,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                            ),
+                          ),
+                          if (video.description.isNotEmpty)
+                            Text(
+                              video.description,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: context.colors.textMuted,
+                                fontSize: 12,
+                              ),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _buildShareAction(
+                      icon: Icons.link,
+                      label: 'Copy Link',
+                      onTap: () async {
+                        Navigator.pop(ctx);
+                        await Clipboard.setData(
+                          ClipboardData(
+                            text: 'https://qwst.run/experience/${video.id}',
+                          ),
+                        );
+                        HapticFeedback.lightImpact();
+                        ref.read(feedRepositoryProvider).shareVideo(video.id);
+                        if (!mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('📋 Link copied to clipboard!'),
+                            backgroundColor: context.colors.emerald,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      },
+                    ),
+                    _buildShareAction(
+                      icon: Icons.chat_bubble_outline,
+                      label: 'Send in Chat',
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        HapticFeedback.lightImpact();
+                        ref.read(feedRepositoryProvider).shareVideo(video.id);
+                        context.push('/connect?tab=messages');
+                      },
+                    ),
+                    _buildShareAction(
+                      icon: Icons.groups_outlined,
+                      label: 'Guild Post',
+                      onTap: () {
+                        Navigator.pop(ctx);
+                        HapticFeedback.lightImpact();
+                        ref.read(feedRepositoryProvider).shareVideo(video.id);
+                        context.push('/connect?tab=communities');
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildShareAction({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: context.colors.card,
+              shape: BoxShape.circle,
+              border: Border.all(color: context.colors.border),
+            ),
+            child: Icon(icon, color: context.colors.textPrimary, size: 24),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: context.colors.textSecondary,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<void> _handleShare(CreatorVideo video) async {
     final accessLevel = ref.read(authProvider).accessLevel;
     if (accessLevel != AccessLevel.member) {
       _promptSignIn('share experiences');
       return;
     }
-
-    HapticFeedback.lightImpact();
-    try {
-      await ref.read(feedRepositoryProvider).shareVideo(video.id);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Shared experience!')),
-      );
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Share error: $e')),
-      );
-    }
+    _showShareSheet(video);
   }
 
   @override

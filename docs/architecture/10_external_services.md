@@ -1,4 +1,4 @@
-_Last Modified: 2026-10-05_
+_Last Modified: 2026-10-09_
 
 # 10. External Services & APIs (Free-Tier Optimized)
 
@@ -13,7 +13,7 @@ Supabase serves as our primary unified backend, replacing the need for separate 
   * **Storage**: Avatars, community banners, event images.
   * **Edge Functions**: Executing server-side logic and managing atomic operations:
     * `sign-media-upload`: Authenticated delegation of upload credentials and signing (Mux direct uploads, Cloudinary HMAC, ImageKit HMAC) without client secrets.
-    * `publish-experience`: Secure, centralized creation of posts across feed, story, and community destinations.
+    * `publish-experience`: Secure, centralized creation of posts across feed, story, and community destinations. Deployed to Supabase remote environment with CORS headers and guest/demo resiliency, supporting linked quest XP awarding.
     * `interact-video`: Atomic handling of likes and comments with automatic calculation of creator engagement scores.
     * `send-message`: Chat message transmission with simultaneous updates to thread metadata (`lastMessageText`, `lastMessageTime`).
     * `update-profile`: Sanitized profile mutation preventing modification of protected properties like `trust_score`.
@@ -68,9 +68,10 @@ For out-of-app alerts (e.g., direct messages, event reminders).
 * **Fallback Video & Chat Media (Cloudinary)**:
   * Client requests an upload signature from `sign-media-upload` with server-side HMAC hashing.
   * Client performs multipart POST directly to Cloudinary using the signature.
-* **Image Media (ImageKit)**:
+* **Image Media (ImageKit) & Supabase Storage Fallback**:
   * Client requests authentication parameters (`token`, `expire`, `signature`) from `sign-media-upload`.
   * Uploads directly to ImageKit using the public key and server signature.
+  * If third-party cloud credentials (Cloudinary/ImageKit) are unconfigured, `MediaServiceGateway` falls back to Supabase Storage (`gallery` public bucket), ensuring zero unhandled upload errors during local or dev runs.
 * **Progress & UI Feedback**: `UploadStatusCallback` in `MediaServiceGateway` feeds human-readable stage messages to the UI.
 
 ## 7. Device Notifications: `flutter_local_notifications`

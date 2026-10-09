@@ -1,4 +1,4 @@
-_Last Modified: 2026-09-18_
+_Last Modified: 2026-10-09_
 
 ## 3. Directory & File Inventory (Exhaustive)
 
@@ -80,9 +80,12 @@ Quest/
 │       │   │       ├── connect_screen.dart             # Social hub (chat message threads & discovery entry)
 │       │   │       └── user_discovery_screen.dart      # Peer discovery with archetype matching & trust scores
 │       │   ├── create/
+│       │   │   ├── data/
+│       │   │   │   └── models/
+│       │   │   │       └── create_submission_payload.dart  # Strongly-typed discriminated payload (image, video, text)
 │       │   │   └── presentation/
-│       │   │       ├── create_screen.dart              # Camera recording & gallery media ingestion
-│       │   │       └── share_experience_screen.dart    # Feed, Story, Community publishing gateway
+│       │   │       ├── create_screen.dart              # Edge-to-edge camera viewfinder with timer, flip, torch & text modes
+│       │   │       └── share_experience_screen.dart    # Review card, quest proof linking & multi-destination publisher
 │       │   ├── explore/
 │       │   │   ├── data/
 │       │   │   │   ├── global_search_provider.dart     # StateNotifier for multi-entity debounced search

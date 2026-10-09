@@ -141,17 +141,19 @@ class MainShell extends ConsumerWidget {
       );
     }
 
-    // Mobile: bottom navigation bar
+    // Mobile: bottom navigation bar (hidden on Create screen for immersive camera)
     return Scaffold(
       backgroundColor: context.colors.background,
       body: child,
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(color: context.colors.border, width: 1),
-          ),
-        ),
-        child: BottomNavigationBar(
+      bottomNavigationBar: idx == 2
+          ? null
+          : Container(
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: context.colors.border, width: 1),
+                ),
+              ),
+              child: BottomNavigationBar(
           currentIndex: idx,
           onTap: (i) => _onTap(context, i),
           backgroundColor: context.colors.background,

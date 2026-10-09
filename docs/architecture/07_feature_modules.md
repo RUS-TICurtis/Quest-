@@ -1,4 +1,4 @@
-_Last Modified: 2026-10-06_
+_Last Modified: 2026-10-09_
 
 # 7. Feature Modules
 
@@ -10,10 +10,10 @@ _Last Modified: 2026-10-06_
 | **Profile / XP** | `lib/features/identity/profile/` | Identity | ✅ Complete | `profiles`, `daily_quests`, `community_members`, `event_rsvps`, `award_xp` RPC |
 | **Leaderboard** | `lib/features/identity/leaderboard/` | Identity | ✅ Complete | `leaderboard` table & season rankings |
 | **Home (Mission Control)** | `lib/features/interaction/home/` | Interaction | ✅ Complete | XP Bar, Quests, Gamification Cockpit, Feed Spotlight |
-| **Video Feed** | `lib/features/interaction/feed/` | Interaction | ✅ Complete | Live `videos` table fallback, `FeedVideoPool`, TikTok scroll, Guest Intercepts |
+| **Video Feed** | `lib/features/interaction/feed/` | Interaction | ✅ Complete | Live `videos` table fallback, `FeedVideoPool`, Quest Share Sheet, Guest Intercepts |
 | **Explore & Global Search** | `lib/features/interaction/explore/` | Interaction | ✅ Complete | Multi-entity repository & Glassmorphic UI (purged all mocks) |
 | **Connect Hub (4 Pillars)** | `lib/features/interaction/connect/` | Interaction | ✅ Complete | Messages, Communities, Events, Radar unified tabs with deep linking |
-| **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Camera, Mux, Cloudinary, signed upload gateway, live community tagging |
+| **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Front/rear camera switch, torch, vlog timer, typed payload, quest linking, Mux/Cloudinary gateway |
 | **Notifications** | `lib/features/interaction/notifications/` | Interaction | ✅ Complete | `notifications` table, in-app alerts, interactive feed |
 | **Messaging / Chat** | `lib/features/interaction/messaging/` | Interaction | ✅ Complete | Supabase Realtime + Hive local outbox + purged all demo threads + baseline empty state |
 | **Stage (Audio)** | `lib/features/interaction/stage/` | Interaction | 🟡 Mock Data | Sinusoidal physics canvas, Agora/LiveKit pending |
@@ -65,30 +65,26 @@ The messaging architecture is built as a **1:1 Telegram replica** powered by `v_
   - Category tabs on `MessagesScreen` (*All, Direct, Groups, Channels, Bots*), unread count pills, and floating action pencil button.
 - **Input System**: Features a port of Finishd's WhatsApp-style input field (`WhatsAppTextField`) with integrated attachment sheets rendered below the input box and a fully themed, persistent emoji picker (`AppEmojiPicker`).
 
-## Media & WhatsApp-Style Status Updates Engine
+## Media, Camera & Social OS Publishing Engine
 
-The media and story ingestion layer follows a **WhatsApp-style status flow**:
-- **WhatsApp-Style Status Flow (`StoriesBar` & `MyStatusModal`)**:
-  - Located in the Connect Screen (`ConnectScreen`).
-  - When the user has no active stories: "My Story" renders a gray ring with a `+` badge; tapping routes to `/create`.
-  - When the user has active stories: the outer ring turns from gray to **Quest Blue** with glowing border, displaying the latest story's media thumbnail.
-  - Tapping "My Story" with active stories opens `MyStatusModal`:
-    - Shows list of uploaded status items (thumbnails, timestamps, view counter pills).
-    - 3-dots action menu with "View update" and "Delete update" (calls `ref.read(storiesProvider.notifier).deleteStory(id)`).
-    - WhatsApp-style floating camera/add button and header `+` action routing to `/create`.
-  - Full-screen `StoryViewerModalV2` supports `customStories`, rendering both Mux/HLS videos and high-resolution images, with bottom views pill (`${viewsCount} views`) for own stories and delete options in `more_vert`.
-  - **User-to-User Grouping**: `StoryViewerModalV2` groups stories by `authorName` and wraps them in a horizontal `PageView` (like Instagram), distinguishing between stories with extensive media content vs different users.
-  - **Video & Image Story Playback Timing**:
-    - Video stories synchronize directly with the native video player duration (setLooping is disabled during story playback), advancing automatically only when the video actually reaches completion.
-    - Image and text status updates default to a generous 8-second display window.
-    - Hold-to-pause gesture: holding down halts playback and progress, releasing resumes playback instantly.
-  - **Video Playback UX**: Visual playback indicators are actively maintained in `VideoFeed` for manual toggle/pause interactions, and explicit visibility-based pooling in `FeedVideoPool` resolves background muting bugs.
-- **Web (`kIsWeb`) Compatibility**: Uses byte streams (`XFile.readAsBytes()`) to bypass `dart:io` `_Namespace` restrictions on the web platform.
-- **Mux Direct Video Ingestion**: Generates direct upload URLs via `https://api.mux.com/video/v1/uploads` and streams bytes directly with `Dio.put()`, then polls for the ready asset `playback_id`.
-- **Cloudinary Image/Video Ingestion**: Generates client-side sha1 signatures with timestamp and secret, uploading via multipart form data (`MultipartFile.fromBytes`).
-- **Resilient Real Backend Sync**: When remote records are returned from Supabase, mock seeds are cleanly replaced by the real database data. Fallback seeds are preserved only if the remote table is empty or the network is unavailable.
-- **Feed & Community Distribution**: `ShareExperienceScreen` persists feeds to the `creator_videos` table, stories to `stories` (`createdAt`, `isSeen`), and community discussions to `community_posts`.
-- **Interaction / Stories**: Uses Hive `storiesBox` for offline cache.
+The media capture, ingestion, and story distribution layer connects kinetic real-world participation with social sharing:
+- **Full-Bleed Camera Viewfinder (`CreateScreen`)**:
+  - Automatically suppresses `MainShell`'s bottom navigation bar on the Create tab (`/create`) for an edge-to-edge camera experience without navigation button collisions.
+  - **Hardware Controls**: Front/rear lens switching (`_switchCamera()`), flash/torch cycling (`FlashMode.off -> auto -> torch`), and top floating glass dismiss button (`Icons.close`).
+  - **Vlog Capture Mechanics**: Integrated active recording timer (`● REC 00:15 / 01:00`), 60-second automatic duration cutoff, and SVG radial circular progress stroke around the shutter button.
+  - **Text Experience Canvas**: Multi-theme gradient palette selector (Quest Blue, Midnight Slate, Aurora Magenta, Emerald, Crimson) with stylized quote typography.
+- **Typed Submission Contract (`CreateSubmissionPayload`)**:
+  - Discriminated payload model (`image`, `video`, `text`) decoupling text status creation from filesystem file loaders, eliminating crashes.
+- **Interactive Review & Experience Publishing (`ShareExperienceScreen`)**:
+  - Responsive 9:16 interactive video review container with central play/pause gesture and audio mute/unmute toggle.
+  - Retake / discard action returning cleanly to camera mode.
+  - **Quest Proof Linking**: Creators can link active daily quests (`QuestItem`) to verify real-world participation and receive dynamic XP rewards upon publication (`+25 XP`).
+  - Segmented destination pills (*Story 24h*, *Main Feed*, *Target Guild*).
+- **Downstream Sharing & Story Reactions**:
+  - **Quest Share Sheet (`FeedScreen`)**: Tapping share triggers a custom bottom sheet with *Copy Link* (`https://qwst.run/experience/:id`), *Send in Chat*, and *Guild Post*.
+  - **Interactive Story Viewer (`StoryViewerModalV2`)**: Includes quick emoji reaction pills (`🔥`, `❤️`, `👏`, `🎯`), direct reply input, and view count pills for owned stories.
+- **Web (`kIsWeb`) Compatibility**: Uses byte streams (`XFile.readAsBytes()`) to bypass `dart:io` restrictions on web.
+- **Multi-Cloud Gateways**: Mux direct video ingestion via signed URLs with Cloudinary automatic fallback.
 
 ## Authentication & Account Lifecycle
 

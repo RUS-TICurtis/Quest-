@@ -27,6 +27,7 @@ import 'package:quest/features/interaction/explore/presentation/user_search_scre
 import 'package:quest/features/interaction/feed/presentation/feed_screen.dart';
 import 'package:quest/features/interaction/create/presentation/create_screen.dart';
 import 'package:quest/features/interaction/create/presentation/share_experience_screen.dart';
+import 'package:quest/features/interaction/create/data/models/create_submission_payload.dart';
 import 'package:quest/features/interaction/notifications/presentation/notifications_screen.dart';
 import 'package:quest/core/shell/main_shell.dart';
 import 'package:quest/features/identity/profile/data/user_provider.dart';
@@ -289,8 +290,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/share-experience',
         name: 'share_experience',
-        builder: (context, state) =>
-            ShareExperienceScreen(mediaPath: state.extra as String?),
+        builder: (context, state) {
+          if (state.extra is CreateSubmissionPayload) {
+            return ShareExperienceScreen(
+              payload: state.extra as CreateSubmissionPayload,
+            );
+          }
+          return ShareExperienceScreen(
+            mediaPath: state.extra as String?,
+          );
+        },
       ),
       GoRoute(
         path: '/notifications',
