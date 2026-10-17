@@ -101,7 +101,7 @@ class _LandingScreenState extends State<LandingScreen>
                           ],
                         ),
                         child: const Icon(
-                          Icons.auto_awesome,
+                          Icons.group_add,
                           color: AppColors.textPrimary,
                           size: 20,
                         ),

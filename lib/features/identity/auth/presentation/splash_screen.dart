@@ -114,7 +114,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                         ],
                       ),
                       child: Icon(
-                        Icons.auto_awesome,
+                        Icons.group_add_outlined,
                         color: context.colors.textPrimary,
                         size: 44,
                       ),

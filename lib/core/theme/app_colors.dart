@@ -35,6 +35,9 @@ class AppColors {
   // Danger
   static const Color crimson = Color(0xFFEF4444);
 
+  // Spontaneous Beacon / Kinetic Energy
+  static const Color coral = Color(0xFFFF5722);
+
   // Information
   static const Color skyBlue = Color(0xFF38BDF8);
 
@@ -44,6 +47,7 @@ class AppColors {
   // Text
   static const Color textPrimary = Colors.white;
   static const Color textPrimary87 = Color(0xDEFFFFFF);
+  static const Color textPrimary80 = Color(0xCCFFFFFF);
   static const Color textPrimary70 = Color(0xB3FFFFFF);
   static const Color textPrimary54 = Color(0x8AFFFFFF);
   static const Color textPrimary38 = Color(0x61FFFFFF);

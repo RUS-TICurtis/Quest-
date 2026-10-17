@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/core/theme/quest_icons.dart';
+import 'package:quest/features/identity/auth/data/auth_provider.dart';
 import 'package:quest/features/interaction/stage/data/stage_provider.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 
@@ -206,6 +207,32 @@ class _StageScreenState extends ConsumerState<StageScreen>
                             ),
                           ],
                         ),
+                      ),
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: Icon(
+                          Icons.share_outlined,
+                          color: context.colors.textPrimary,
+                          size: 20,
+                        ),
+                        onPressed: () async {
+                          HapticFeedback.lightImpact();
+                          await Clipboard.setData(
+                            ClipboardData(
+                              text: 'https://qwst.run/stage/${widget.stageId}',
+                            ),
+                          );
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: const Text(
+                                '📋 Stage link copied to clipboard!',
+                              ),
+                              backgroundColor: context.colors.emerald,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
@@ -602,6 +629,24 @@ class _StageScreenState extends ConsumerState<StageScreen>
                   label: Text(state.isMicMuted ? 'Muted' : 'Speaking'),
                   onPressed: () {
                     HapticFeedback.lightImpact();
+                    final authState = ref.read(authProvider);
+                    if (authState.accessLevel != AccessLevel.member) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            '🔒 Sign in to speak or raise your hand on Stage!',
+                          ),
+                          backgroundColor: context.colors.questBlue,
+                          behavior: SnackBarBehavior.floating,
+                          action: SnackBarAction(
+                            label: 'Sign In',
+                            textColor: Colors.white,
+                            onPressed: () => context.push('/login'),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
                     HapticFeedback.mediumImpact();
                     notifier.toggleMic();
                   },
@@ -646,6 +691,24 @@ class _StageScreenState extends ConsumerState<StageScreen>
                   ),
                   onPressed: () {
                     HapticFeedback.lightImpact();
+                    final authState = ref.read(authProvider);
+                    if (authState.accessLevel != AccessLevel.member) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                            '🔒 Sign in to speak or raise your hand on Stage!',
+                          ),
+                          backgroundColor: context.colors.questBlue,
+                          behavior: SnackBarBehavior.floating,
+                          action: SnackBarAction(
+                            label: 'Sign In',
+                            textColor: Colors.white,
+                            onPressed: () => context.push('/login'),
+                          ),
+                        ),
+                      );
+                      return;
+                    }
                     HapticFeedback.selectionClick();
                     notifier.toggleHandRaise();
                   },

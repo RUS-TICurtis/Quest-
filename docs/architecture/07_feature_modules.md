@@ -1,4 +1,4 @@
-_Last Modified: 2026-10-09_
+_Last Modified: 2026-10-17_
 
 # 7. Feature Modules
 
@@ -13,14 +13,14 @@ _Last Modified: 2026-10-09_
 | **Video Feed** | `lib/features/interaction/feed/` | Interaction | ✅ Complete | Live `videos` table fallback, `FeedVideoPool`, Quest Share Sheet, Guest Intercepts |
 | **Explore & Global Search** | `lib/features/interaction/explore/` | Interaction | ✅ Complete | Multi-entity repository & Glassmorphic UI (purged all mocks) |
 | **Connect Hub (4 Pillars)** | `lib/features/interaction/connect/` | Interaction | ✅ Complete | Messages, Communities, Events, Radar unified tabs with deep linking |
-| **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Front/rear camera switch, torch, vlog timer, typed payload, quest linking, Mux/Cloudinary gateway |
+| **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Front/rear camera switch, torch, vlog timer, tap-to-focus, pinch-to-zoom, typed payload, quest linking, Mux/Cloudinary gateway |
 | **Notifications** | `lib/features/interaction/notifications/` | Interaction | ✅ Complete | `notifications` table, in-app alerts, interactive feed |
 | **Messaging / Chat** | `lib/features/interaction/messaging/` | Interaction | ✅ Complete | Supabase Realtime + Hive local outbox + purged all demo threads + baseline empty state |
-| **Stage (Audio)** | `lib/features/interaction/stage/` | Interaction | 🟡 Mock Data | Sinusoidal physics canvas, Agora/LiveKit pending |
+| **Stage (Audio Rooms)** | `lib/features/interaction/stage/` | Interaction | 🟢 Hardened UI & Controls | Dynamic room repository, speaker promotions, link sharing, guest-gate protection, sinusoidal physics canvas |
 | **Communities / Guilds** | `lib/features/society/communities/` | Society | ✅ Complete | `communities`, `community_members` (backend join/leave & XP wired) |
 | **Events** | `lib/features/society/events/` | Society | ✅ Complete | `events`, `event_rsvps` (backend RSVP & XP wired) |
 | **Organization Portal** | `lib/features/society/organization/` | Society | 🟡 Scaffold | Host & guild management dashboards |
-| **Radar (Proximity)** | `lib/features/world/radar/` | World | ✅ Complete | Live `profiles` HUD canvas & truthful empty state |
+| **Radar & Beacons** | `lib/features/world/radar/` | World | ✅ Complete | Live `profiles` HUD, spontaneous Beacon creation/joining (+50/+25 XP), pulsing markers, `beacons` schema & pg_cron auto-expiration |
 | **Commerce & Wallet** | `lib/features/economy/` | Economy | 🟡 Prototype | Models & state providers scaffolded |
 
 ## Module Structure (per feature)
@@ -45,8 +45,8 @@ lib/features/<feature>/
 | `eventsProvider` | `AsyncNotifier<EventsState>` | `toggleRsvp()`, `addEvent()`, `setFilter()` |
 | `communitiesProvider` | `AsyncNotifier<CommunitiesState>` | `toggleJoin()`, `addCommunity()`, `setCategory()`, `setSearchQuery()` |
 | `chatProvider` | `StreamNotifier<ChatState> (Supabase Realtime)` | `sendMessage()`, `sendVoiceNote()`, `markThreadRead()`, `toggleReaction()`, `votePoll()`, `pinMessage()`, `deleteMessage()` |
-| `stageProvider(id)` | `AsyncNotifier<StageState>` (family) | `toggleMic()`, `toggleHandRaise()`, `sendReaction()` |
-| `radarProvider` | `AsyncNotifier<RadarState>` | `selectHub()`, `checkInToHub()` |
+| `stageProvider(id)` | `AsyncNotifier<StageState>` (family) | `toggleMic()`, `toggleHandRaise()`, `promoteToSpeaker()`, `sendReaction()` |
+| `radarProvider` | `AsyncNotifier<RadarState>` | `selectHub()`, `checkInToHub()`, `dropBeacon()`, `joinBeacon()` |
 | `leaderboardProvider` | `AsyncNotifier<LeaderboardState>` | `setTab()`, `setArchetype()` |
 | `storiesProvider` | `AsyncNotifier<List<StoryItem>>` | `addStory()`, `deleteStory()`, `markAsSeen()` |
 | `globalSearchProvider` | `StateNotifier<GlobalSearchState>` | `onQueryChanged()`, `setArchetypeFilter()`, `clearSearch()`, `loadTrending()` |

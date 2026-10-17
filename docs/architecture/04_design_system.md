@@ -1,4 +1,4 @@
-_Last Modified: 2026-08-06_
+_Last Modified: 2026-10-17_
 
 # 4. Design System
 
@@ -8,19 +8,24 @@ Quest uses a centralized design system built entirely with Dart constants — no
 
 | Token | Value | Usage |
 |---|---|---|
-| `AppColors.background` | `#0A0A0F` | Scaffold backgrounds |
-| `AppColors.surface` | `#12121A` | Card/modal backgrounds |
-| `AppColors.card` | `#1A1A2E` | Elevated card surfaces |
-| `AppColors.border` | `#2A2A3E` | Dividers, input borders |
-| `AppColors.questBlue` | `#4F8EF7` | Primary accent, CTAs, glow |
-| `AppColors.auroraPurple` | `#9B59F5` | Secondary accent, gradients |
-| `AppColors.emerald` | `#2ECC71` | Success, active states |
-| `AppColors.gold` | `#F1C40F` | XP, achievements, badges |
-| `AppColors.crimson` | `#E74C3C` | Danger, destructive actions |
-| `AppColors.skyBlue` | `#5DADE2` | Links, secondary interactive |
+| `AppColors.background` | `#030712` | Scaffold backgrounds |
+| `AppColors.surface` | `#111827` | Card/modal backgrounds |
+| `AppColors.card` | `#1F2937` | Elevated card surfaces |
+| `AppColors.border` | `#374151` | Dividers, input borders |
+| `AppColors.questBlue` | `#2563EB` | Primary accent, CTAs, glow |
+| `AppColors.auroraPurple` | `#7C3AED` | Secondary accent, gradients |
+| `AppColors.emerald` | `#10B981` | Success, active states |
+| `AppColors.gold` | `#FBBF24` | XP, achievements, badges |
+| `AppColors.amber` | `#F59E0B` | Warning, pending status |
+| `AppColors.crimson` | `#EF4444` | Danger, destructive actions |
+| `AppColors.coral` | `#FF5722` | Spontaneous beacons, kinetic pulse |
+| `AppColors.skyBlue` | `#38BDF8` | Links, secondary interactive |
 | `AppColors.textPrimary` | `#FFFFFF` | Primary body text |
-| `AppColors.textSecondary` | `#B0B3C1` | Subtitles, meta text |
-| `AppColors.textMuted` | `#6B6E82` | Captions, disabled states |
+| `AppColors.textPrimary87` | `0xDEFFFFFF` | High-emphasis body text |
+| `AppColors.textPrimary80` | `0xCCFFFFFF` | Secondary content text |
+| `AppColors.textPrimary70` | `0xB3FFFFFF` | Subtitles, secondary text |
+| `AppColors.textSecondary` | `#9CA3AF` | Supporting descriptions |
+| `AppColors.textMuted` | `#6B7280` | Captions, disabled states |
 
 ## Theme Definition (`lib/core/theme/app_theme.dart`)
 

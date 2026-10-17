@@ -1,6 +1,26 @@
 # Changelog
 
-_Last Modified: 2026-10-09_
+_Last Modified: 2026-10-17_
+
+## 2026-10-17 — MVP Sprints 1 & 2 Execution + Stage Control Hardening
+- **Sprint 1 (Create Pipeline Hardening Complete)**:
+  - Added interactive tap-to-focus reticle with golden pulse animation (`Curves.easeOutBack`) and exposure point alignment.
+  - Implemented smooth pinch-to-zoom gesture tracking (`ScaleGestureRecognizer`) with floating zoom factor pill indicator (`1.0x`–`5.0x`).
+- **Sprint 2 (Beacons / Spontaneous Meetups Complete)**:
+  - **Schema & Migration**: Created [`supabase/migrations/20261017000000_beacons_schema.sql`](supabase/migrations/20261017000000_beacons_schema.sql) with full RLS policies (`authenticated` insert/update/select/delete) and hourly `pg_cron` auto-expiration job (`cleanup_expired_beacons`).
+  - **Domain Model & Providers**: Built strongly-typed `BeaconModel` in `lib/features/world/radar/data/beacon_model.dart` and integrated `dropBeacon` and `joinBeacon` into `RadarNotifier` (`radar_provider.dart`).
+  - **Server-Side Gamification**: Wired atomic `award_xp` RPC rewarding `+50 XP` for igniting a beacon and `+25 XP` for joining.
+  - **Guest Gate Security**: Member-only protection gating beacon creation to authenticated accounts.
+  - **Radar HUD Visualization**: Rendered active beacons on the radar pulse canvas with animated radial wave rings and glowing beacon pins.
+  - **Truthful Radar Presence**: Purged fabricated seed beacons from runtime paths, ensuring an honest empty state when no spontaneous meetups are active.
+  - **Unit Test Suite**: Added `test/beacon_radar_test.dart` validating JSON serialization, duration math, expiry calculations, and copyWith attendee mutations (25/25 tests passing across entire suite).
+- **Sprint 3 (Stage Audio Rooms Hardening)**:
+  - **Dynamic Stage Repository**: Expanded `StageRepository` to support dynamic multi-room lookup (`getActiveStages()` and ID-based matching).
+  - **Speaker Promotions**: Implemented `promoteToSpeaker()` in `StageNotifier` allowing room hosts to promote audience members to speakers.
+  - **Deep-Link Sharing**: Added stage share action copying verified deep links (`https://qwst.run/stage/:id`) to clipboard.
+  - **Guest Gate Intercept**: Guarded microphone toggle and hand-raise actions against guest sessions, displaying actionable sign-in prompts.
+- **Design System Expansion**: Added `AppColors.coral` (`#FF5722`) and `AppColors.textPrimary80` (`#CCFFFFFF`) design tokens to `lib/core/theme/app_colors.dart` and `docs/architecture/04_design_system.md`.
+- **Quality & Verification**: `dart analyze lib/ test/` completed with **0 warnings, 0 errors**; `flutter test` passed with **25/25 tests passing (100% success rate)**.
 
 ## 2026-10-09 — Create & Sharing Pipeline UI/UX Audit & Production Modernization
 - **Senior Design Audit Document**: Published [`docs/AUDIT_CREATE_SHARING_2026-10-09.md`](AUDIT_CREATE_SHARING_2026-10-09.md) executing a comprehensive, multi-disciplinary UI/UX audit of the camera, video, media review, and sharing pipeline across Quest.

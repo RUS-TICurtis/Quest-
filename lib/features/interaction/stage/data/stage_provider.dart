@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quest/features/identity/auth/data/auth_provider.dart';
+import 'package:quest/features/identity/profile/data/user_provider.dart';
 import 'stage_repository.dart';
 
 class StageSpeaker {
@@ -238,8 +240,22 @@ class StageNotifier extends AsyncNotifier<StageState> {
   Future<StageState> build() async {
     _repository = ref.watch(stageRepositoryProvider);
 
-    // Cancel all pending reaction timers when the provider is disposed or rebuilt.
+    final channel = _repository.subscribeToStage(
+      stageId,
+      onReaction: (emoji, xOffset) {
+        _handleIncomingReaction(emoji, xOffset);
+      },
+      onHandRaise: (userId, userName, userAvatar, hasRaised) {
+        _handleIncomingHandRaise(userId, userName, userAvatar, hasRaised);
+      },
+      onSpeakerPromotion: (participantId, name, avatar) {
+        _handleIncomingSpeakerPromotion(participantId, name, avatar);
+      },
+    );
+
+    // Cancel all pending reaction timers and unsubscribe from channel on dispose.
     ref.onDispose(() {
+      _repository.unsubscribeFromStage(channel);
       for (final t in _reactionTimers) {
         t.cancel();
       }
@@ -247,6 +263,97 @@ class StageNotifier extends AsyncNotifier<StageState> {
     });
 
     return _repository.getStageDetails(stageId);
+  }
+
+  void _handleIncomingReaction(String emoji, double xOffset) {
+    if (state.value == null) return;
+    final reaction = StageReaction(
+      id: 'rt_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1000)}',
+      emoji: emoji,
+      xOffset: xOffset,
+    );
+
+    state = AsyncData(
+      state.value!.copyWith(
+        activeReactions: [...state.value!.activeReactions, reaction],
+      ),
+    );
+
+    final timer = Timer(const Duration(seconds: 2), () {
+      if (state.value != null) {
+        state = AsyncData(
+          state.value!.copyWith(
+            activeReactions: state.value!.activeReactions
+                .where((r) => r.id != reaction.id)
+                .toList(),
+          ),
+        );
+      }
+    });
+    _reactionTimers.add(timer);
+  }
+
+  void _handleIncomingHandRaise(
+    String userId,
+    String userName,
+    String userAvatar,
+    bool hasRaised,
+  ) {
+    if (state.value == null) return;
+    final current = state.value!;
+    final index = current.audience.indexWhere((p) => p.id == userId);
+
+    List<StageParticipant> updatedAudience;
+    if (index != -1) {
+      updatedAudience = current.audience.map((p) {
+        if (p.id == userId) {
+          return p.copyWith(hasHandRaised: hasRaised);
+        }
+        return p;
+      }).toList();
+    } else {
+      updatedAudience = [
+        ...current.audience,
+        StageParticipant(
+          id: userId,
+          name: userName,
+          avatar: userAvatar,
+          hasHandRaised: hasRaised,
+        ),
+      ];
+    }
+
+    state = AsyncData(current.copyWith(audience: updatedAudience));
+  }
+
+  void _handleIncomingSpeakerPromotion(
+    String participantId,
+    String name,
+    String avatar,
+  ) {
+    if (state.value == null) return;
+    final current = state.value!;
+    final updatedAudience =
+        current.audience.where((p) => p.id != participantId).toList();
+
+    if (!current.speakers.any((s) => s.id == participantId)) {
+      final newSpeaker = StageSpeaker(
+        id: participantId,
+        name: name,
+        role: 'Speaker • Invited',
+        avatar: avatar,
+        isMuted: false,
+        isSpeaking: false,
+        archetype: 'Seeker',
+      );
+
+      state = AsyncData(
+        current.copyWith(
+          audience: updatedAudience,
+          speakers: [...current.speakers, newSpeaker],
+        ),
+      );
+    }
   }
 
   void toggleMic() {
@@ -259,10 +366,60 @@ class StageNotifier extends AsyncNotifier<StageState> {
 
   void toggleHandRaise() {
     if (state.value != null) {
+      final newHandState = !state.value!.isHandRaised;
       state = AsyncData(
-        state.value!.copyWith(isHandRaised: !state.value!.isHandRaised),
+        state.value!.copyWith(isHandRaised: newHandState),
       );
+
+      final user = ref.read(authProvider).user;
+      final profile = ref.read(userProvider).value;
+      if (user != null) {
+        _repository.broadcastHandRaise(
+          stageId,
+          user.id,
+          profile?.name ?? 'Builder',
+          profile?.avatarUrl ?? '',
+          newHandState,
+        );
+      }
     }
+  }
+
+  void promoteToSpeaker(String participantId) {
+    if (state.value == null) return;
+    final current = state.value!;
+    final participantIndex =
+        current.audience.indexWhere((p) => p.id == participantId);
+    if (participantIndex == -1) return;
+
+    final participant = current.audience[participantIndex];
+    final updatedAudience = current.audience
+        .where((p) => p.id != participantId)
+        .toList();
+
+    final newSpeaker = StageSpeaker(
+      id: participant.id,
+      name: participant.name,
+      role: 'Speaker • Invited',
+      avatar: participant.avatar,
+      isMuted: false,
+      isSpeaking: false,
+      archetype: 'Seeker',
+    );
+
+    state = AsyncData(
+      current.copyWith(
+        audience: updatedAudience,
+        speakers: [...current.speakers, newSpeaker],
+      ),
+    );
+
+    _repository.broadcastSpeakerPromotion(
+      stageId,
+      participant.id,
+      participant.name,
+      participant.avatar,
+    );
   }
 
   void sendReaction(String emoji) {
@@ -284,7 +441,7 @@ class StageNotifier extends AsyncNotifier<StageState> {
     );
 
     // Auto cleanup after 2 seconds — stored so it can be cancelled on dispose.
-    final timer = Timer(Duration(seconds: 2), () {
+    final timer = Timer(const Duration(seconds: 2), () {
       if (state.value != null) {
         state = AsyncData(
           state.value!.copyWith(

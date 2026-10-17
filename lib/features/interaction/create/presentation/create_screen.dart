@@ -37,6 +37,17 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
   int _recordingDurationSeconds = 0;
   static const int _maxRecordingSeconds = 60;
 
+  // Tap-to-focus & pinch-to-zoom state
+  double _minZoom = 1.0;
+  double _maxZoom = 1.0;
+  double _currentZoom = 1.0;
+  double _baseScale = 1.0;
+  Offset? _focusPoint;
+  bool _showFocusReticle = false;
+  Timer? _focusTimer;
+  bool _showZoomBadge = false;
+  Timer? _zoomBadgeTimer;
+
   // Text mode state
   final TextEditingController _textController = TextEditingController();
   int _selectedGradientIndex = 0;
@@ -132,6 +143,13 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
         await controller.setFlashMode(_flashMode);
       } catch (_) {}
 
+      try {
+        _minZoom = await controller.getMinZoomLevel();
+        _maxZoom = await controller.getMaxZoomLevel();
+        if (_maxZoom > 8.0) _maxZoom = 8.0;
+        _currentZoom = _minZoom;
+      } catch (_) {}
+
       setState(() {
         _isCameraInitialized = true;
         _cameraErrorMessage = null;
@@ -204,6 +222,10 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
   void _disposeCamera() {
     _recordingTimer?.cancel();
     _recordingTimer = null;
+    _focusTimer?.cancel();
+    _focusTimer = null;
+    _zoomBadgeTimer?.cancel();
+    _zoomBadgeTimer = null;
     _cameraController?.dispose();
     _cameraController = null;
     _isCameraInitialized = false;
@@ -213,6 +235,8 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _recordingTimer?.cancel();
+    _focusTimer?.cancel();
+    _zoomBadgeTimer?.cancel();
     _cameraController?.dispose();
     _textController.dispose();
     super.dispose();
@@ -808,19 +832,179 @@ class _CreateScreenState extends ConsumerState<CreateScreen>
       return const Center(child: CircularProgressIndicator(color: Colors.white));
     }
 
-    // Edge-to-edge full viewfinder scaling
-    return ClipRect(
-      child: Transform.scale(
-        scale: _cameraController!.value.aspectRatio,
-        alignment: Alignment.center,
-        child: Center(
-          child: AspectRatio(
-            aspectRatio: 1 / _cameraController!.value.aspectRatio,
-            child: CameraPreview(_cameraController!),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTapDown: (details) => _onViewfinderTap(details, constraints),
+          onScaleStart: _onScaleStart,
+          onScaleUpdate: _onScaleUpdate,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // Edge-to-edge full viewfinder scaling
+              ClipRect(
+                child: Transform.scale(
+                  scale: _cameraController!.value.aspectRatio,
+                  alignment: Alignment.center,
+                  child: Center(
+                    child: AspectRatio(
+                      aspectRatio: 1 / _cameraController!.value.aspectRatio,
+                      child: CameraPreview(_cameraController!),
+                    ),
+                  ),
+                ),
+              ),
+
+              // Animated Golden Focus Reticle
+              if (_showFocusReticle && _focusPoint != null)
+                Positioned(
+                  left: _focusPoint!.dx - 32,
+                  top: _focusPoint!.dy - 32,
+                  child: IgnorePointer(
+                    child: TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 1.35, end: 1.0),
+                      duration: const Duration(milliseconds: 240),
+                      curve: Curves.easeOutBack,
+                      builder: (context, scale, child) {
+                        return Transform.scale(
+                          scale: scale,
+                          child: Container(
+                            width: 64,
+                            height: 64,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.rectangle,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: context.colors.gold,
+                                width: 1.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: context.colors.gold.withValues(alpha: 0.35),
+                                  blurRadius: 8,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: Center(
+                              child: Container(
+                                width: 5,
+                                height: 5,
+                                decoration: BoxDecoration(
+                                  color: context.colors.gold,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+
+              // Zoom Level Indicator Pill Badge
+              if (_showZoomBadge)
+                Positioned(
+                  bottom: 110,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: IgnorePointer(
+                      child: AnimatedOpacity(
+                        opacity: _showZoomBadge ? 1.0 : 0.0,
+                        duration: const Duration(milliseconds: 200),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.25),
+                              width: 1,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.4),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '${_currentZoom.toStringAsFixed(1)}x',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  void _onViewfinderTap(TapDownDetails details, BoxConstraints constraints) async {
+    if (!_isCameraInitialized || _cameraController == null) return;
+    final localPosition = details.localPosition;
+    final x = (localPosition.dx / constraints.maxWidth).clamp(0.0, 1.0);
+    final y = (localPosition.dy / constraints.maxHeight).clamp(0.0, 1.0);
+
+    setState(() {
+      _focusPoint = localPosition;
+      _showFocusReticle = true;
+    });
+    HapticFeedback.selectionClick();
+
+    try {
+      await _cameraController!.setFocusPoint(Offset(x, y));
+      await _cameraController!.setExposurePoint(Offset(x, y));
+    } catch (_) {}
+
+    _focusTimer?.cancel();
+    _focusTimer = Timer(const Duration(milliseconds: 1400), () {
+      if (mounted) {
+        setState(() {
+          _showFocusReticle = false;
+        });
+      }
+    });
+  }
+
+  void _onScaleStart(ScaleStartDetails details) {
+    _baseScale = _currentZoom;
+  }
+
+  void _onScaleUpdate(ScaleUpdateDetails details) async {
+    if (!_isCameraInitialized || _cameraController == null) return;
+    if (_maxZoom <= _minZoom) return;
+
+    final newZoom = (_baseScale * details.scale).clamp(_minZoom, _maxZoom);
+    if ((newZoom - _currentZoom).abs() > 0.04) {
+      _currentZoom = newZoom;
+      try {
+        await _cameraController!.setZoomLevel(_currentZoom);
+      } catch (_) {}
+      setState(() {
+        _showZoomBadge = true;
+      });
+      _zoomBadgeTimer?.cancel();
+      _zoomBadgeTimer = Timer(const Duration(milliseconds: 1200), () {
+        if (mounted) {
+          setState(() {
+            _showZoomBadge = false;
+          });
+        }
+      });
+    }
   }
 
   Widget _buildTextMode() {

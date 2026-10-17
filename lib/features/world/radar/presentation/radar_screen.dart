@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:quest/core/theme/quest_icons.dart';
+import 'package:quest/features/identity/auth/data/auth_provider.dart';
 import 'package:quest/features/identity/profile/data/user_provider.dart';
+import 'package:quest/features/world/radar/data/beacon_model.dart';
 import 'package:quest/features/world/radar/data/radar_provider.dart';
 
 class RadarScreen extends ConsumerStatefulWidget {
@@ -19,6 +21,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _sweepController;
   RadarMember? _selectedMember;
+  BeaconModel? _selectedBeacon;
 
   @override
   void initState() {
@@ -164,6 +167,7 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                         radarNotifier.selectHub(hub.id);
                         setState(() {
                           _selectedMember = null;
+                          _selectedBeacon = null;
                         });
                       }
                     },
@@ -289,7 +293,97 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
                           ),
                         );
                       }),
-                      if (radarState.nearbyMembers.isEmpty)
+                      // Active Beacon Pins on Radar
+                      ...radarState.activeBeacons.map((beacon) {
+                        final angle = beacon.angleRatio * 2 * pi;
+                        final radius = (size / 2) * beacon.radiusRatio;
+                        final x = (size / 2) + (radius * cos(angle)) - 20;
+                        final y = (size / 2) + (radius * sin(angle)) - 20;
+                        final isSelected = _selectedBeacon?.id == beacon.id;
+
+                        return Positioned(
+                          left: (constraints.maxWidth - size) / 2 + x,
+                          top: (constraints.maxHeight - size) / 2 + y,
+                          child: GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() {
+                                _selectedBeacon = isSelected ? null : beacon;
+                                _selectedMember = null;
+                              });
+                            },
+                            child: AnimatedBuilder(
+                              animation: _sweepController,
+                              builder: (context, child) {
+                                final pulse = sin(
+                                  (_sweepController.value * 2 * pi) +
+                                      (beacon.angleRatio * 4),
+                                ).abs();
+                                return Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    // Radiating beacon pulse ring
+                                    Container(
+                                      width: 44 + (pulse * 14),
+                                      height: 44 + (pulse * 14),
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        border: Border.all(
+                                          color: AppColors.coral.withValues(
+                                            alpha: 0.8 - (pulse * 0.5),
+                                          ),
+                                          width: 2,
+                                        ),
+                                      ),
+                                    ),
+                                    // Core beacon marker
+                                    AnimatedContainer(
+                                      duration: const Duration(milliseconds: 200),
+                                      width: isSelected ? 42 : 36,
+                                      height: isSelected ? 42 : 36,
+                                      decoration: BoxDecoration(
+                                        shape: BoxShape.circle,
+                                        gradient: const LinearGradient(
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                          colors: [
+                                            AppColors.coral,
+                                            Color(0xFFFF8A00),
+                                          ],
+                                        ),
+                                        border: Border.all(
+                                          color: isSelected
+                                              ? AppColors.gold
+                                              : Colors.white,
+                                          width: isSelected ? 2.5 : 2,
+                                        ),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: AppColors.coral.withValues(
+                                              alpha: 0.6,
+                                            ),
+                                            blurRadius: 10,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
+                                      ),
+                                      child: const Center(
+                                        child: Icon(
+                                          Icons.podcasts_rounded,
+                                          color: Colors.white,
+                                          size: 18,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                );
+                              },
+                            ),
+                          ),
+                        );
+                      }),
+                      if (radarState.nearbyMembers.isEmpty &&
+                          radarState.activeBeacons.isEmpty)
                         Center(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -321,14 +415,559 @@ class _RadarScreenState extends ConsumerState<RadarScreen>
               ),
             ),
 
-            // Bottom Selected Member Card or Check-In Action
-            if (_selectedMember != null)
+            // Bottom Selected Beacon Card, Member Card, or Check-In Action
+            if (_selectedBeacon != null)
+              _buildSelectedBeaconCard(_selectedBeacon!, radarNotifier)
+            else if (_selectedMember != null)
               _buildSelectedMemberCard(_selectedMember!)
             else if (currentHub != null)
               _buildCheckInBar(currentHub, isCheckedIn, radarNotifier),
           ],
         ),
       ),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: AppColors.coral,
+        foregroundColor: Colors.white,
+        elevation: 6,
+        icon: const Icon(Icons.podcasts_rounded, size: 20),
+        label: const Text(
+          'Drop Beacon',
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.3),
+        ),
+        onPressed: () {
+          HapticFeedback.mediumImpact();
+          _showDropBeaconSheet(context, radarNotifier, currentHub);
+        },
+      ),
+    );
+  }
+
+  Widget _buildSelectedBeaconCard(
+    BeaconModel beacon,
+    RadarNotifier notifier,
+  ) {
+    final currentUserId = ref.read(authProvider).user?.id ?? '';
+    final isJoined = beacon.isUserJoined(currentUserId);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: AppColors.coral.withValues(alpha: 0.6),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.coral.withValues(alpha: 0.2),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppColors.coral.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.podcasts_rounded,
+                  color: AppColors.coral,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            beacon.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppColors.coral.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: AppColors.coral.withValues(alpha: 0.4),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.access_time_rounded,
+                                color: AppColors.coral,
+                                size: 12,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                beacon.timeRemainingFormatted,
+                                style: const TextStyle(
+                                  color: AppColors.coral,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Hosted by ${beacon.creatorName} • ${beacon.hubName}',
+                      style: const TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.close,
+                  color: AppColors.textPrimary54,
+                  size: 20,
+                ),
+                onPressed: () {
+                  HapticFeedback.lightImpact();
+                  setState(() {
+                    _selectedBeacon = null;
+                  });
+                },
+              ),
+            ],
+          ),
+          if (beacon.description.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Text(
+              beacon.description,
+              style: const TextStyle(
+                color: AppColors.textPrimary80,
+                fontSize: 13,
+                height: 1.35,
+              ),
+            ),
+          ],
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              // Attendee avatars stack
+              if (beacon.attendeeAvatars.isNotEmpty)
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  height: 28,
+                  width: (beacon.attendeeAvatars.length * 18.0) + 14,
+                  child: Stack(
+                    children: List.generate(
+                      beacon.attendeeAvatars.length,
+                      (i) => Positioned(
+                        left: i * 18.0,
+                        child: CircleAvatar(
+                          radius: 13,
+                          backgroundColor: AppColors.surface,
+                          child: CircleAvatar(
+                            radius: 12,
+                            backgroundImage:
+                                NetworkImage(beacon.attendeeAvatars[i]),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              Text(
+                '${beacon.attendeeCount} ${beacon.attendeeCount == 1 ? 'person' : 'people'} joined',
+                style: const TextStyle(
+                  color: AppColors.textMuted,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor:
+                      isJoined ? AppColors.emerald : AppColors.coral,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
+                ),
+                onPressed: isJoined
+                    ? null
+                    : () async {
+                        final authState = ref.read(authProvider);
+                        if (authState.accessLevel != AccessLevel.member) {
+                          _promptSignIn('join meetups');
+                          return;
+                        }
+                        HapticFeedback.heavyImpact();
+                        final success = await notifier.joinBeacon(beacon.id);
+                        if (success && mounted) {
+                          setState(() {
+                            _selectedBeacon = _selectedBeacon?.copyWith(
+                              attendeeIds: [
+                                ...beacon.attendeeIds,
+                                currentUserId,
+                              ],
+                            );
+                          });
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                '🎉 Joined Beacon! +25 XP awarded.',
+                              ),
+                              backgroundColor: AppColors.emerald,
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                icon: Icon(
+                  isJoined
+                      ? Icons.check_circle_outline
+                      : Icons.add_location_alt_outlined,
+                  size: 16,
+                ),
+                label: Text(
+                  isJoined ? 'Joined' : 'Join (+25 XP)',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _promptSignIn(String action) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.card,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text(
+          'Member Access Required',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          'Please sign in with a full account to $action and earn participation XP.',
+          style: const TextStyle(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text(
+              'Cancel',
+              style: TextStyle(color: AppColors.textMuted),
+            ),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.questBlue,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.push('/login');
+            },
+            child: const Text('Sign In', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDropBeaconSheet(
+    BuildContext context,
+    RadarNotifier notifier,
+    HubLocation? currentHub,
+  ) {
+    final authState = ref.read(authProvider);
+    if (authState.accessLevel != AccessLevel.member) {
+      _promptSignIn('drop beacons');
+      return;
+    }
+
+    final titleController = TextEditingController();
+    final descController = TextEditingController();
+    int selectedDurationMinutes = 120;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(ctx).viewInsets.bottom,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: const BoxDecoration(
+                  color: AppColors.card,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                  border: Border(
+                    top: BorderSide(color: AppColors.coral, width: 2),
+                  ),
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: AppColors.coral.withValues(alpha: 0.15),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.podcasts_rounded,
+                            color: AppColors.coral,
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Ignite a Radar Beacon',
+                                style: TextStyle(
+                                  color: AppColors.textPrimary,
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Broadcast a spontaneous meetup at ${currentHub?.name ?? 'current hub'}',
+                                style: const TextStyle(
+                                  color: AppColors.textMuted,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+                    TextField(
+                      controller: titleController,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      decoration: InputDecoration(
+                        labelText: 'Meetup Title',
+                        labelStyle: const TextStyle(color: AppColors.textMuted),
+                        hintText: 'e.g. Coffee & Fellowship, Evening Prayer Walk',
+                        hintStyle: TextStyle(
+                          color: AppColors.textMuted.withValues(alpha: 0.6),
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: AppColors.coral,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    TextField(
+                      controller: descController,
+                      maxLines: 2,
+                      style: const TextStyle(color: AppColors.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Details / Where to find you',
+                        labelStyle: const TextStyle(color: AppColors.textMuted),
+                        hintText: 'e.g. Sitting near the corner table with Bible open…',
+                        hintStyle: TextStyle(
+                          color: AppColors.textMuted.withValues(alpha: 0.6),
+                        ),
+                        filled: true,
+                        fillColor: AppColors.surface,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(color: AppColors.border),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          borderSide: const BorderSide(
+                            color: AppColors.coral,
+                            width: 1.5,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    const Text(
+                      'Beacon Duration',
+                      style: TextStyle(
+                        color: AppColors.textMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [30, 60, 120, 240].map((mins) {
+                        final isSel = selectedDurationMinutes == mins;
+                        final label = mins < 60 ? '${mins}m' : '${mins ~/ 60}h';
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ChoiceChip(
+                            label: Text(label),
+                            selected: isSel,
+                            selectedColor:
+                                AppColors.coral.withValues(alpha: 0.25),
+                            backgroundColor: AppColors.surface,
+                            side: BorderSide(
+                              color: isSel ? AppColors.coral : AppColors.border,
+                            ),
+                            labelStyle: TextStyle(
+                              color: isSel
+                                  ? AppColors.coral
+                                  : AppColors.textMuted,
+                              fontWeight: isSel
+                                  ? FontWeight.bold
+                                  : FontWeight.normal,
+                              fontSize: 12,
+                            ),
+                            onSelected: (selected) {
+                              if (selected) {
+                                HapticFeedback.selectionClick();
+                                setSheetState(() {
+                                  selectedDurationMinutes = mins;
+                                });
+                              }
+                            },
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.coral,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 4,
+                        ),
+                        icon: const Icon(Icons.bolt, size: 20),
+                        label: const Text(
+                          'Ignite Beacon (+50 XP)',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: () async {
+                          final title = titleController.text.trim();
+                          if (title.isEmpty) {
+                            ScaffoldMessenger.of(sheetCtx).showSnackBar(
+                              const SnackBar(
+                                content: Text('Please provide a meetup title.'),
+                                backgroundColor: AppColors.crimson,
+                              ),
+                            );
+                            return;
+                          }
+                          HapticFeedback.heavyImpact();
+                          Navigator.pop(sheetCtx);
+
+                          final messenger = ScaffoldMessenger.of(context);
+                          final success = await notifier.dropBeacon(
+                            title: title,
+                            description: descController.text.trim(),
+                            hubId: currentHub?.id ?? 'hub_1',
+                            durationMinutes: selectedDurationMinutes,
+                          );
+
+                          if (success && mounted) {
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  '🔥 Beacon Ignited on Radar! +50 XP awarded.',
+                                ),
+                                backgroundColor: AppColors.emerald,
+                                behavior: SnackBarBehavior.floating,
+                              ),
+                            );
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
     );
   }
 

@@ -1,4 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quest/features/identity/auth/data/auth_provider.dart';
+import 'package:quest/features/identity/profile/data/user_provider.dart';
+import 'package:quest/features/identity/profile/data/user_repository.dart';
+import 'beacon_model.dart';
 import 'radar_repository.dart';
 
 class HubLocation {
@@ -119,6 +123,7 @@ class RadarState {
   final bool isScanning;
   final List<HubLocation> hubs;
   final List<RadarMember> nearbyMembers;
+  final List<BeaconModel> activeBeacons;
 
   RadarState({
     this.selectedHubId,
@@ -126,6 +131,7 @@ class RadarState {
     this.isScanning = false,
     required this.hubs,
     required this.nearbyMembers,
+    this.activeBeacons = const [],
   });
 
   HubLocation? get currentSelectedHub {
@@ -145,6 +151,7 @@ class RadarState {
     bool? isScanning,
     List<HubLocation>? hubs,
     List<RadarMember>? nearbyMembers,
+    List<BeaconModel>? activeBeacons,
   }) {
     return RadarState(
       selectedHubId: selectedHubId ?? this.selectedHubId,
@@ -154,6 +161,7 @@ class RadarState {
       isScanning: isScanning ?? this.isScanning,
       hubs: hubs ?? this.hubs,
       nearbyMembers: nearbyMembers ?? this.nearbyMembers,
+      activeBeacons: activeBeacons ?? this.activeBeacons,
     );
   }
 }
@@ -166,6 +174,7 @@ class RadarNotifier extends AsyncNotifier<RadarState> {
     _repository = ref.watch(radarRepositoryProvider);
     final hubs = await _repository.getHubs();
     final members = await _repository.getNearbyMembers();
+    final beacons = await _repository.getActiveBeacons();
 
     return RadarState(
       selectedHubId: hubs.isNotEmpty ? hubs.first.id : null,
@@ -173,6 +182,7 @@ class RadarNotifier extends AsyncNotifier<RadarState> {
       isScanning: false,
       hubs: hubs,
       nearbyMembers: members,
+      activeBeacons: beacons,
     );
   }
 
@@ -202,6 +212,93 @@ class RadarNotifier extends AsyncNotifier<RadarState> {
       state = AsyncData(state.value!.copyWith(checkedInHubId: hubId));
       return true;
     }
+  }
+
+  Future<bool> dropBeacon({
+    required String title,
+    required String description,
+    required String hubId,
+    int durationMinutes = 120,
+  }) async {
+    final authState = ref.read(authProvider);
+    if (authState.accessLevel != AccessLevel.member || authState.user == null) {
+      return false;
+    }
+
+    final user = authState.user!;
+    final userProfile = ref.read(userProvider).value;
+    final hub = state.value?.hubs.firstWhere(
+      (h) => h.id == hubId,
+      orElse: () => state.value!.hubs.first,
+    );
+
+    final newBeacon = BeaconModel(
+      id: 'beacon_${DateTime.now().millisecondsSinceEpoch}',
+      creatorId: user.id,
+      creatorName: userProfile?.name ?? 'Builder',
+      creatorAvatar: userProfile?.avatarUrl ??
+          'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
+      title: title,
+      description: description,
+      hubId: hubId,
+      hubName: hub?.name ?? 'Nearby Hub',
+      createdAt: DateTime.now(),
+      expiresAt: DateTime.now().add(Duration(minutes: durationMinutes)),
+      attendeeIds: [user.id],
+      attendeeAvatars: [
+        userProfile?.avatarUrl ??
+            'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200',
+      ],
+      xpReward: 50,
+      angleRatio: 0.15 + ((DateTime.now().millisecond % 70) / 100.0),
+      radiusRatio: 0.35 + ((DateTime.now().microsecond % 40) / 100.0),
+    );
+
+    await _repository.createBeacon(newBeacon);
+    await ref
+        .read(userRepositoryProvider)
+        .awardXp(user.id, 50, 'Ignited radar beacon');
+
+    if (state.value != null) {
+      state = AsyncData(
+        state.value!.copyWith(
+          activeBeacons: [newBeacon, ...state.value!.activeBeacons],
+        ),
+      );
+    }
+    return true;
+  }
+
+  Future<bool> joinBeacon(String beaconId) async {
+    final authState = ref.read(authProvider);
+    if (authState.accessLevel != AccessLevel.member || authState.user == null) {
+      return false;
+    }
+
+    final user = authState.user!;
+    final userProfile = ref.read(userProvider).value;
+    final avatar = userProfile?.avatarUrl ??
+        'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=200';
+
+    await _repository.joinBeacon(beaconId, user.id, avatar);
+    await ref
+        .read(userRepositoryProvider)
+        .awardXp(user.id, 25, 'Joined radar beacon');
+
+    if (state.value != null) {
+      final updatedBeacons = state.value!.activeBeacons.map((b) {
+        if (b.id == beaconId && !b.attendeeIds.contains(user.id)) {
+          return b.copyWith(
+            attendeeIds: [...b.attendeeIds, user.id],
+            attendeeAvatars: [...b.attendeeAvatars, avatar],
+          );
+        }
+        return b;
+      }).toList();
+
+      state = AsyncData(state.value!.copyWith(activeBeacons: updatedBeacons));
+    }
+    return true;
   }
 }
 

@@ -31,3 +31,32 @@ Historically, `profiles` had both `avatarUrl` and `avatar_url`.
 _Last Modified: 2026-10-05_
 
 `20261005000000_foundation_security.sql`: own-row profile RLS, `protect_profile_columns` trigger (level/currentXp/xpToNextLevel/streak/badges/role/creator_status/ban flags are service-role only), unique `lower(username)` index, `profiles_username_format` CHECK (`^[a-z0-9_]{3,30}$`, NOT VALID), RPC `check_username_available(text)`, `is_guest()`, `is_chat_participant(uuid)` (fixes recursive chat policies). Live DB has NO `profiles.full_name` - never write it. Missing tables: event_rsvps, community_members, notifications, xp_events, achievements, challenges, places, presences.
+
+---
+## Beacons Schema & Spontaneous Fellowship (added 2026-10-17)
+_Last Modified: 2026-10-17_
+
+`20261017000000_beacons_schema.sql`:
+- **Table**: `public.beacons`
+  - `id`: `UUID PRIMARY KEY DEFAULT gen_random_uuid()`
+  - `creator_id`: `UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE`
+  - `creator_name`: `TEXT NOT NULL`
+  - `creator_avatar`: `TEXT NOT NULL DEFAULT ''`
+  - `title`: `TEXT NOT NULL`
+  - `description`: `TEXT DEFAULT ''`
+  - `hub_id`: `TEXT NOT NULL`
+  - `hub_name`: `TEXT NOT NULL`
+  - `created_at`: `TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())`
+  - `expires_at`: `TIMESTAMPTZ NOT NULL` (1–4 hour ephemeral TTL)
+  - `attendee_ids`: `UUID[] NOT NULL DEFAULT '{}'`
+  - `attendee_avatars`: `TEXT[] NOT NULL DEFAULT '{}'`
+  - `xp_reward`: `INTEGER NOT NULL DEFAULT 50`
+  - `angle_ratio`: `DOUBLE PRECISION NOT NULL DEFAULT 0.35`
+  - `radius_ratio`: `DOUBLE PRECISION NOT NULL DEFAULT 0.55`
+- **RLS Policies**:
+  - `Anyone can view active beacons`: `SELECT` allowed where `expires_at > timezone('utc'::text, now())`
+  - `Authenticated users can create beacons`: `INSERT` allowed with `auth.uid() = creator_id`
+  - `Authenticated users can update attendee lists`: `UPDATE` allowed for joining active beacons
+  - `Creators can delete their own beacons`: `DELETE` allowed with `auth.uid() = creator_id`
+- **Automation**: `pg_cron` hourly scheduled job (`cleanup_expired_beacons`) deletes beacons past their `expires_at` timestamp.
+
