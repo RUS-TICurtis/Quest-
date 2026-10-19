@@ -316,7 +316,8 @@ class StageNotifier extends AsyncNotifier<StageState> {
       ),
     );
 
-    final timer = Timer(const Duration(seconds: 2), () {
+    late final Timer timer;
+    timer = Timer(const Duration(seconds: 2), () {
       if (state.value != null) {
         state = AsyncData(
           state.value!.copyWith(
@@ -326,6 +327,7 @@ class StageNotifier extends AsyncNotifier<StageState> {
           ),
         );
       }
+      _reactionTimers.remove(timer);
     });
     _reactionTimers.add(timer);
   }
@@ -490,7 +492,8 @@ class StageNotifier extends AsyncNotifier<StageState> {
     );
 
     // Auto cleanup after 2 seconds — stored so it can be cancelled on dispose.
-    final timer = Timer(const Duration(seconds: 2), () {
+    late final Timer timer;
+    timer = Timer(const Duration(seconds: 2), () {
       if (state.value != null) {
         state = AsyncData(
           state.value!.copyWith(
@@ -500,6 +503,7 @@ class StageNotifier extends AsyncNotifier<StageState> {
           ),
         );
       }
+      _reactionTimers.remove(timer);
     });
     _reactionTimers.add(timer);
   }

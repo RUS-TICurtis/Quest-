@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -97,9 +98,20 @@ class QuestStageAudioService implements StageAudioService {
     _currentUserId = userId;
     _isSpeaker = isSpeaker;
     _isMicrophoneMuted = !isSpeaker;
+    // Only reset reconnect state on user-initiated joins, not internal retries.
     _reconnectAttempts = 0;
     _reconnectTimer?.cancel();
 
+    await _connectToStage(stageId: stageId, userId: userId, isSpeaker: isSpeaker);
+  }
+
+  /// Internal connect logic shared by [joinStage] and reconnect attempts.
+  /// Does NOT reset [_reconnectAttempts] so the backoff cap is enforced.
+  Future<void> _connectToStage({
+    required String stageId,
+    required String userId,
+    required bool isSpeaker,
+  }) async {
     _updateConnectionState(AudioConnectionState.connecting);
 
     try {
@@ -107,10 +119,11 @@ class QuestStageAudioService implements StageAudioService {
       await _fetchToken(stageId: stageId, isSpeaker: isSpeaker, userId: userId);
 
       // 2. Establish RTC audio session
+      _reconnectAttempts = 0; // Reset only on success
       _updateConnectionState(AudioConnectionState.connected);
       _startAudioMonitoring();
     } catch (e) {
-      debugPrint('[StageAudioService] Join failed: $e');
+      debugPrint('[StageAudioService] Connect failed: $e');
       _triggerAutoReconnect();
     }
   }
@@ -180,15 +193,12 @@ class QuestStageAudioService implements StageAudioService {
       debugPrint(
         '[StageAudioService] Attempting reconnect ($_reconnectAttempts/$_maxReconnectAttempts)...',
       );
-      try {
-        await joinStage(
-          stageId: _currentStageId!,
-          userId: _currentUserId!,
-          isSpeaker: _isSpeaker,
-        );
-      } catch (_) {
-        _triggerAutoReconnect();
-      }
+      // Use _connectToStage (not joinStage) to preserve the reconnect counter.
+      await _connectToStage(
+        stageId: _currentStageId!,
+        userId: _currentUserId!,
+        isSpeaker: _isSpeaker,
+      );
     });
   }
 
@@ -218,7 +228,7 @@ class QuestStageAudioService implements StageAudioService {
 
   @override
   void dispose() {
-    leaveStage();
+    unawaited(leaveStage());
     _connectionController.close();
     _volumeLevelsController.close();
   }

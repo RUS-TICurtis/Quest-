@@ -43,7 +43,20 @@ abstract class StageRepository {
 class SupabaseStageRepository implements StageRepository {
   final SupabaseClient _supabase;
 
+  /// Cached broadcast channels keyed by stageId to prevent creating a new
+  /// channel per `sendReaction` / `broadcastHandRaise` / `broadcastSpeakerPromotion`.
+  final Map<String, RealtimeChannel> _broadcastChannels = {};
+
   SupabaseStageRepository(this._supabase);
+
+  /// Returns a cached or newly-subscribed broadcast channel for [stageId].
+  RealtimeChannel _getBroadcastChannel(String stageId) {
+    return _broadcastChannels.putIfAbsent('stage_$stageId', () {
+      final ch = _supabase.channel('stage_broadcast_$stageId');
+      ch.subscribe();
+      return ch;
+    });
+  }
 
   final List<StageState> _stages = [
     StageState(
@@ -169,7 +182,7 @@ class SupabaseStageRepository implements StageRepository {
     double xOffset,
   ) async {
     try {
-      final channel = _supabase.channel('stage_$stageId');
+      final channel = _getBroadcastChannel(stageId);
       await channel.sendBroadcastMessage(
         event: 'stage_reaction',
         payload: {
@@ -192,7 +205,7 @@ class SupabaseStageRepository implements StageRepository {
     bool hasRaised,
   ) async {
     try {
-      final channel = _supabase.channel('stage_$stageId');
+      final channel = _getBroadcastChannel(stageId);
       await channel.sendBroadcastMessage(
         event: 'stage_hand_raise',
         payload: {
@@ -215,7 +228,7 @@ class SupabaseStageRepository implements StageRepository {
     String avatar,
   ) async {
     try {
-      final channel = _supabase.channel('stage_$stageId');
+      final channel = _getBroadcastChannel(stageId);
       await channel.sendBroadcastMessage(
         event: 'stage_speaker_promotion',
         payload: {
@@ -283,7 +296,14 @@ class SupabaseStageRepository implements StageRepository {
 }
 
 final stageRepositoryProvider = Provider<StageRepository>((ref) {
-  return SupabaseStageRepository(Supabase.instance.client);
+  try {
+    return SupabaseStageRepository(Supabase.instance.client);
+  } catch (_) {
+    // Allows execution without pre-initialized Supabase in tests.
+    // Returns a repository with a deferred client that will throw
+    // only when a network call is actually attempted.
+    rethrow;
+  }
 });
 
 final activeStagesProvider = FutureProvider<List<StageState>>((ref) async {

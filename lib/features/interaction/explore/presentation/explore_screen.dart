@@ -71,7 +71,7 @@ class ExploreScreen extends ConsumerWidget {
                     children: [
                       _buildQuickAction(context, 'Leaderboard', Icons.leaderboard, '/leaderboard'),
                       _buildQuickAction(context, 'Radar', Icons.radar, '/radar'),
-                      _buildQuickAction(context, 'Stage', Icons.mic, '/stage/1'),
+                      _buildQuickAction(context, 'Stage', Icons.mic, '/stage/stage_1'),
                       _buildQuickAction(context, 'Organization', Icons.business, '/organization'),
                     ],
                   ),

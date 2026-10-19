@@ -626,7 +626,6 @@ class _StageScreenState extends ConsumerState<StageScreen>
               return GestureDetector(
                 onTap: () {
                   HapticFeedback.lightImpact();
-                  HapticFeedback.lightImpact();
                   notifier.sendReaction(emoji);
                 },
                 child: Container(
@@ -773,7 +772,6 @@ class _StageScreenState extends ConsumerState<StageScreen>
                 ),
                 icon: Icon(Icons.call_end, color: context.colors.crimson),
                 onPressed: () {
-                  HapticFeedback.lightImpact();
                   HapticFeedback.lightImpact();
                   if (context.canPop()) {
                     context.pop();

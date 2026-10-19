@@ -107,13 +107,16 @@ class _StartStageSheetState extends ConsumerState<StartStageSheet> {
       context.push('/stage/${newStage.stageId}');
     } catch (e) {
       if (mounted) {
-        setState(() => _isSubmitting = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Failed to start stage: $e'),
             backgroundColor: AppColors.crimson,
           ),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
       }
     }
   }

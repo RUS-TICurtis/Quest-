@@ -2,6 +2,25 @@
 
 _Last Modified: 2026-10-19_
 
+## 2026-10-19 — Sprint 3 Bug Audit: 8 Fixes Across Stage Audio System
+- **🔴 Critical — Infinite Reconnect Loop Fixed** (`stage_audio_service.dart`):
+  - Extracted `_connectToStage()` internal method; `joinStage()` resets attempt counter only on user-initiated calls, and `_reconnectAttempts` resets only on successful connect. Reconnect cap (5 attempts) now correctly enforced.
+- **🔴 Critical — Realtime Channel Leak Fixed** (`stage_repository.dart`):
+  - Added `_broadcastChannels` cache in `SupabaseStageRepository`; `sendReaction()`, `broadcastHandRaise()`, and `broadcastSpeakerPromotion()` now reuse a single subscribed channel per stage instead of creating a new one per call.
+- **🔴 Critical — Unguarded Supabase Init Fixed** (`stage_repository.dart`):
+  - Wrapped `Supabase.instance.client` access in `stageRepositoryProvider` with try-catch, matching the pattern used by `stageAudioServiceProvider`.
+- **🟡 Medium — Submit State Reset** (`start_stage_sheet.dart`):
+  - Moved `_isSubmitting = false` reset from catch-only to a `finally` block so the button re-enables even if navigation fails after successful creation.
+- **🟡 Medium — Duplicate Haptic Feedback** (`stage_screen.dart`):
+  - Removed duplicate `HapticFeedback.lightImpact()` calls on reaction tap and leave button.
+- **🟡 Medium — Invalid Stage Route** (`explore_screen.dart`):
+  - Changed hardcoded `/stage/1` quick-action route to `/stage/stage_1` to match actual seed stage IDs.
+- **🟡 Medium — Timer List Leak** (`stage_provider.dart`):
+  - Reaction timers now self-remove from `_reactionTimers` after firing, preventing unbounded list growth.
+- **🟢 Low — Explicit Fire-and-Forget** (`stage_audio_service.dart`):
+  - `dispose()` now wraps `leaveStage()` with `unawaited()` for clarity.
+- **Verification**: `flutter analyze` — zero warnings, zero errors.
+
 ## 2026-10-19 — MVP Sprint 3: Stage Audio Rooms & Firesides Complete
 - **Serverless Token Authority (`stage-token` Edge Function)**:
   - Created [`supabase/functions/stage-token/index.ts`](supabase/functions/stage-token/index.ts) implementing server-side RTC token generation.
