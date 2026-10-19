@@ -19,6 +19,12 @@ abstract class StageRepository {
     String name,
     String avatar,
   );
+  Future<StageState> createStage({
+    required String title,
+    required String topic,
+    required String communityName,
+    required StageSpeaker host,
+  });
   RealtimeChannel subscribeToStage(
     String stageId, {
     required void Function(String emoji, double xOffset) onReaction,
@@ -123,6 +129,29 @@ class SupabaseStageRepository implements StageRepository {
   @override
   Future<List<StageState>> getActiveStages() async {
     return _stages;
+  }
+
+  @override
+  Future<StageState> createStage({
+    required String title,
+    required String topic,
+    required String communityName,
+    required StageSpeaker host,
+  }) async {
+    final stageId = 'stage_${DateTime.now().millisecondsSinceEpoch}';
+    final newStage = StageState(
+      stageId: stageId,
+      title: title,
+      topic: topic,
+      communityName: communityName,
+      isMicMuted: false,
+      isHandRaised: false,
+      speakers: [host],
+      audience: [],
+      activeReactions: [],
+    );
+    _stages.insert(0, newStage);
+    return newStage;
   }
 
   @override
@@ -256,3 +285,8 @@ class SupabaseStageRepository implements StageRepository {
 final stageRepositoryProvider = Provider<StageRepository>((ref) {
   return SupabaseStageRepository(Supabase.instance.client);
 });
+
+final activeStagesProvider = FutureProvider<List<StageState>>((ref) async {
+  return ref.watch(stageRepositoryProvider).getActiveStages();
+});
+

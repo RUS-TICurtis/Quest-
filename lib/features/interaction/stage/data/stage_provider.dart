@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:quest/core/audio/stage_audio_service.dart';
 import 'package:quest/features/identity/auth/data/auth_provider.dart';
 import 'package:quest/features/identity/profile/data/user_provider.dart';
 import 'stage_repository.dart';
@@ -235,10 +236,13 @@ class StageNotifier extends AsyncNotifier<StageState> {
   final List<Timer> _reactionTimers = [];
 
   late StageRepository _repository;
+  late StageAudioService _audioService;
+  StreamSubscription<Map<String, double>>? _volumeSubscription;
 
   @override
   Future<StageState> build() async {
     _repository = ref.watch(stageRepositoryProvider);
+    _audioService = ref.watch(stageAudioServiceProvider);
 
     final channel = _repository.subscribeToStage(
       stageId,
@@ -253,8 +257,41 @@ class StageNotifier extends AsyncNotifier<StageState> {
       },
     );
 
-    // Cancel all pending reaction timers and unsubscribe from channel on dispose.
+    final details = await _repository.getStageDetails(stageId);
+    final user = ref.read(authProvider).user;
+    final isSpeaker = user != null && details.speakers.any((s) => s.id == user.id);
+
+    unawaited(
+      _audioService.joinStage(
+        stageId: stageId,
+        userId: user?.id ?? 'guest_${DateTime.now().millisecondsSinceEpoch}',
+        isSpeaker: isSpeaker,
+      ),
+    );
+
+    _volumeSubscription = _audioService.speakerVolumeLevelsStream.listen((volumes) {
+      if (state.value == null || volumes.isEmpty) return;
+      final currentSpeakers = state.value!.speakers;
+      bool hasChanges = false;
+      final updatedSpeakers = currentSpeakers.map((s) {
+        final vol = volumes[s.id] ?? 0.0;
+        final isSpeakingNow = vol > 0.05;
+        if (s.isSpeaking != isSpeakingNow) {
+          hasChanges = true;
+          return s.copyWith(isSpeaking: isSpeakingNow);
+        }
+        return s;
+      }).toList();
+
+      if (hasChanges) {
+        state = AsyncData(state.value!.copyWith(speakers: updatedSpeakers));
+      }
+    });
+
+    // Cancel all pending reaction timers, audio streaming, and unsubscribe from channel on dispose.
     ref.onDispose(() {
+      _volumeSubscription?.cancel();
+      _audioService.leaveStage();
       _repository.unsubscribeFromStage(channel);
       for (final t in _reactionTimers) {
         t.cancel();
@@ -262,7 +299,7 @@ class StageNotifier extends AsyncNotifier<StageState> {
       _reactionTimers.clear();
     });
 
-    return _repository.getStageDetails(stageId);
+    return details;
   }
 
   void _handleIncomingReaction(String emoji, double xOffset) {
@@ -336,6 +373,11 @@ class StageNotifier extends AsyncNotifier<StageState> {
     final updatedAudience =
         current.audience.where((p) => p.id != participantId).toList();
 
+    final currentUserId = ref.read(authProvider).user?.id;
+    if (participantId == currentUserId) {
+      _audioService.setSpeakerRole(true);
+    }
+
     if (!current.speakers.any((s) => s.id == participantId)) {
       final newSpeaker = StageSpeaker(
         id: participantId,
@@ -358,8 +400,10 @@ class StageNotifier extends AsyncNotifier<StageState> {
 
   void toggleMic() {
     if (state.value != null) {
+      final newMicMuted = !state.value!.isMicMuted;
+      _audioService.setMicrophoneMuted(newMicMuted);
       state = AsyncData(
-        state.value!.copyWith(isMicMuted: !state.value!.isMicMuted),
+        state.value!.copyWith(isMicMuted: newMicMuted),
       );
     }
   }
@@ -396,6 +440,11 @@ class StageNotifier extends AsyncNotifier<StageState> {
     final updatedAudience = current.audience
         .where((p) => p.id != participantId)
         .toList();
+
+    final currentUserId = ref.read(authProvider).user?.id;
+    if (participantId == currentUserId) {
+      _audioService.setSpeakerRole(true);
+    }
 
     final newSpeaker = StageSpeaker(
       id: participant.id,

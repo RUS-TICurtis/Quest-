@@ -7,6 +7,8 @@ import 'package:quest/features/society/events/data/events_provider.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
 import 'package:quest/core/video/presentation/video_feed.dart';
 import 'package:quest/core/video/feed_video_pool.dart';
+import 'package:quest/features/interaction/stage/data/stage_repository.dart';
+import 'package:quest/features/interaction/stage/presentation/widgets/start_stage_sheet.dart';
 
 class EventsScreen extends ConsumerStatefulWidget {
   const EventsScreen({super.key});
@@ -47,7 +49,12 @@ class _EventsScreenState extends ConsumerState<EventsScreen> {
             tooltip: 'Live Stage Room',
             onPressed: () {
               HapticFeedback.lightImpact();
-              context.push('/stage/stage_1');
+              final stages = ref.read(activeStagesProvider).value;
+              if (stages != null && stages.isNotEmpty) {
+                context.push('/stage/${stages.first.stageId}');
+              } else {
+                StartStageSheet.show(context);
+              }
             },
           ),
           IconButton(

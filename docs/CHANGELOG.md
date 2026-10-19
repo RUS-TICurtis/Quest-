@@ -1,6 +1,27 @@
 # Changelog
 
-_Last Modified: 2026-10-17_
+_Last Modified: 2026-10-19_
+
+## 2026-10-19 — MVP Sprint 3: Stage Audio Rooms & Firesides Complete
+- **Serverless Token Authority (`stage-token` Edge Function)**:
+  - Created [`supabase/functions/stage-token/index.ts`](supabase/functions/stage-token/index.ts) implementing server-side RTC token generation.
+  - Authenticates callers using Supabase JWT Bearer tokens, validates room role (`host`, `speaker`, `audience`), and computes cryptographically signed HMAC room tokens with 24-hour expiration.
+  - Safe error handling, CORS headers, and environment variable resolution for Agora App credentials.
+- **Stage Audio Engine Gateway (`StageAudioService`)**:
+  - Built `StageAudioService` abstract contract and `QuestStageAudioService` implementation in [`lib/core/audio/stage_audio_service.dart`](lib/core/audio/stage_audio_service.dart).
+  - Implemented connection state machine (`disconnected`, `connecting`, `connected`, `reconnecting`, `failed`) with automatic exponential backoff reconnection on dropped connections.
+  - Exposed `speakerVolumeLevelsStream` to drive live sinusoidal physics waves and visual avatar speaking pulses.
+  - Integrated cleanly with `StageNotifier` (`stage_provider.dart`): microphone hardware mute/unmute, speaker promotion role elevation, and volume-reactive speaking updates.
+- **Stage Room Discovery & Creation Flow**:
+  - **`ActiveStagesCarousel`**: Created [`lib/features/interaction/stage/presentation/widgets/active_stages_carousel.dart`](lib/features/interaction/stage/presentation/widgets/active_stages_carousel.dart) surfaced in `CommunitiesScreen` and `CommunityDetailScreen`, featuring live pulsing status, speaker avatar stacks, attendee counts, and 1-tap "Tune In".
+  - **`StartStageSheet`**: Created [`lib/features/interaction/stage/presentation/widgets/start_stage_sheet.dart`](lib/features/interaction/stage/presentation/widgets/start_stage_sheet.dart) offering a member-gated bottom sheet to launch live audio stages with custom title, topic/prompt, and community tag.
+  - **Dynamic Stage Navigation**: Wired `EventsScreen` and `CommunitiesScreen` FAB / header actions to dynamically route into active stages or open `StartStageSheet`.
+  - **Reconnection Indicator**: Added amber `RECONNECTING` status badge in `StageScreen` header when network recovery is in progress.
+- **Automated Unit Testing & Verification**:
+  - Expanded `test/stage_realtime_test.dart` with unit tests for `QuestStageAudioService` state transitions, role updates, and `StageState` / `StageSpeaker` creation.
+  - Full suite verification: **30/30 unit tests passing (100% pass rate)**.
+  - Zero warnings and zero errors across `dart analyze lib/ test/`.
+
 
 ## 2026-10-17 — MVP Sprints 1 & 2 Execution + Stage Control Hardening
 - **Sprint 1 (Create Pipeline Hardening Complete)**:

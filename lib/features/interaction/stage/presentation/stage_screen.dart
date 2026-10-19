@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:quest/core/audio/stage_audio_service.dart';
 import 'package:quest/core/theme/quest_icons.dart';
 import 'package:quest/features/identity/auth/data/auth_provider.dart';
 import 'package:quest/features/interaction/stage/data/stage_provider.dart';
@@ -152,6 +153,49 @@ class _StageScreenState extends ConsumerState<StageScreen>
                                       ),
                                     ],
                                   ),
+                                ),
+                                StreamBuilder<AudioConnectionState>(
+                                  stream: ref
+                                      .watch(stageAudioServiceProvider)
+                                      .connectionStateStream,
+                                  initialData: ref
+                                      .watch(stageAudioServiceProvider)
+                                      .connectionState,
+                                  builder: (context, snapshot) {
+                                    final conn = snapshot.data ??
+                                        AudioConnectionState.connected;
+                                    if (conn ==
+                                        AudioConnectionState.reconnecting) {
+                                      return Container(
+                                        margin: const EdgeInsets.only(left: 6),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 6,
+                                          vertical: 2,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.amber.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(4),
+                                          border: Border.all(
+                                            color: Colors.amber.withValues(
+                                              alpha: 0.5,
+                                            ),
+                                          ),
+                                        ),
+                                        child: const Text(
+                                          'RECONNECTING',
+                                          style: TextStyle(
+                                            color: Colors.amber,
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
                                 ),
                                 SizedBox(width: 8),
                                 Text(

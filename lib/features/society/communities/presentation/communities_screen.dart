@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import 'package:quest/features/identity/profile/data/user_provider.dart';
 import 'package:quest/features/society/communities/data/communities_provider.dart';
 import 'package:quest/core/theme/app_colors_extension.dart';
+import 'package:quest/features/interaction/stage/presentation/widgets/active_stages_carousel.dart';
+import 'package:quest/features/interaction/stage/presentation/widgets/start_stage_sheet.dart';
 
 class CommunitiesScreen extends ConsumerStatefulWidget {
   const CommunitiesScreen({super.key});
@@ -49,12 +51,16 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen>
 
     return Scaffold(
       backgroundColor: context.colors.background,
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: context.colors.questBlue,
-        child: Icon(Icons.add, color: context.colors.textPrimary),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: context.colors.crimson,
+        icon: const Icon(Icons.mic_rounded, color: Colors.white),
+        label: const Text(
+          'Host Stage',
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
         onPressed: () {
           HapticFeedback.lightImpact();
-          // _showCreateSheet(context);
+          StartStageSheet.show(context);
         },
       ),
       body: NestedScrollView(
@@ -118,6 +124,12 @@ class _CommunitiesScreenState extends ConsumerState<CommunitiesScreen>
                     ),
                   ),
                 ),
+              ),
+            ),
+            const SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: ActiveStagesCarousel(),
               ),
             ),
           ];

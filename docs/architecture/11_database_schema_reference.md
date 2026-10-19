@@ -1,5 +1,5 @@
 # 11. Database Schema Reference
-_Last Modified: 2026-09-21_
+_Last Modified: 2026-10-19_
 
 ## The Schema Rule
 When interacting with the database from Dart or Edge Functions, **only use what has already been created in the Supabase schema migrations**. Supabase accepts what is defined in its tables. Our schemas feature a mix of `camelCase` (e.g. `createdAt`) and `snake_case` (e.g. `avatar_url`). Do not attempt to enforce a single naming convention in Dart; use the exact column names as defined in the DB.
@@ -22,9 +22,11 @@ Historically, `profiles` had both `avatarUrl` and `avatar_url`.
 - `get-feed`: Takes `seed`, `cursor`, `limit`, `seen_ids`, `recent_genres`. Returns feed videos.
 - `interact-video`: Takes `video_id`, `action`. Increments counts on the `videos` table.
 - `update-profile`: Takes `username`, `full_name`, `avatar_url`, `bio`.
+- `stage-token`: Takes `stage_id`, `role`, `uid`. Authenticates caller JWT and returns cryptographically signed RTC room tokens.
 
 ## Supabase Realtime
 - **Chat**: Channel name `chat_messages_for_$userId`, listening to `INSERT` on `chat_messages` in `public` schema.
+- **Stage (Audio Rooms)**: Broadcast channel `stage_$stageId` for `stage_reaction`, `stage_hand_raise`, and `stage_speaker_promotion`.
 
 ---
 ## Foundation security migration (added 2026-10-05)

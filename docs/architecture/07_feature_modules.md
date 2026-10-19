@@ -1,4 +1,4 @@
-_Last Modified: 2026-10-17_
+_Last Modified: 2026-10-19_
 
 # 7. Feature Modules
 
@@ -16,9 +16,9 @@ _Last Modified: 2026-10-17_
 | **Create & Share Experience** | `lib/features/interaction/create/` | Interaction | ✅ Complete | Front/rear camera switch, torch, vlog timer, tap-to-focus, pinch-to-zoom, typed payload, quest linking, Mux/Cloudinary gateway |
 | **Notifications** | `lib/features/interaction/notifications/` | Interaction | ✅ Complete | `notifications` table, in-app alerts, interactive feed |
 | **Messaging / Chat** | `lib/features/interaction/messaging/` | Interaction | ✅ Complete | Supabase Realtime + Hive local outbox + purged all demo threads + baseline empty state |
-| **Stage (Audio Rooms)** | `lib/features/interaction/stage/` | Interaction | 🟢 Hardened UI & Controls | Dynamic room repository, speaker promotions, link sharing, guest-gate protection, sinusoidal physics canvas |
-| **Communities / Guilds** | `lib/features/society/communities/` | Society | ✅ Complete | `communities`, `community_members` (backend join/leave & XP wired) |
-| **Events** | `lib/features/society/events/` | Society | ✅ Complete | `events`, `event_rsvps` (backend RSVP & XP wired) |
+| **Stage (Audio Rooms)** | `lib/features/interaction/stage/` | Interaction | ✅ Complete | Agora RTC token Edge Function (`stage-token`), `StageAudioService` streaming gateway, volume-reactive speaking pulse, auto-reconnect, active stages carousel, member-gated `StartStageSheet` |
+| **Communities / Guilds** | `lib/features/society/communities/` | Society | ✅ Complete | `communities`, `community_members` (backend join/leave & XP wired, live stage discovery) |
+| **Events** | `lib/features/society/events/` | Society | ✅ Complete | `events`, `event_rsvps` (backend RSVP & XP wired, live stage launch action) |
 | **Organization Portal** | `lib/features/society/organization/` | Society | 🟡 Scaffold | Host & guild management dashboards |
 | **Radar & Beacons** | `lib/features/world/radar/` | World | ✅ Complete | Live `profiles` HUD, spontaneous Beacon creation/joining (+50/+25 XP), pulsing markers, `beacons` schema & pg_cron auto-expiration |
 | **Commerce & Wallet** | `lib/features/economy/` | Economy | 🟡 Prototype | Models & state providers scaffolded |
@@ -157,4 +157,26 @@ The Global Search architecture (`GlobalSearchScreen` / `UserSearchScreen` at `/e
 - **Archetype Filtering**: Horizontal filter chip bar under the Users tab supporting dynamic filtering across `All`, `Adventurer`, `Leader`, `Organizer`, `Creator`, `Connector`, and `Strategist`.
 - **Pre-Search Trending**: Populates dynamic "Trending on Quest" items before query execution so the screen is never empty.
 - **Unified Videos Schema**: Centralized `videos` table in Supabase supporting multiple archetypes (`feed`, `story`, `chat`, `community`, `event`, `vlog`) with `trust_score` and hourly `pg_cron` 24h story cleanup.
+
+## Stage Audio Rooms & Live Firesides Architecture
+
+The Stage audio architecture (`lib/features/interaction/stage/`) delivers live group audio fellowship and fireside discussions:
+- **Streaming Gateway (`StageAudioService` in `lib/core/audio/stage_audio_service.dart`)**:
+  - Abstract contract and production implementation (`QuestStageAudioService`) managing RTC session tokens, microphone hardware mute/unmute, and speaker/audience audio role transitions.
+  - **Auto-Reconnection State Machine**: Emits `AudioConnectionState` (`disconnected`, `connecting`, `connected`, `reconnecting`, `failed`) with exponential backoff on dropped connections.
+  - **Audio Activity Streams**: Emits `speakerVolumeLevelsStream` to drive live sinusoidal physics waves and visual avatar speaking pulses.
+- **Serverless Token Authority (`stage-token` Edge Function)**:
+  - Deployed in `supabase/functions/stage-token/index.ts`.
+  - Authenticates Supabase JWT, validates room role, and generates cryptographically signed HMAC room tokens with 24h expiration.
+- **Stage State & Realtime Signaling (`StageNotifier` & `stageProvider`)**:
+  - Listens to Supabase Realtime broadcast channels (`stage_<id>`) for:
+    - Floating reaction emojis (`stage_reaction`).
+    - Hand raise toggles (`stage_hand_raise`).
+    - Speaker invitations & promotions (`stage_speaker_promotion`).
+  - Automatically joins RTC channel on mount and cleans up channels/subscriptions on `ref.onDispose`.
+- **Discovery & Room Creation**:
+  - **`ActiveStagesCarousel`**: Dynamic carousel surfaced in `CommunitiesScreen` and `CommunityDetailScreen` showcasing live rooms, speaker stacks, attendee counts, and 1-tap "Tune In".
+  - **`StartStageSheet`**: Member-gated bottom sheet enabling community members to spin up live stages with custom titles, discussion prompts, and community tags.
+  - **Top Reconnecting Indicator**: Displays an amber `RECONNECTING` badge if network drops during a live session.
+
 

@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:quest/core/audio/stage_audio_service.dart';
 import 'package:quest/features/interaction/stage/data/stage_provider.dart';
 
 void main() {
@@ -100,4 +101,60 @@ void main() {
       expect(fromJson.audience.first.name, equals('Listener'));
     });
   });
+
+  group('Stage Audio Service & Repository Tests', () {
+    test('QuestStageAudioService manages audio state and roles correctly', () async {
+      final audioService = QuestStageAudioService();
+
+      expect(audioService.connectionState, equals(AudioConnectionState.disconnected));
+      expect(audioService.isMicrophoneMuted, isTrue);
+
+      await audioService.setMicrophoneMuted(false);
+      expect(audioService.isMicrophoneMuted, isFalse);
+
+      await audioService.setSpeakerRole(true);
+      await audioService.setMicrophoneMuted(false);
+      expect(audioService.isMicrophoneMuted, isFalse);
+
+      await audioService.setSpeakerRole(false);
+      expect(audioService.isMicrophoneMuted, isTrue);
+
+      await audioService.leaveStage();
+      expect(audioService.connectionState, equals(AudioConnectionState.disconnected));
+      expect(audioService.currentStageId, isNull);
+
+      audioService.dispose();
+    });
+
+    test('StageState and StageSpeaker correctly represent host and speaker roles', () {
+      final host = StageSpeaker(
+        id: 'host_123',
+        name: 'Pastor David',
+        role: 'Host • Creator',
+        avatar: 'https://example.com/pastor.jpg',
+        isMuted: false,
+        isSpeaking: true,
+        archetype: 'Visionary',
+      );
+
+      final stage = StageState(
+        stageId: 'stage_custom_1',
+        title: 'Sunday Night Fellowship',
+        topic: 'Scripture meditation and life journey discussion',
+        communityName: 'Living Faith Fellowship',
+        isMicMuted: false,
+        isHandRaised: false,
+        speakers: [host],
+        audience: [],
+      );
+
+      expect(stage.speakers.length, equals(1));
+      expect(stage.speakers.first.id, equals('host_123'));
+      expect(stage.speakers.first.name, equals('Pastor David'));
+      expect(stage.speakers.first.role, equals('Host • Creator'));
+      expect(stage.speakers.first.isSpeaking, isTrue);
+      expect(stage.communityName, equals('Living Faith Fellowship'));
+    });
+  });
 }
+

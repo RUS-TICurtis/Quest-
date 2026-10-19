@@ -8,6 +8,7 @@ import 'package:quest/features/identity/profile/data/user_provider.dart';
 import 'package:quest/features/society/communities/data/communities_provider.dart';
 import 'package:quest/features/society/communities/data/community_posts_provider.dart';
 import 'package:quest/features/society/communities/presentation/widgets/community_post_card.dart';
+import 'package:quest/features/interaction/stage/presentation/widgets/active_stages_carousel.dart';
 
 class CommunityDetailScreen extends ConsumerWidget {
   final String communityId;
@@ -166,7 +167,12 @@ class CommunityDetailScreen extends ConsumerWidget {
 
                   SizedBox(height: 20),
                   Divider(color: AppColors.border),
-                  SizedBox(height: 20),
+                  SizedBox(height: 16),
+
+                  // Live Stages in this Community
+                  ActiveStagesCarousel(communityFilter: community.name),
+
+                  SizedBox(height: 8),
 
                   // About
                   Text(
